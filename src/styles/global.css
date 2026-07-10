@@ -1,4 +1,5 @@
 @import './fonts.css';
+@import './colors.css';
 
 :root {
   font-family: Roboto, RobotoDraft, Helvetica, Arial, sans-serif;
@@ -16,6 +17,7 @@ body {
     Arial,
     sans-serif;
   letter-spacing: 0.25px;
+  color: var(--neutral-800);
 }
 
 button,
