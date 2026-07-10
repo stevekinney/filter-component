@@ -1,0 +1,116 @@
+/* The joiner word between two chips — the smart-joiners model's only
+   structural control. Dotted underline signals "flippable text", and the
+   hover/focus accent tint promises the flip without moving anything. */
+.filter-joiner {
+  padding: 3px 6px;
+  border-radius: var(--filter-radius-control);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--filter-text-muted);
+  text-decoration: underline dotted var(--filter-icon-muted);
+  text-underline-offset: 3px;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--filter-surface-accent-hover);
+    color: var(--filter-text-accent-strong);
+  }
+
+  &:focus-visible {
+    outline: var(--filter-focus-ring);
+    outline-offset: 1px;
+  }
+}
+
+/* Read-only precedence indicator around a ≥2-member and-run. */
+.filter-bracket {
+  margin: 0 -2px;
+  font-size: 22px;
+  font-weight: 300;
+  line-height: 26px;
+  color: var(--filter-icon-muted);
+  user-select: none;
+}
+
+.filter-draft-preview {
+  max-width: 100%;
+  border: 1px dashed var(--filter-accent);
+  background: var(--filter-surface-selected);
+
+  > span {
+    display: flex;
+    flex: 0 1 auto;
+    align-items: center;
+    min-width: 0;
+    padding: 4px 10px;
+  }
+
+  .filter-draft-preview-divider {
+    width: 1px;
+    padding: 0;
+    background: color-mix(in oklch, var(--filter-accent) 24%, transparent);
+  }
+}
+
+.filter-draft-preview-field {
+  font-weight: 500;
+}
+
+.filter-draft-preview-field,
+.filter-draft-preview-operator {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.filter-draft-preview-operator {
+  color: var(--filter-text-muted);
+}
+
+.filter-draft-preview-value {
+  color: var(--filter-text-accent-strong);
+  max-width: 160px;
+}
+
+.filter-incomplete-draft-chip {
+  max-width: 100%;
+  border: 1px dashed var(--filter-warning-border);
+  background: var(--filter-warning-surface);
+}
+
+.filter-incomplete-draft-resume {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+  padding-block: 0;
+  padding-inline: 8px 4px;
+  color: var(--filter-warning-text);
+
+  &:hover {
+    background: var(--filter-warning-hover);
+  }
+}
+
+.filter-incomplete-draft-field {
+  font-weight: 500;
+  color: var(--filter-text);
+}
+
+.filter-incomplete-draft-operator {
+  color: var(--filter-text-muted);
+}
+
+.filter-incomplete-draft-discard {
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  color: var(--filter-text-muted);
+
+  &:hover {
+    background: var(--filter-danger-hover);
+    color: var(--filter-danger-text);
+  }
+}

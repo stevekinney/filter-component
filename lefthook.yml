@@ -10,9 +10,19 @@ pre-commit:
   jobs:
     - name: format-staged
       run: bun run prettier --write {staged_files}
-      glob: '**/*.{ts,tsx,js,jsx,json,md}'
+      glob: '**/*.{ts,tsx,js,jsx,json,md,css,yml,html}'
       stage_fixed: true
     - name: lint-fix
-      run: bun run oxlint --fix {staged_files}
+      run: bun run oxlint --fix --deny-warnings {staged_files}
       glob: '**/*.{ts,tsx,js,jsx}'
       stage_fixed: true
+    - name: lint-css-fix
+      run: bun run stylelint --fix {staged_files}
+      glob: 'src/**/*.css'
+      stage_fixed: true
+    - name: check-file-sizes
+      run: bun run check:file-sizes
+    - name: test-coverage
+      run: bun run test:coverage
+    - name: test-e2e
+      run: bun run test:e2e

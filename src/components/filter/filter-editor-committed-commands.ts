@@ -1,0 +1,127 @@
+import type { FocusTarget } from './use-filter-focus.ts';
+import type { FilterFieldRegistry } from '@/utilities/filter/field-registry.ts';
+import { createFilterEntry } from '@/utilities/filter/filter-entry.ts';
+import { filterConditionSchema } from '@/utilities/filter/filter-schema.ts';
+import { fieldLabel } from '@/utilities/filter/formatting.ts';
+import { getFilterValidationIssue } from '@/utilities/filter/validation.ts';
+import type {
+  FilterHistory,
+  FilterHistoryAction,
+} from '@/utilities/filter/history.ts';
+
+type FilterEditorCommittedCommandsOptions = {
+  getFieldRegistry: () => FilterFieldRegistry;
+  getCurrentHistory: () => FilterHistory;
+  applyFilterHistoryAction: (action: FilterHistoryAction) => boolean;
+  resetEditor: () => void;
+  scheduleFocus: (target: FocusTarget) => void;
+  announce: (message: string) => void;
+};
+
+/** Committed row commands exposed by the editor controller. */
+export function createFilterEditorCommittedCommands({
+  getFieldRegistry,
+  getCurrentHistory,
+  applyFilterHistoryAction,
+  resetEditor,
+  scheduleFocus,
+  announce,
+}: FilterEditorCommittedCommandsOptions) {
+  const removeFilter = (id: string) => {
+    const history = getCurrentHistory();
+    const filters = history.present.conditions;
+    const index = filters.findIndex((candidate) => candidate.id === id);
+    const token = filters[index];
+    if (!token) return;
+    const remaining = filters.filter((candidate) => candidate.id !== id);
+    const neighbor = remaining[Math.min(index, remaining.length - 1)];
+    scheduleFocus(
+      neighbor ? { type: 'token', id: neighbor.id } : { type: 'addInput' },
+    );
+    resetEditor();
+    if (!applyFilterHistoryAction({ type: 'remove', id })) return;
+    const field = getFieldRegistry().byKey.get(token.fieldKey);
+    const label = field ? fieldLabel(field) : token.fieldKey;
+    announce(
+      history.present.joiners.includes('or')
+        ? `Filter removed: ${label}; grouping updated`
+        : `Filter removed: ${label}`,
+    );
+  };
+
+  const removeEnumValue = (id: string, value: string) => {
+    const token = getCurrentHistory().present.conditions.find(
+      (candidate) => candidate.id === id,
+    );
+    if (!token || !Array.isArray(token.value)) return;
+    const remaining = token.value.filter((candidate) => candidate !== value);
+    if (remaining.length === 0) {
+      removeFilter(id);
+      return;
+    }
+    const { id: _id, ...publicCondition } = token;
+    const condition = filterConditionSchema.parse({
+      ...publicCondition,
+      value: remaining,
+    });
+    const candidate = createFilterEntry(condition, id);
+    const fieldRegistry = getFieldRegistry();
+    const field = fieldRegistry.byKey.get(token.fieldKey);
+    if (
+      !field ||
+      getFilterValidationIssue(candidate, fieldRegistry.fields) !== null
+    ) {
+      return;
+    }
+    scheduleFocus({ type: 'token', id });
+    if (
+      applyFilterHistoryAction({
+        type: 'update',
+        id,
+        filter: candidate,
+      })
+    ) {
+      announce(`${value} removed from ${fieldLabel(field)} filter`);
+    }
+  };
+
+  const clearAll = () => {
+    resetEditor();
+    scheduleFocus({ type: 'addInput' });
+    if (applyFilterHistoryAction({ type: 'clear' })) {
+      announce('All filters cleared');
+    }
+  };
+
+  const undo = () => {
+    resetEditor();
+    if (getCurrentHistory().past.length === 1) {
+      scheduleFocus({ type: 'addInput' });
+    }
+    if (applyFilterHistoryAction({ type: 'undo' })) {
+      announce('Undid last filter change');
+    }
+  };
+
+  const redo = () => {
+    resetEditor();
+    if (getCurrentHistory().future.length === 1) {
+      scheduleFocus({ type: 'addInput' });
+    }
+    if (applyFilterHistoryAction({ type: 'redo' })) {
+      announce('Redid filter change');
+    }
+  };
+
+  const flipJoiner = (index: number) => {
+    const joiner = getCurrentHistory().present.joiners[index];
+    if (joiner === undefined) return;
+    if (applyFilterHistoryAction({ type: 'flipJoiner', index })) {
+      announce(
+        `Filters combined with ${joiner === 'and' ? 'or' : 'and'}; grouping updated`,
+      );
+    }
+  };
+
+  return { removeFilter, removeEnumValue, clearAll, undo, redo, flipJoiner };
+}

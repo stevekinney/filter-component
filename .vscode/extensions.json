@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "esbenp.prettier-vscode",
+    "stylelint.vscode-stylelint",
+    "vitest.explorer",
+    "ms-playwright.playwright",
+    "oxc.oxc-vscode",
+    "editorconfig.editorconfig"
+  ]
+}

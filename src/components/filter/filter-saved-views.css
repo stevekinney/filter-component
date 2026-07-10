@@ -1,0 +1,111 @@
+/* The consolidated views surface: a save action on top (when the group is
+   savable), then the saved rows, kept to a sensible width so long names
+   truncate rather than widening the popover. */
+.filter-saved-views-popover {
+  min-width: min(232px, calc(100vi - 16px));
+  max-width: min(320px, calc(100vi - 16px));
+}
+
+/* Horizontal hairline between the save action and the saved rows. */
+.filter-popover-divider {
+  height: 1px;
+  margin-block: 4px;
+  background: var(--filter-border);
+}
+
+.filter-saved-views-save {
+  padding-block: 2px 4px;
+  padding-inline: 8px;
+}
+
+/* Full-width primary action that swaps in place for the inline name field. */
+.filter-saved-views-save-action {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: var(--filter-radius-control);
+  font-weight: 500;
+  color: var(--filter-text-accent);
+
+  &:hover {
+    background: var(--filter-surface-accent-hover);
+  }
+}
+
+.filter-saved-views-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.filter-saved-views-item {
+  display: flex;
+  align-items: stretch;
+
+  /* The active view (its group matches the current one) is tinted; the check
+     in the load button carries the same state without relying on color. */
+  &.is-active {
+    background: var(--filter-surface-selected);
+  }
+}
+
+/* The whole name-and-summary area loads the view; long names and summaries
+   truncate rather than widening the popover. */
+.filter-saved-views-load {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  padding: 6px 12px;
+  text-align: start;
+
+  &:hover {
+    background: var(--filter-surface-hover);
+  }
+}
+
+/* Fixed leading slot so names align whether or not a row carries the check. */
+.filter-saved-views-check {
+  display: flex;
+  flex: none;
+  width: 16px;
+  color: var(--filter-text-accent);
+}
+
+.filter-saved-views-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.filter-saved-views-name {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.filter-saved-views-summary {
+  font-size: 11px;
+  color: var(--filter-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.filter-saved-views-remove {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  color: var(--filter-text-muted);
+
+  &:hover {
+    background: var(--filter-danger-hover);
+    color: var(--filter-danger-text);
+  }
+}

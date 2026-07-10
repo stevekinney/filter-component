@@ -1,0 +1,259 @@
+/* Semantic theming contract for the whole component. Every stylesheet under
+   the filter consumes these instead of the raw palette; the popover inherits
+   them too because top-layer promotion doesn't change DOM inheritance. */
+.filter {
+  --filter-text: rgb(0 0 0 / 87%);
+  --filter-text-muted: rgb(0 0 0 / 60%);
+  --filter-text-placeholder: rgb(0 0 0 / 60%);
+  --filter-icon-muted: rgb(0 0 0 / 36%);
+  --filter-surface: oklch(100% 0 0deg);
+  --filter-surface-subtle: oklch(97.02% 0 89.88deg);
+  --filter-surface-selected: oklch(95.33% 0.0164 274.82deg);
+  --filter-surface-hover: rgb(0 0 0 / 8%);
+  --filter-border: rgb(0 0 0 / 12%);
+  --filter-accent: oklch(59.23% 0.18 257deg);
+  --filter-text-accent: oklch(57.37% 0.1946 257.86deg);
+  --filter-text-accent-strong: oklch(44.32% 0.1531 259.86deg);
+  --filter-accent-hover: oklch(44.32% 0.1531 259.86deg);
+  --filter-on-accent: oklch(100% 0 0deg);
+  --filter-surface-accent-hover: color-mix(
+    in oklch,
+    var(--filter-accent) 12%,
+    transparent
+  );
+  --filter-danger-text: oklch(58.37% 0.2116 27.91deg);
+  --filter-danger-border: oklch(65.86% 0.2058 22.05deg);
+  --filter-danger-surface: oklch(95.33% 0.0218 14.06deg);
+  --filter-danger-hover: color-mix(
+    in oklch,
+    var(--filter-danger-border) 12%,
+    transparent
+  );
+  --filter-warning-text: oklch(53.78% 0.1712 36.44deg);
+  --filter-warning-border: oklch(70.36% 0.1865 42.12deg);
+  --filter-warning-surface: oklch(97.06% 0.0195 65.15deg);
+  --filter-warning-hover: color-mix(
+    in oklch,
+    var(--filter-warning-border) 12%,
+    transparent
+  );
+  --filter-control-height: 28px;
+  --filter-radius-control: 4px;
+  --filter-radius-container: 8px;
+  --filter-radius-pill: 10px;
+  --filter-focus-ring: 2px solid var(--filter-accent);
+  --filter-popover-shadow: 0 2px 6px rgb(0 0 0 / 20%), 0 0 2px rgb(0 0 0 / 12%);
+
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--filter-text);
+}
+
+/* Control reset: the component must not depend on the page's global styles.
+   Zero specificity so any component class overrides it regardless of the
+   order stylesheets land in the bundle. */
+:where(.filter) :where(button, input, select) {
+  font: inherit;
+  letter-spacing: inherit;
+}
+
+:where(.filter button) {
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* Default focus treatment for buttons: an inset accent ring. Controls with a
+   different treatment (.filter-icon-button, .filter-popover-footer-apply) override
+   it; non-button focus targets (chips, option lists) style themselves. */
+:where(.filter button):focus-visible {
+  outline: var(--filter-focus-ring);
+  outline-offset: -2px;
+}
+
+/* Destructive controls keep a visible safety boundary while pointer hover
+   changes Chromium's focus-visible modality. */
+:where(
+  .filter .is-destructive,
+  .filter .filter-incomplete-draft-discard,
+  .filter .filter-token-remove,
+  .filter .filter-token-pill-remove,
+  .filter .filter-saved-views-remove
+):focus {
+  outline: var(--filter-focus-ring);
+  outline-offset: -2px;
+}
+
+/* Chip shell shared by committed tokens, the in-progress draft chip, and the
+   incomplete-draft chip. Variants own their border style and surface. */
+:where(.filter-chip) {
+  display: inline-flex;
+  align-items: stretch;
+  height: var(--filter-control-height);
+  overflow: hidden;
+  border: 1px solid var(--filter-border);
+  border-radius: var(--filter-radius-control);
+  background: var(--filter-surface);
+}
+
+/* Single-line truncation shared by token values, enum pill labels, and the
+   draft chip's value preview. Width limits stay with each consumer. */
+:where(
+  .filter-token-value,
+  .filter-token-pill-label,
+  .filter-draft-preview-value
+) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The fieldset that natively disables every control inside it. The popover
+   anchors to its invoking element through the Popover API, so this needs no
+   positioning context. */
+.filter-controls {
+  margin: 0;
+  padding: 0;
+  border: none;
+  min-width: 0;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+/* While disabled, controls take no pointer events: their `:hover` states
+   never fire and the fieldset's not-allowed cursor shows through them. */
+:where(.filter-controls:disabled) :where(button, input, select) {
+  pointer-events: none;
+}
+
+.filter-storage-notice {
+  box-sizing: border-box;
+  max-inline-size: 100%;
+  margin: 8px 0 0;
+  padding: 6px 8px;
+  overflow-wrap: anywhere;
+  border: 1px solid var(--filter-warning-border);
+  border-radius: var(--filter-radius-control);
+  background: var(--filter-warning-surface);
+  color: var(--filter-warning-text);
+}
+
+/* Layout-transparent: the token list exists purely for list semantics; its
+   tokens lay out as flex children of the row. */
+.filter-token-list {
+  display: contents;
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  min-height: 32px;
+  border: 1px solid var(--filter-border);
+  border-radius: var(--filter-radius-container);
+  background: var(--filter-surface);
+}
+
+/* The composer-and-actions block: the add-filter input and the rail as a
+   single flex item. Because they travel together, they wrap to the last line
+   as a unit; `flex: 1` makes the block fill that line so the input can grow
+   and the rail pins to the right edge → bottom-right in every layout. */
+.filter-composer {
+  flex: 1 1 260px;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Grows to fill the composer block; shrinks first on a narrow row (down to
+   its min-width) while the rail keeps its size. */
+.filter-add-input {
+  flex: 1 1 120px;
+  min-width: min(120px, 100%);
+  padding: 4px;
+  border: none;
+  outline: none;
+  border-radius: var(--filter-radius-control);
+  background: transparent;
+  color: var(--filter-text);
+
+  &::placeholder {
+    color: var(--filter-text-placeholder);
+  }
+
+  &:focus-visible {
+    outline: var(--filter-focus-ring);
+    outline-offset: 1px;
+    background: var(--filter-surface);
+  }
+}
+
+/* The right-side action rail: saved views, history, and clear as one unit
+   that never wraps internally, so the controls stay together and pinned to
+   the bottom-right. */
+.filter-rail {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  margin-inline-start: auto;
+}
+
+/* Hairline fence between clusters. */
+.filter-rail-divider {
+  width: 1px;
+  height: 18px;
+  margin: 0 2px;
+  background: var(--filter-border);
+}
+
+/* Shared by the row's undo/redo/clear buttons and the popover's × cancel. */
+.filter-icon-button {
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 50%;
+  color: var(--filter-text-muted);
+
+  &:hover {
+    background: var(--filter-surface-hover);
+  }
+
+  &.is-destructive:hover {
+    background: var(--filter-danger-hover);
+    color: var(--filter-danger-text);
+  }
+
+  /* A trigger holds its open state while its popover is showing: a tinted
+     accent surface and accent glyph, so the affordance reads without color
+     alone doing the work. */
+  &.is-open {
+    background: var(--filter-surface-accent-hover);
+    color: var(--filter-text-accent);
+  }
+
+  &:focus-visible {
+    outline: var(--filter-focus-ring);
+    outline-offset: 0;
+  }
+}
+
+/* Polite live region for announcements. */
+.filter-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

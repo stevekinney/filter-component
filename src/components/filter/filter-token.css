@@ -1,0 +1,128 @@
+/* One list slot: the leading joiner word, the read-only bracket glyphs, and
+   the chip travel together so they wrap as a unit. */
+.filter-token-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.filter-token {
+  flex: 1;
+  outline: none;
+  min-width: 0;
+  max-width: 100%;
+
+  &:focus {
+    outline: var(--filter-focus-ring);
+    outline-offset: 1px;
+    border-color: var(--filter-accent);
+    background: var(--filter-surface-selected);
+    box-shadow: 0 0 0 3px
+      color-mix(in oklch, var(--filter-accent) 15%, transparent);
+  }
+
+  /* data-invalid, not aria-invalid: ARIA doesn't support aria-invalid on
+     role="group", and the invalid state is already spoken through the
+     chip's accessible name ("… (invalid: reason)"). */
+  &[data-invalid] {
+    border-color: var(--filter-danger-border);
+    background: var(--filter-danger-surface);
+  }
+
+  /* Every control inside a chip: segments, pills, pill removes. This nested
+     rule outranks the single-class rules below, so it owns the shared text
+     color (inherited) and hover surface for all of them. */
+  button {
+    padding: 4px 10px;
+
+    &:hover {
+      background: var(--filter-surface-hover);
+    }
+  }
+
+  .filter-token-pill-label {
+    padding: 0;
+    font-size: 12px;
+    line-height: 16px;
+
+    /* The stronger accent: plain accent text misses WCAG AA 4.5:1 on the
+       selected (indigo-tinted) pill surface. */
+    color: var(--filter-text-accent-strong);
+    max-width: 120px;
+
+    &:hover {
+      background: transparent;
+      text-decoration: underline;
+    }
+  }
+
+  .filter-token-pill-remove {
+    padding: 2px;
+    border-radius: 50%;
+  }
+}
+
+.filter-token-divider {
+  width: 1px;
+  background: var(--filter-border);
+}
+
+.filter-token-segment {
+  min-width: 0;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &.is-editing {
+    background: var(--filter-surface-selected);
+  }
+
+  /* The field name is the only bold segment. */
+  &[data-token-segment='field'] {
+    font-weight: 500;
+  }
+}
+
+.filter-token-value {
+  max-width: 180px;
+}
+
+/* The icon-only chip controls. Their size and colors come from the shared
+   `button` rule above — its higher specificity means it owns padding, text
+   color, and hover surface; only the removes' hover text goes danger-red. */
+:where(.filter-token-warning, .filter-token-remove, .filter-token-pill-remove) {
+  display: flex;
+  align-items: center;
+}
+
+.filter-token-remove,
+.filter-token-pill-remove {
+  &:hover {
+    color: var(--filter-danger-text);
+  }
+}
+
+.filter-token-pills {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 0 8px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.filter-token-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 20px;
+  padding-block: 0;
+  padding-inline: 8px 2px;
+  border-radius: var(--filter-radius-pill);
+  background: var(--filter-surface-selected);
+  min-width: 0;
+}
