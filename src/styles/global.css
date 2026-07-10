@@ -1,0 +1,27 @@
+@import './fonts.css';
+
+:root {
+  font-family: Roboto, RobotoDraft, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: 0.25px;
+}
+
+body {
+  font:
+    400 14px/20px Roboto,
+    RobotoDraft,
+    Helvetica,
+    Arial,
+    sans-serif;
+  letter-spacing: 0.25px;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  letter-spacing: inherit;
+}

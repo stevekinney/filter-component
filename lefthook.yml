@@ -1,0 +1,18 @@
+output:
+  - failure
+  - execution_out
+
+pre-commit:
+  piped: true
+  skip:
+    - merge
+    - rebase
+  jobs:
+    - name: format-staged
+      run: bun run prettier --write {staged_files}
+      glob: '**/*.{ts,tsx,js,jsx,json,md}'
+      stage_fixed: true
+    - name: lint-fix
+      run: bun run oxlint --fix {staged_files}
+      glob: '**/*.{ts,tsx,js,jsx}'
+      stage_fixed: true
