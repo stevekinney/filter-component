@@ -5,6 +5,7 @@
     "lib": ["ES2023"],
     "types": ["node"],
     "skipLibCheck": true,
+    "strict": true,
 
     /* Bundler mode */
     "module": "nodenext",
@@ -14,6 +15,13 @@
     "noEmit": true,
 
     /* Linting */
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,

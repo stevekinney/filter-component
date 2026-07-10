@@ -9,5 +9,23 @@
     "react/only-export-components": ["warn", { "allowConstantExport": true }],
     "typescript/await-thenable": "error",
     "typescript/no-floating-promises": "error"
-  }
+  },
+  "overrides": [
+    {
+      // The filter component implements the WAI-ARIA APG combobox, listbox,
+      // and roving-tabindex patterns: div-based listboxes driven by
+      // aria-activedescendant (options intentionally not focusable), keydown
+      // handlers on composite containers, and role="group" token chips. These
+      // jsx-a11y rules flag exactly that structure, so they are disabled for
+      // the component only.
+      "files": ["src/components/filter/*.tsx"],
+      "rules": {
+        "jsx-a11y/prefer-tag-over-role": "off",
+        "jsx-a11y/no-noninteractive-element-interactions": "off",
+        "jsx-a11y/no-noninteractive-tabindex": "off",
+        "jsx-a11y/interactive-supports-focus": "off",
+        "jsx-a11y/click-events-have-key-events": "off"
+      }
+    }
+  ]
 }
