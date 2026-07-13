@@ -45,6 +45,7 @@ export function useFilterHistory(
 
     return { past: [], present, future: [] };
   });
+
   const historyRef = useRef(history);
   const abortControllerRef = useRef<AbortController | null>(null);
   const onChangeRef = useRef(onChange);
@@ -58,6 +59,7 @@ export function useFilterHistory(
   const [initialNotifiedGroupKey] = useState(() =>
     stableSerialize(deriveValidGroup(history.present, fieldRegistry.fields)),
   );
+
   const lastNotifiedGroupKeyRef = useRef(initialNotifiedGroupKey);
 
   const notifyFiltersChange = (validGroup: FilterGroup) => {
@@ -83,8 +85,8 @@ export function useFilterHistory(
 
   useEffect(() => {
     const validGroup = deriveValidGroup(historyRef.current.present, fieldsRef.current);
-
     if (stableSerialize(validGroup) === lastNotifiedGroupKeyRef.current) return;
+
     notifyFiltersChange(validGroup);
   }, [fieldRegistry.signature]);
 

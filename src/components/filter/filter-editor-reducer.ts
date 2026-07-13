@@ -25,6 +25,7 @@ export function incompleteFromEditor(editor: FilterEditorState): IncompleteDraft
   if (editor.stage === 'idle' || editor.stage === 'field' || editor.filterId !== null) {
     return null;
   }
+
   return editor.stage === 'operator'
     ? {
         stage: 'operator',
@@ -57,6 +58,7 @@ function idleEditor(
   if (state.editor.stage === 'idle' && incompleteDraft === state.incompleteDraft) {
     return state;
   }
+
   return { editor: IDLE_FILTER_EDITOR_STATE, incompleteDraft };
 }
 
@@ -65,9 +67,11 @@ function changeQuery(
   query: string,
 ): FilterEditorControllerState {
   if (state.editor.stage !== 'field') return state;
+
   if (state.editor.query === query && state.editor.activeIndex === 0) {
     return state;
   }
+
   return {
     ...state,
     editor: {
@@ -84,6 +88,7 @@ function changeDraft(
 ): FilterEditorControllerState {
   if (state.editor.stage !== 'value') return state;
   if (state.editor.draft === draft && state.editor.error === null) return state;
+
   return {
     ...state,
     editor: { ...state.editor, draft, error: null },

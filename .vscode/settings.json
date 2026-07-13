@@ -13,5 +13,6 @@
   "stylelint.validate": ["css"],
   "vitest.include": ["src/**/*.test.{ts,tsx}"],
   "vitest.disabledWorkspaceFolders": [],
-  "playwright.reuseBrowser": true
+  "playwright.reuseBrowser": true,
+  "githubPullRequests.ignoredPullRequestBranches": ["main"]
 }

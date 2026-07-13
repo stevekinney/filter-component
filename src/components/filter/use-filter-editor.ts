@@ -55,6 +55,7 @@ export function useFilterEditor({
     editor: IDLE_FILTER_EDITOR_STATE,
     incompleteDraft: null,
   }));
+
   const stateRef = useRef(controllerState);
   const registryRef = useRef(fieldRegistry);
   const scheduleFocusRef = useRef(scheduleFocus);
@@ -94,6 +95,7 @@ export function useFilterEditor({
       scheduleFocus,
       announce,
     });
+
   const commitFilter = (
     fieldKey: string,
     operator: FilterOperator,
@@ -240,9 +242,11 @@ export function useFilterEditor({
     const editor = stateRef.current.editor;
 
     if (editor.stage !== 'value' || draft === null) return;
+
     const field = registryRef.current.byKey.get(editor.fieldKey);
 
     if (!field || field.type !== editor.fieldType) return;
+
     const result = validateDraft(field, editor.operator, draft);
 
     if (!result.ok) {
@@ -262,11 +266,15 @@ export function useFilterEditor({
     const preserved = preserveCurrent();
 
     popoverAnchorRef.current = invoker;
+
     const editor = editorForTokenSegment(token, segment, registryRef.current);
 
     if (!editor) return;
+
     send({ type: 'open', editor, preserveCurrent: true });
+
     if (preserved) announce('Filter incomplete — kept for later');
+
     scheduleFocus({ type: 'autofocus' });
   };
 
@@ -277,8 +285,10 @@ export function useFilterEditor({
     const field = registryRef.current.byKey.get(incomplete.fieldKey);
 
     send({ type: 'discardIncomplete' });
+
     if (!field) return;
     popoverAnchorRef.current = anchor;
+
     if (field.type !== incomplete.fieldType) {
       send({
         type: 'open',
@@ -336,7 +346,9 @@ export function useFilterEditor({
     if (nextIncomplete !== current.incompleteDraft) {
       send({ type: 'replaceIncomplete', draft: nextIncomplete });
     }
+
     if (nextEditor === current.editor) return;
+
     if (nextEditor.stage === 'idle') {
       send({ type: 'idle', preserveCurrent: false });
       scheduleFocusRef.current(
@@ -346,7 +358,9 @@ export function useFilterEditor({
       );
       return;
     }
+
     send({ type: 'open', preserveCurrent: false, editor: nextEditor });
+
     if (current.editor.stage !== nextEditor.stage) {
       scheduleFocusRef.current(
         nextEditor.stage === 'field' && nextEditor.filterId === null
@@ -361,9 +375,8 @@ export function useFilterEditor({
     const preserved = preserveCurrent();
 
     send({ type: 'idle', preserveCurrent: true });
-    if (preserved) {
-      announceRef.current('Filter incomplete — kept for later');
-    }
+
+    if (preserved) announceRef.current('Filter incomplete — kept for later');
   }, [disabled]);
 
   return {

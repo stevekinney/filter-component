@@ -57,6 +57,7 @@ export function AddFilterCombobox({
       onOpenMenu(event.currentTarget.value);
       return;
     }
+
     if (results.length > 0) {
       onNavigate(event.key === 'ArrowDown' ? 1 : -1);
     }
@@ -64,6 +65,7 @@ export function AddFilterCombobox({
 
   const handleEscapeKey = (event: KeyboardEvent<HTMLInputElement>) => {
     if (!open) return;
+
     event.preventDefault();
 
     // First press clears a non-empty query; the second closes the menu.
@@ -76,12 +78,14 @@ export function AddFilterCombobox({
 
   const handleTabKey = (event: KeyboardEvent<HTMLInputElement>) => {
     if (!open) return;
+
     if (query !== '' && activeField) {
       // Tab accepts the highlighted suggestion once a query has been typed.
       event.preventDefault();
       onSelectActive(activeField);
       return;
     }
+
     onCloseMenu();
   };
 
@@ -94,7 +98,9 @@ export function AddFilterCombobox({
     ) {
       return;
     }
+
     event.preventDefault();
+
     onFocusLastToken(lastFilterId);
   };
 

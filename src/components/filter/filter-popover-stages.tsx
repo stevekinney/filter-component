@@ -43,7 +43,6 @@ function SelectedChoiceCheck({ selected }: { selected: boolean }) {
 
 function ChoiceCheckbox({ checked }: { checked: boolean }) {
   const Icon = checked ? SquareCheck : Square;
-
   return <Icon aria-hidden="true" size={15} className="filter-popover-checkbox" />;
 }
 
@@ -63,6 +62,7 @@ function FieldSearchInput({
   onKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
 }) {
   if (state.filterId === null) return null;
+
   return (
     <div className="filter-popover-search">
       <input
@@ -127,7 +127,6 @@ export function FieldSelectionStage({
   state: ActiveFilterEditorState & { stage: 'field' };
 }) {
   const activeIndex = clampIndex(state.activeIndex, fieldResults.length);
-
   const activeResult = fieldResults[activeIndex];
 
   const handleNavigationKey = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -205,6 +204,7 @@ export function SingleChoiceStage(
   },
 ) {
   const { state, field, heading, idPrefix, editingFilter, onChangeActiveIndex } = props;
+
   const options =
     state.stage === 'value'
       ? (field.options ?? []).map((option) => ({
@@ -213,6 +213,7 @@ export function SingleChoiceStage(
           selected: state.draft.kind === 'scalar' && state.draft.input === option,
         }))
       : buildOperatorOrBooleanChoices(field, editingFilter);
+
   const activeIndex = clampIndex(state.activeIndex, options.length);
 
   const selectChoice = (value: string) => {
@@ -234,7 +235,6 @@ export function SingleChoiceStage(
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
       const delta = event.key === 'ArrowDown' ? 1 : -1;
-
       onChangeActiveIndex(stepIndex(activeIndex, delta, options.length));
       return;
     }
@@ -309,11 +309,13 @@ export function MultipleChoiceStage(
       kind: 'multiSelection',
       selectedOptions: nextSelectedOptions,
     });
+
     onChangeActiveIndex(options.indexOf(option));
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (options.length === 0) return;
+
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
       const delta = event.key === 'ArrowDown' ? 1 : -1;
@@ -321,6 +323,7 @@ export function MultipleChoiceStage(
       onChangeActiveIndex(stepIndex(activeIndex, delta, options.length));
       return;
     }
+
     if (event.key === ' ') {
       event.preventDefault();
       const active = options[activeIndex];
@@ -328,6 +331,7 @@ export function MultipleChoiceStage(
       if (active !== undefined) toggleChoice(active);
       return;
     }
+
     if (event.key === 'Enter') {
       event.preventDefault();
       onCommitValue();

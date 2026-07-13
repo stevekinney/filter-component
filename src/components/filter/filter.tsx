@@ -147,6 +147,7 @@ const CompiledFilter = memo(function CompiledFilter(
   // space forces a mutation without visible or spoken output.
   const announce = (message: string) =>
     setLiveRegionMessage((previous) => (previous === message ? `${message}\u200B` : message));
+
   const {
     editorState,
     incompleteDraft,

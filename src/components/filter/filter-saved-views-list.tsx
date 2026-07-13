@@ -60,8 +60,6 @@ export const SavedViewsList = memo(function SavedViewsList({
   onRemoveView,
 }: SavedViewsListProps) {
   const removeView = (view: SavedView) => {
-    // Removing the last view closes the menu; its neighbor (or the trigger /
-    // add-filter input) is focused by the popover hook.
     if (views.length === 1) dispatchMenu({ type: 'close' });
     onRemoveView(view.name);
   };

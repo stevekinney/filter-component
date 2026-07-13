@@ -121,6 +121,7 @@ export function FilterRail({
       />,
     );
   }
+
   if (historyVisible) {
     clusters.push(
       <HistoryControls
@@ -132,6 +133,7 @@ export function FilterRail({
       />,
     );
   }
+
   if (hasFilters) {
     clusters.push(
       <RowActionButton
@@ -147,6 +149,7 @@ export function FilterRail({
   }
 
   if (clusters.length === 0) return null;
+
   return (
     <div className="filter-rail">
       {clusters.map((cluster, index) => (

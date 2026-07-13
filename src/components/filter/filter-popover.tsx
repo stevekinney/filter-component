@@ -66,7 +66,6 @@ function OpenFilterPopover(props: OpenFilterPopoverProps) {
     content = <FieldSelectionStage {...props} state={state} />;
   } else if (state.stage === 'operator') {
     const field = props.fields.find((candidate) => candidate.key === state.fieldKey);
-
     if (!field) return null;
     ariaLabel = fieldLabel(field);
     content = <SingleChoiceStage {...props} heading={ariaLabel} field={field} />;
@@ -74,9 +73,11 @@ function OpenFilterPopover(props: OpenFilterPopoverProps) {
     const field = props.fields.find((candidate) => candidate.key === state.fieldKey);
 
     if (!field) return null;
+
     const kind = getValueEditorKind(field.type, state.operator);
 
     ariaLabel = `${fieldLabel(field)} ${OPERATOR_LABELS[state.operator]}`;
+
     if (kind === 'enumSingle') {
       content = <SingleChoiceStage {...props} heading={ariaLabel} field={field} />;
     } else if (kind === 'enumMulti') {

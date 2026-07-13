@@ -37,12 +37,14 @@ export function createFilterEditorCommittedCommands({
     const field = fieldRegistry.byKey.get(fieldKey);
 
     if (!field || !operatorsForField(field).includes(operator)) return;
+
     const condition = createFilterCondition(field, operator, value);
     const validationEntry = createFilterEntry(condition, filterId ?? 'pending-filter');
 
     if (getFilterValidationIssue(validationEntry, fieldRegistry.fields)) return;
 
     resetEditor();
+
     if (filterId === null) {
       const filter = createFilterEntry(condition, createConditionId());
 
@@ -68,12 +70,15 @@ export function createFilterEditorCommittedCommands({
     const token = filters[index];
 
     if (!token) return;
+
     const remaining = filters.filter((candidate) => candidate.id !== id);
     const neighbor = remaining[Math.min(index, remaining.length - 1)];
 
     scheduleFocus(neighbor ? { type: 'token', id: neighbor.id } : { type: 'addInput' });
     resetEditor();
+
     if (!applyFilterHistoryAction({ type: 'remove', id })) return;
+
     const field = getFieldRegistry().byKey.get(token.fieldKey);
     const label = field ? fieldLabel(field) : token.fieldKey;
 
@@ -94,6 +99,7 @@ export function createFilterEditorCommittedCommands({
       removeFilter(id);
       return;
     }
+
     const { id: _id, ...publicCondition } = token;
     const condition = filterConditionSchema.parse({
       ...publicCondition,
@@ -106,7 +112,9 @@ export function createFilterEditorCommittedCommands({
     if (!field || getFilterValidationIssue(candidate, fieldRegistry.fields) !== null) {
       return;
     }
+
     scheduleFocus({ type: 'token', id });
+
     if (
       applyFilterHistoryAction({
         type: 'update',
@@ -121,6 +129,7 @@ export function createFilterEditorCommittedCommands({
   const clearAll = () => {
     resetEditor();
     scheduleFocus({ type: 'addInput' });
+
     if (applyFilterHistoryAction({ type: 'clear' })) {
       announce('All filters cleared');
     }
@@ -128,6 +137,7 @@ export function createFilterEditorCommittedCommands({
 
   const undo = () => {
     resetEditor();
+
     if (getCurrentHistory().past.length === 1) {
       scheduleFocus({ type: 'addInput' });
     }
@@ -138,6 +148,7 @@ export function createFilterEditorCommittedCommands({
 
   const redo = () => {
     resetEditor();
+
     if (getCurrentHistory().future.length === 1) {
       scheduleFocus({ type: 'addInput' });
     }

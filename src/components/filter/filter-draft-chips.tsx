@@ -4,8 +4,15 @@ import { OPERATOR_LABELS } from '@/utilities/filter/operators.ts';
 import type { FilterEditorState, IncompleteDraft } from './filter-editor-state.ts';
 import type { FilterFieldDefinition } from '@/types/filter.ts';
 
+function isActiveDraft(editorState: FilterEditorState): boolean {
+  return (
+    editorState.stage !== 'idle' && editorState.stage !== 'field' && editorState.filterId === null
+  );
+}
+
 function formatDraftPreview(state: FilterEditorState): string {
   if (state.stage !== 'value') return '…';
+
   const { draft } = state;
 
   switch (draft.kind) {
@@ -28,10 +35,8 @@ export function FilterDraftPreview({
   editorState: FilterEditorState;
   field: FilterFieldDefinition | undefined;
 }) {
-  const isActiveDraft =
-    editorState.stage !== 'idle' && editorState.stage !== 'field' && editorState.filterId === null;
+  if (!isActiveDraft(editorState) || !field) return null;
 
-  if (!isActiveDraft || !field) return null;
   return (
     <div aria-hidden="true" className="filter-chip filter-draft-preview" data-draft-preview="1">
       <span className="filter-draft-preview-field">{fieldLabel(field)}</span>
@@ -62,6 +67,7 @@ export function IncompleteDraftChip({
   onDiscard: () => void;
 }) {
   if (!incompleteDraft || !visible) return null;
+
   const label = field ? fieldLabel(field) : incompleteDraft.fieldKey;
 
   return (

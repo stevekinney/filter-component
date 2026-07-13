@@ -202,9 +202,11 @@ export function reconcileFilterEditor(
   registry: FilterFieldRegistry,
 ): FilterEditorState {
   if (editor.stage !== 'operator' && editor.stage !== 'value') return editor;
+
   const field = registry.byKey.get(editor.fieldKey);
 
   if (!field) return IDLE_FILTER_EDITOR_STATE;
+
   if (field.type !== editor.fieldType) {
     return {
       stage: 'field',
@@ -213,7 +215,9 @@ export function reconcileFilterEditor(
       activeIndex: fieldActiveIndex(registry, editor.fieldKey),
     };
   }
+
   if (editor.stage === 'operator') return editor;
+
   if (!operatorsForField(field).includes(editor.operator)) {
     return {
       stage: 'operator',
@@ -223,6 +227,7 @@ export function reconcileFilterEditor(
       activeIndex: 0,
     };
   }
+
   const kind = getValueEditorKind(field.type, editor.operator);
   let draft = draftMatchesKind(editor.draft, kind) ? editor.draft : createEmptyValueDraft(kind);
 
@@ -240,9 +245,11 @@ export function reconcileIncompleteDraft(
   const field = registry.byKey.get(incomplete.fieldKey);
 
   if (!field) return null;
+
   if (field.type !== incomplete.fieldType || incomplete.stage === 'operator') {
     return incomplete;
   }
+
   if (!operatorsForField(field).includes(incomplete.operator)) {
     return {
       stage: 'operator',
@@ -250,6 +257,7 @@ export function reconcileIncompleteDraft(
       fieldType: field.type,
     };
   }
+
   const draft = reconcileValueDraftForField(incomplete.draft, field);
 
   return draft === incomplete.draft ? incomplete : { ...incomplete, draft };

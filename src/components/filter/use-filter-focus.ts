@@ -34,7 +34,6 @@ function resolveFocusTarget(root: ParentNode, target: FocusTarget): HTMLElement 
       return elementWithDataValue(root, 'data-token', target.id);
     case 'segment': {
       const token = elementWithDataValue(root, 'data-token', target.id);
-
       return token ? elementWithDataValue(token, 'data-token-segment', target.segment) : null;
     }
     case 'joiner':

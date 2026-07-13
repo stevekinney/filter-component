@@ -54,6 +54,7 @@ export function useSavedViews({
       ? { pending: stored, savedViews: [] }
       : { pending: null, savedViews: parseSavedViews(stored) };
   });
+
   const [savedViews, setSavedViews] = useState<SavedView[]>(initialRead.savedViews);
   const [isStorageReady, setIsStorageReady] = useState(initialRead.pending === null);
   const [persistenceNotice, setPersistenceNotice] = useState<string | null>(null);
@@ -169,10 +170,12 @@ export function useSavedViews({
       announce(`View already applied: ${view.name}`);
       return;
     }
+
     applyFilterHistoryAction({
       type: 'replace',
       expression: fromFilterGroup(view.group, createConditionId),
     });
+
     announce(`View loaded: ${view.name}`);
   };
 
