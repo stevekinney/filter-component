@@ -27,7 +27,7 @@ export default defineConfig((configurationEnvironment) => {
             'src/example/**',
             'src/**/*.test.{ts,tsx}',
             'src/test-setup.ts',
-            'src/components/filter/filter-test-setup.tsx',
+            'src/components/filter/__test__/filter-test-setup.tsx',
           ],
           reporter: ['text', 'json-summary', 'html'],
         },

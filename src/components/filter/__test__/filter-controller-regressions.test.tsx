@@ -2,7 +2,7 @@ import { StrictMode } from 'react';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { Filter } from './filter.tsx';
+import { Filter } from '../filter.tsx';
 import { FIELDS, addStringFilter, setup } from './filter-test-setup.tsx';
 import type { FilterFieldDefinition } from '@/types/filter.ts';
 

@@ -1,8 +1,8 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { MultipleChoiceStage } from './filter-popover-stages.tsx';
-import type { FilterEditorState } from './filter-editor-state.ts';
-import type { FilterPopoverProps } from './filter-popover.tsx';
+import { MultipleChoiceStage } from '../filter-popover-stages.tsx';
+import type { FilterEditorState } from '../filter-editor-state.ts';
+import type { FilterPopoverProps } from '../filter-popover.tsx';
 import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
 import type { FilterFieldDefinition, FilterOperator } from '@/types/filter.ts';
 import type { ValueDraft } from '@/utilities/filter/value-drafts.ts';

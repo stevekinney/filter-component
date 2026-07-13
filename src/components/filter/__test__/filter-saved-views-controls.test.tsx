@@ -17,7 +17,7 @@ vi.mock('@/utilities/filter/saved-views.ts', async (importOriginal) => {
   };
 });
 
-import { SavedViewsControls } from './filter-saved-views.tsx';
+import { SavedViewsControls } from '../filter-saved-views.tsx';
 import { savedViewKey } from '@/utilities/filter/saved-views.ts';
 import type { SavedView } from '@/utilities/filter/saved-views.ts';
 import type { FilterFieldDefinition } from '@/types/filter.ts';

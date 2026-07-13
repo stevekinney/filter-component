@@ -23,7 +23,7 @@
       // containers through aria-activedescendant, while token groups handle
       // keyboard input on divs. These rules assume individually focusable native
       // controls, so disable them only for the filter component.
-      "files": ["src/components/filter/*.tsx"],
+      "files": ["src/components/filter/**/*.tsx"],
       "rules": {
         "jsx-a11y/prefer-tag-over-role": "off",
         "jsx-a11y/no-noninteractive-element-interactions": "off",

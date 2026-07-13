@@ -1,7 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
-import { Filter } from './filter.tsx';
+import { Filter } from '../filter.tsx';
 import type { FilterFieldDefinition } from '@/types/filter.ts';
 
 export const FIELDS: FilterFieldDefinition[] = [

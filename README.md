@@ -20,7 +20,7 @@ import {
   type FilterFieldDefinition,
   type FilterGroup,
 } from '@/components/filter/index.ts';
-import '@/components/filter/filter-component.css';
+import '@/components/filter/styles/filter-component.css';
 
 const fields = [
   { key: 'name', label: 'Name', type: 'string' },

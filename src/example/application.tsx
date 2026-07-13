@@ -4,7 +4,7 @@ import type { FilterFieldDefinition, FilterGroup } from '@/components/filter/ind
 import { applyFilters } from '@/example/apply-filters.ts';
 import { DEALS, DEAL_FILTER_FIELDS, INITIAL_FILTERS } from '@/example/records.ts';
 import type { Deal } from '@/example/records.ts';
-import '@/components/filter/filter-component.css';
+import '@/components/filter/styles/filter-component.css';
 import '@/example/example.css';
 
 type LogEntry = {

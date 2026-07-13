@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { filterEditorControllerReducer, incompleteFromEditor } from './filter-editor-reducer.ts';
-import type { FilterEditorControllerState } from './filter-editor-reducer.ts';
+import { filterEditorControllerReducer, incompleteFromEditor } from '../filter-editor-reducer.ts';
+import type { FilterEditorControllerState } from '../filter-editor-reducer.ts';
 import {
   IDLE_FILTER_EDITOR_STATE,
   activeEditorSegment,
   findEditingFilter,
-} from './filter-editor-state.ts';
-import type { FilterEditorState } from './filter-editor-state.ts';
+} from '../filter-editor-state.ts';
+import type { FilterEditorState } from '../filter-editor-state.ts';
 import { createFilterEntry } from '@/utilities/filter/filter-entry.ts';
 
 const scalarDraft = { kind: 'scalar', input: 'Maria' } as const;

@@ -37,7 +37,7 @@ test.describe('layout resilience', () => {
       const shadowRoot = host.attachShadow({ mode: 'open' });
       const stylesheet = document.createElement('link');
       stylesheet.rel = 'stylesheet';
-      stylesheet.href = '/src/components/filter/filter-component.css';
+      stylesheet.href = '/src/components/filter/styles/filter-component.css';
       await new Promise<void>((resolve, reject) => {
         stylesheet.addEventListener('load', () => resolve(), { once: true });
         stylesheet.addEventListener(

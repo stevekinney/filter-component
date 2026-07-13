@@ -2,7 +2,7 @@ import { createRef } from 'react';
 import type { ComponentProps } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { AddFilterCombobox } from './add-filter-combobox.tsx';
+import { AddFilterCombobox } from '../add-filter-combobox.tsx';
 import type { FilterFieldDefinition } from '@/types/filter.ts';
 
 const STRING_FIELD = {

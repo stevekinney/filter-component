@@ -3,9 +3,9 @@ import {
   booleanActiveIndex,
   reconcileFilterEditor,
   reconcileIncompleteDraft,
-} from './filter-editor-reconciliation.ts';
+} from '../filter-editor-reconciliation.ts';
 import { createFilterFieldRegistry } from '@/utilities/filter/field-registry.ts';
-import type { FilterEditorState, IncompleteDraft } from './filter-editor-state.ts';
+import type { FilterEditorState, IncompleteDraft } from '../filter-editor-state.ts';
 import type { FilterFieldDefinition } from '@/types/filter.ts';
 
 const FIELDS: readonly FilterFieldDefinition[] = [

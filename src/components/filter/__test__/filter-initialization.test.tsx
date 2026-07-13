@@ -1,7 +1,7 @@
 import { act, renderHook, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { Filter } from './filter.tsx';
-import { useFilterHistory } from './use-filter-history.ts';
+import { Filter } from '../filter.tsx';
+import { useFilterHistory } from '../use-filter-history.ts';
 import { FIELDS, addStringFilter, setup } from './filter-test-setup.tsx';
 import { createFilterEntry } from '@/utilities/filter/filter-entry.ts';
 import { createFilterFieldRegistry } from '@/utilities/filter/field-registry.ts';

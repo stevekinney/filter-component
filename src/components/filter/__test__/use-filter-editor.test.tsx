@@ -1,8 +1,8 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import * as filterEditorReducerModule from './filter-editor-reducer.ts';
-import { useFilterEditor } from './use-filter-editor.ts';
-import type { FocusTarget } from './use-filter-focus.ts';
+import * as filterEditorReducerModule from '../filter-editor-reducer.ts';
+import { useFilterEditor } from '../use-filter-editor.ts';
+import type { FocusTarget } from '../use-filter-focus.ts';
 import { createFilterEntry } from '@/utilities/filter/filter-entry.ts';
 import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
 import { createFilterFieldRegistry } from '@/utilities/filter/field-registry.ts';

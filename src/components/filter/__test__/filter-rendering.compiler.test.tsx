@@ -38,8 +38,8 @@ vi.mock('@/utilities/filter/field-registry.ts', async (importOriginal) => {
   };
 });
 
-vi.mock('./filter-action-rail.tsx', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('./filter-action-rail.tsx')>();
+vi.mock('../filter-action-rail.tsx', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../filter-action-rail.tsx')>();
 
   function FilterRailRenderProbe(props: ComponentProps<typeof actual.FilterRail>) {
     renderProbes.filterRail();
@@ -49,8 +49,8 @@ vi.mock('./filter-action-rail.tsx', async (importOriginal) => {
   return { ...actual, FilterRail: FilterRailRenderProbe };
 });
 
-vi.mock('./filter-token.tsx', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('./filter-token.tsx')>();
+vi.mock('../filter-token.tsx', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../filter-token.tsx')>();
 
   function FilterTokenRenderProbe(props: ComponentProps<typeof actual.FilterToken>) {
     renderProbes.filterToken();
@@ -60,8 +60,8 @@ vi.mock('./filter-token.tsx', async (importOriginal) => {
   return { ...actual, FilterToken: FilterTokenRenderProbe };
 });
 
-vi.mock('./filter-token-list.tsx', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('./filter-token-list.tsx')>();
+vi.mock('../filter-token-list.tsx', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../filter-token-list.tsx')>();
 
   function FilterTokenListRenderProbe(props: ComponentProps<typeof actual.FilterTokenList>) {
     renderProbes.filterTokenList();
@@ -71,7 +71,7 @@ vi.mock('./filter-token-list.tsx', async (importOriginal) => {
   return { ...actual, FilterTokenList: FilterTokenListRenderProbe };
 });
 
-import { Filter } from './filter.tsx';
+import { Filter } from '../filter.tsx';
 import { FIELDS } from './filter-test-setup.tsx';
 
 describe('compiled Filter render boundaries', () => {

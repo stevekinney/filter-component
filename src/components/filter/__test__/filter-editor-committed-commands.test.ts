@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createFilterEditorCommittedCommands } from './filter-editor-committed-commands.ts';
+import { createFilterEditorCommittedCommands } from '../filter-editor-committed-commands.ts';
 import { createFilterFieldRegistry } from '@/utilities/filter/field-registry.ts';
 import { createFilterEntry } from '@/utilities/filter/filter-entry.ts';
 import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';

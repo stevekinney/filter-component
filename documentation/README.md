@@ -145,7 +145,7 @@ import {
   type FilterFieldDefinition,
   type FilterGroup,
 } from '@/components/filter/index.ts';
-import '@/components/filter/filter-component.css';
+import '@/components/filter/styles/filter-component.css';
 ```
 
 ### Runtime exports
@@ -933,7 +933,7 @@ This project uses the React Compiler in development and production, then tests t
 
 ## Design tokens and CSS
 
-[`filter-component.css`](../src/components/filter/filter-component.css) is the single component stylesheet entrypoint. It imports, in order:
+[`filter-component.css`](../src/components/filter/styles/filter-component.css) is the single component stylesheet entrypoint. It imports, in order:
 
 1. `filter-colors.css`
 2. `filter.css`
@@ -1071,7 +1071,7 @@ Import the stylesheet once in the document that renders the component:
 
 ```tsx
 import { Filter } from '@/components/filter/index.ts';
-import '@/components/filter/filter-component.css';
+import '@/components/filter/styles/filter-component.css';
 ```
 
 The component resets button/input/select typography and basic button chrome inside `.filter`, but inherits font family. The example application's [`global.css`](../src/styles/global.css) imports the palette and bundled [Roboto](https://fonts.google.com/specimen/Roboto); consumers do not need those files.
@@ -1085,7 +1085,7 @@ In this Vite project, `?url` provides the built stylesheet URL:
 ```tsx
 import { createRoot } from 'react-dom/client';
 import { Filter } from '@/components/filter/index.ts';
-import filterStylesheetUrl from '@/components/filter/filter-component.css?url';
+import filterStylesheetUrl from '@/components/filter/styles/filter-component.css?url';
 
 const host = document.createElement('div');
 document.documentElement.append(host);
@@ -1403,11 +1403,11 @@ This is the file-by-file tour. Start at the narrowest owner of the behavior you 
 
 ### Public contract
 
-| File                                                                                          | Responsibility                                                                           |
-| --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| [`src/components/filter/index.ts`](../src/components/filter/index.ts)                         | Sole public source barrel for component, storage adapters, and public types              |
-| [`src/types/filter.ts`](../src/types/filter.ts)                                               | Operator map, public discriminated condition union, field definitions, groups, and props |
-| [`src/components/filter/filter-component.css`](../src/components/filter/filter-component.css) | Single deterministic component stylesheet entrypoint                                     |
+| File                                                                                                        | Responsibility                                                                           |
+| ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| [`src/components/filter/index.ts`](../src/components/filter/index.ts)                                       | Sole public source barrel for component, storage adapters, and public types              |
+| [`src/types/filter.ts`](../src/types/filter.ts)                                                             | Operator map, public discriminated condition union, field definitions, groups, and props |
+| [`src/components/filter/styles/filter-component.css`](../src/components/filter/styles/filter-component.css) | Single deterministic component stylesheet entrypoint                                     |
 
 ### Composition and controllers
 
@@ -1469,17 +1469,17 @@ This is the file-by-file tour. Start at the narrowest owner of the behavior you 
 
 ### Styles
 
-| File                                                                        | Responsibility                                                                                       |
-| --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| [`filter-colors.css`](../src/components/filter/filter-colors.css)           | Public semantic color inputs and private resolved fallbacks                                          |
-| [`filter.css`](../src/components/filter/filter.css)                         | Base tokens, scoped resets, disabled form, row/composer/rail, storage notice, and hidden live region |
-| [`filter-row.css`](../src/components/filter/filter-row.css)                 | Joiners, brackets, active preview, and incomplete chip                                               |
-| [`filter-token.css`](../src/components/filter/filter-token.css)             | Token focus/invalid states, segments, pills, truncation, and remove actions                          |
-| [`filter-popover.css`](../src/components/filter/filter-popover.css)         | Native anchor geometry, lists, errors, inputs, and action controls                                   |
-| [`filter-saved-views.css`](../src/components/filter/filter-saved-views.css) | Saved-view menu, active rows, summaries, and remove action                                           |
-| [`src/styles/colors.css`](../src/styles/colors.css)                         | Optional demonstration-wide OKLCH palette aliases                                                    |
-| [`src/styles/fonts.css`](../src/styles/fonts.css)                           | Demonstration Roboto font faces                                                                      |
-| [`src/styles/global.css`](../src/styles/global.css)                         | Demonstration palette/font imports and global defaults                                               |
+| File                                                                               | Responsibility                                                                                       |
+| ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| [`filter-colors.css`](../src/components/filter/styles/filter-colors.css)           | Public semantic color inputs and private resolved fallbacks                                          |
+| [`filter.css`](../src/components/filter/styles/filter.css)                         | Base tokens, scoped resets, disabled form, row/composer/rail, storage notice, and hidden live region |
+| [`filter-row.css`](../src/components/filter/styles/filter-row.css)                 | Joiners, brackets, active preview, and incomplete chip                                               |
+| [`filter-token.css`](../src/components/filter/styles/filter-token.css)             | Token focus/invalid states, segments, pills, truncation, and remove actions                          |
+| [`filter-popover.css`](../src/components/filter/styles/filter-popover.css)         | Native anchor geometry, lists, errors, inputs, and action controls                                   |
+| [`filter-saved-views.css`](../src/components/filter/styles/filter-saved-views.css) | Saved-view menu, active rows, summaries, and remove action                                           |
+| [`src/styles/colors.css`](../src/styles/colors.css)                                | Optional demonstration-wide OKLCH palette aliases                                                    |
+| [`src/styles/fonts.css`](../src/styles/fonts.css)                                  | Demonstration Roboto font faces                                                                      |
+| [`src/styles/global.css`](../src/styles/global.css)                                | Demonstration palette/font imports and global defaults                                               |
 
 ### Example and entrypoint
 
