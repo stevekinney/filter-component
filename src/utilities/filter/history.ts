@@ -45,6 +45,7 @@ function filterExpressionReducer(
       if (filtersEqual(expression.conditions[index], action.filter)) {
         return expression;
       }
+
       const conditions = expression.conditions.slice();
 
       conditions[index] = action.filter;
@@ -63,8 +64,8 @@ function filterExpressionReducer(
       const joiner = expression.joiners[action.index];
 
       if (joiner === undefined) return expression;
-      const joiners = expression.joiners.slice();
 
+      const joiners = expression.joiners.slice();
       joiners[action.index] = joiner === 'and' ? 'or' : 'and';
 
       return { conditions: expression.conditions, joiners };

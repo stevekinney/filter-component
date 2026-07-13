@@ -31,7 +31,6 @@ export function searchFields(
   query: string,
 ): readonly FilterFieldDefinition[] {
   const normalized = query.trim().toLowerCase();
-
   if (normalized === '') return fields;
   return rankFields(fields, normalized);
 }

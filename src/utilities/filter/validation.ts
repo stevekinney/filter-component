@@ -307,5 +307,6 @@ function intrinsicValueReason(filter: FilterEntry): string {
   if (filter.type === 'number') return 'Enter a finite number';
   if (filter.type === 'date') return 'Choose a valid date';
   if (filter.type === 'boolean') return 'Choose true or false';
+
   return 'Enter a value';
 }

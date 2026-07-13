@@ -81,6 +81,7 @@ export function createFilterFieldRegistry(
   if (!result.success) {
     throw new TypeError(`Invalid fields:\n${z.prettifyError(result.error)}`);
   }
+
   const fields = structuredClone(value);
   const byKey = new Map<string, FilterFieldDefinition>();
 

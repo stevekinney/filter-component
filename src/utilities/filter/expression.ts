@@ -67,6 +67,7 @@ export function toFilterGroup(expression: FilterExpression): FilterGroup {
       conditions: publicConditions,
     };
   }
+
   let offset = 0;
 
   return {
