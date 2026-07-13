@@ -41,9 +41,9 @@ describe('operator helpers', () => {
         operators: ['isEmpty'],
       }),
     ).toEqual([{ value: 'isEmpty', label: 'is empty' }]);
-    expect(
-      booleanChoicesForField({ ...defaultField, operators: ['equals'] }),
-    ).toEqual(allChoices.slice(0, 2));
+    expect(booleanChoicesForField({ ...defaultField, operators: ['equals'] })).toEqual(
+      allChoices.slice(0, 2),
+    );
   });
 
   it('recognizes valueless operators', () => {

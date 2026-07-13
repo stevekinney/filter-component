@@ -25,14 +25,11 @@ export const joinerButton = (page: Page, joiner: 'and' | 'or'): Locator =>
     } — grouping adjusts automatically.`,
   });
 
-export const resultCount = (page: Page): Locator =>
-  page.locator('.example-count');
+export const resultCount = (page: Page): Locator => page.locator('.example-count');
 
-export const liveRegion = (page: Page): Locator =>
-  page.locator('.filter [aria-live="polite"]');
+export const liveRegion = (page: Page): Locator => page.locator('.filter [aria-live="polite"]');
 
-export const onChangePayloadPane = (page: Page): Locator =>
-  page.locator('.example-panes pre');
+export const onChangePayloadPane = (page: Page): Locator => page.locator('.example-panes pre');
 
 /**
  * Load the demo and wait for the seeded "Active is true" filter to apply

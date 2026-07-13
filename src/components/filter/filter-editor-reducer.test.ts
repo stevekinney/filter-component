@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  filterEditorControllerReducer,
-  incompleteFromEditor,
-} from './filter-editor-reducer.ts';
+import { filterEditorControllerReducer, incompleteFromEditor } from './filter-editor-reducer.ts';
 import type { FilterEditorControllerState } from './filter-editor-reducer.ts';
 import {
   IDLE_FILTER_EDITOR_STATE,
@@ -348,9 +345,7 @@ describe('filterEditorControllerReducer', () => {
         preserveCurrent: true,
       }),
     ).toBe(idleWithDraft);
-    expect(
-      filterEditorControllerReducer(idle, { type: 'discardIncomplete' }),
-    ).toBe(idle);
+    expect(filterEditorControllerReducer(idle, { type: 'discardIncomplete' })).toBe(idle);
     expect(
       filterEditorControllerReducer(idleWithDraft, {
         type: 'replaceIncomplete',
@@ -450,8 +445,7 @@ describe('filterEditorControllerReducer', () => {
     });
     expect(replaced.incompleteDraft).toBe(draft);
     expect(
-      filterEditorControllerReducer(replaced, { type: 'discardIncomplete' })
-        .incompleteDraft,
+      filterEditorControllerReducer(replaced, { type: 'discardIncomplete' }).incompleteDraft,
     ).toBeNull();
   });
 });

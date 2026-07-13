@@ -1,7 +1,4 @@
-import type {
-  FilterFieldDefinition,
-  FilterGroup,
-} from '@/components/filter/index.ts';
+import type { FilterFieldDefinition, FilterGroup } from '@/components/filter/index.ts';
 
 /** Widened record contract checked against the literal fixture below. */
 type DealRecordShape = {
@@ -144,9 +141,8 @@ const STAGES = [
 ] as const satisfies readonly PipelineStage[];
 
 // `satisfies` rejects extras; this defaulted constraint rejects omissions.
-type CompleteStageOrder<
-  Missing extends never = Exclude<PipelineStage, (typeof STAGES)[number]>,
-> = Missing;
+type CompleteStageOrder<Missing extends never = Exclude<PipelineStage, (typeof STAGES)[number]>> =
+  Missing;
 declare const _completeStageOrder: CompleteStageOrder;
 
 export const DEAL_FILTER_FIELDS = [

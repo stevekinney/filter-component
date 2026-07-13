@@ -5,10 +5,7 @@ import { createFilterEntry } from '@/utilities/filter/filter-entry.ts';
 import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
 import { EMPTY_FILTER_EXPRESSION } from '@/utilities/filter/expression.ts';
 import type { FilterExpression } from '@/utilities/filter/expression.ts';
-import type {
-  FilterHistory,
-  FilterHistoryAction,
-} from '@/utilities/filter/history.ts';
+import type { FilterHistory, FilterHistoryAction } from '@/utilities/filter/history.ts';
 
 const name = createFilterEntry(
   {
@@ -48,13 +45,9 @@ describe('createFilterEditorCommittedCommands', () => {
   ]);
   let currentFieldRegistry = fieldRegistry;
   let history: FilterHistory;
-  let applyFilterHistoryAction: ReturnType<
-    typeof vi.fn<(action: FilterHistoryAction) => boolean>
-  >;
+  let applyFilterHistoryAction: ReturnType<typeof vi.fn<(action: FilterHistoryAction) => boolean>>;
   let resetEditor: ReturnType<typeof vi.fn<() => void>>;
-  let scheduleFocus: ReturnType<
-    typeof vi.fn<(target: { type: string; id?: string }) => void>
-  >;
+  let scheduleFocus: ReturnType<typeof vi.fn<(target: { type: string; id?: string }) => void>>;
   let announce: ReturnType<typeof vi.fn<(message: string) => void>>;
 
   beforeEach(() => {
@@ -96,9 +89,7 @@ describe('createFilterEditorCommittedCommands', () => {
       type: 'remove',
       id: 'name',
     });
-    expect(announce).toHaveBeenCalledWith(
-      'Filter removed: Name; grouping updated',
-    );
+    expect(announce).toHaveBeenCalledWith('Filter removed: Name; grouping updated');
   });
 
   it('falls back to the add input and condition key, and skips a no-op announcement', () => {
@@ -237,15 +228,11 @@ describe('createFilterEditorCommittedCommands', () => {
       future: [],
     };
     api.flipJoiner(0);
-    expect(announce).toHaveBeenCalledWith(
-      'Filters combined with or; grouping updated',
-    );
+    expect(announce).toHaveBeenCalledWith('Filters combined with or; grouping updated');
 
     history = { ...history, present: expression([name, secondName], ['or']) };
     api.flipJoiner(0);
-    expect(announce).toHaveBeenCalledWith(
-      'Filters combined with and; grouping updated',
-    );
+    expect(announce).toHaveBeenCalledWith('Filters combined with and; grouping updated');
 
     applyFilterHistoryAction.mockReturnValue(false);
     announce.mockClear();

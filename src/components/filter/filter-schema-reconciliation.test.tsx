@@ -1,12 +1,7 @@
 import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { Filter } from './filter.tsx';
-import {
-  FIELDS,
-  addStringFilter,
-  queryTokens,
-  setup,
-} from './filter-test-setup.tsx';
+import { FIELDS, addStringFilter, queryTokens, setup } from './filter-test-setup.tsx';
 import type { FilterFieldDefinition } from '@/types/filter.ts';
 
 describe('field-definition changes and invalid tokens', () => {
@@ -133,9 +128,7 @@ describe('field-definition changes and invalid tokens', () => {
     const withoutStage = FIELDS.filter((field) => field.key !== 'stage');
     view.rerender(<Filter fields={withoutStage} onChange={onChange} />);
     onChange.mockClear();
-    await user.click(
-      screen.getByRole('button', { name: 'Remove stage is Lead filter' }),
-    );
+    await user.click(screen.getByRole('button', { name: 'Remove stage is Lead filter' }));
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(onChange).toHaveBeenLastCalledWith(
       { combinator: 'and', conditions: [] },

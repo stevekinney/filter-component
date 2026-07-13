@@ -5,11 +5,7 @@ import { fieldLabel } from '@/utilities/filter/formatting.ts';
 import { savedViewKey } from '@/utilities/filter/saved-views.ts';
 import type { SavedView } from '@/utilities/filter/saved-views.ts';
 import { stepIndex } from '@/utilities/list-navigation.ts';
-import type {
-  FilterCondition,
-  FilterFieldDefinition,
-  FilterGroup,
-} from '@/types/filter.ts';
+import type { FilterCondition, FilterFieldDefinition, FilterGroup } from '@/types/filter.ts';
 
 function leafConditions(group: FilterGroup): FilterCondition[] {
   return group.conditions.flatMap((member) =>
@@ -21,24 +17,23 @@ function leafConditions(group: FilterGroup): FilterCondition[] {
  * Summarizes leaf count, meaningful root combinator, and distinct field labels;
  * missing definitions fall back to field keys.
  */
-function savedViewSummary(
-  view: SavedView,
-  fields: readonly FilterFieldDefinition[],
-): string {
+function savedViewSummary(view: SavedView, fields: readonly FilterFieldDefinition[]): string {
   const { combinator } = view.group;
   const leaves = leafConditions(view.group);
   const labels: string[] = [];
+
   for (const condition of leaves) {
-    const field = fields.find(
-      (candidate) => candidate.key === condition.fieldKey,
-    );
+    const field = fields.find((candidate) => candidate.key === condition.fieldKey);
     const label = field ? fieldLabel(field) : condition.fieldKey;
+
     if (!labels.includes(label)) labels.push(label);
   }
   const count = leaves.length;
   const parts = [`${count} filter${count === 1 ? '' : 's'}`];
+
   if (count > 1) parts.push(combinator === 'or' ? 'Any' : 'All');
   if (labels.length > 0) parts.push(labels.join(', '));
+
   return parts.join(' · ');
 }
 
@@ -75,7 +70,9 @@ export const SavedViewsList = memo(function SavedViewsList({
     const rows = Array.from(event.currentTarget.children).filter(
       (child): child is HTMLLIElement => child instanceof HTMLLIElement,
     );
+
     if (rows.length === 0) return;
+
     // Keyboard events dispatched through this list originate on the list or
     // one of its focusable HTMLElement descendants.
     const target = event.target as HTMLElement;
@@ -83,17 +80,13 @@ export const SavedViewsList = memo(function SavedViewsList({
     const index = Math.max(0, row === null ? 0 : rows.indexOf(row));
 
     const focusViewAt = (rowIndex: number) =>
-      rows[rowIndex]
-        ?.querySelector<HTMLElement>('[data-saved-view-item]')
-        ?.focus();
+      rows[rowIndex]?.querySelector<HTMLElement>('[data-saved-view-item]')?.focus();
 
     switch (event.key) {
       case 'ArrowDown':
       case 'ArrowUp': {
         event.preventDefault();
-        focusViewAt(
-          stepIndex(index, event.key === 'ArrowDown' ? 1 : -1, rows.length),
-        );
+        focusViewAt(stepIndex(index, event.key === 'ArrowDown' ? 1 : -1, rows.length));
         return;
       }
       case 'Home':
@@ -104,9 +97,7 @@ export const SavedViewsList = memo(function SavedViewsList({
       }
       case 'ArrowRight': {
         event.preventDefault();
-        rows[index]
-          ?.querySelector<HTMLElement>('[data-saved-view-remove]')
-          ?.focus();
+        rows[index]?.querySelector<HTMLElement>('[data-saved-view-remove]')?.focus();
         return;
       }
       case 'ArrowLeft': {
@@ -118,6 +109,7 @@ export const SavedViewsList = memo(function SavedViewsList({
       case 'Backspace': {
         event.preventDefault();
         const view = views[index];
+
         if (view !== undefined) removeView(view);
         return;
       }
@@ -125,20 +117,14 @@ export const SavedViewsList = memo(function SavedViewsList({
   };
 
   return (
-    <ul
-      className="filter-popover-list filter-saved-views-list"
-      onKeyDown={handleMenuKeyDown}
-    >
+    <ul className="filter-popover-list filter-saved-views-list" onKeyDown={handleMenuKeyDown}>
       {views.map((view, index) => {
         const isActive = savedViewKey(view.group) === currentGroupKey;
+
         return (
           <li
             key={view.name}
-            className={
-              isActive
-                ? 'filter-saved-views-item is-active'
-                : 'filter-saved-views-item'
-            }
+            className={isActive ? 'filter-saved-views-item is-active' : 'filter-saved-views-item'}
           >
             <button
               type="button"

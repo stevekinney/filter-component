@@ -19,47 +19,33 @@ test.describe('undo and redo', () => {
 
   test('initialized filters create no history entry', async ({ page }) => {
     await expect(filterToken(page, 'Active is true')).toBeVisible();
-    await expect(
-      page.getByRole('button', { name: 'Undo filter change' }),
-    ).toBeHidden();
-    await expect(
-      page.getByRole('button', { name: 'Redo filter change' }),
-    ).toBeHidden();
+    await expect(page.getByRole('button', { name: 'Undo filter change' })).toBeHidden();
+    await expect(page.getByRole('button', { name: 'Redo filter change' })).toBeHidden();
   });
 
-  test('undo reverts the last commit and redo restores it', async ({
-    page,
-  }) => {
+  test('undo reverts the last commit and redo restores it', async ({ page }) => {
     await addSingleValueFilter(page, 'Name', 'contains', 'corp');
     await expect(resultCount(page)).toHaveText('1 of 12 deals');
 
     await page.getByRole('button', { name: 'Undo filter change' }).click();
     await expect(filterToken(page, 'Name contains corp')).toBeHidden();
     await expect(resultCount(page)).toHaveText('8 of 12 deals');
-    await expect(
-      page.getByRole('button', { name: 'Undo filter change' }),
-    ).toBeHidden();
+    await expect(page.getByRole('button', { name: 'Undo filter change' })).toBeHidden();
 
     await page.getByRole('button', { name: 'Redo filter change' }).click();
     await expect(filterToken(page, 'Name contains corp')).toBeVisible();
     await expect(resultCount(page)).toHaveText('1 of 12 deals');
-    await expect(
-      page.getByRole('button', { name: 'Redo filter change' }),
-    ).toBeHidden();
+    await expect(page.getByRole('button', { name: 'Redo filter change' })).toBeHidden();
   });
 
   test('a new commit clears the redo future', async ({ page }) => {
     await addSingleValueFilter(page, 'Name', 'contains', 'corp');
     await page.getByRole('button', { name: 'Undo filter change' }).click();
     await addSingleValueFilter(page, 'Name', 'contains', 'labs');
-    await expect(
-      page.getByRole('button', { name: 'Redo filter change' }),
-    ).toBeHidden();
+    await expect(page.getByRole('button', { name: 'Redo filter change' })).toBeHidden();
   });
 
-  test('clear all removes every filterToken and is undoable', async ({
-    page,
-  }) => {
+  test('clear all removes every filterToken and is undoable', async ({ page }) => {
     await addSingleValueFilter(page, 'Name', 'contains', 'a');
     await page.getByRole('button', { name: 'Clear all filters' }).click();
     await expect(filterTokenList(page).getByRole('listitem')).toHaveCount(0);
@@ -72,12 +58,8 @@ test.describe('undo and redo', () => {
 
   test('repeated undo walks back through every change', async ({ page }) => {
     await addSingleValueFilter(page, 'Name', 'contains', 'corp');
-    await page
-      .getByRole('button', { name: 'Remove Name contains corp filter' })
-      .click();
-    await page
-      .getByRole('button', { name: 'Remove Active is true filter' })
-      .click();
+    await page.getByRole('button', { name: 'Remove Name contains corp filter' }).click();
+    await page.getByRole('button', { name: 'Remove Active is true filter' }).click();
     await expect(filterTokenList(page).getByRole('listitem')).toHaveCount(0);
 
     const undo = page.getByRole('button', { name: 'Undo filter change' });
@@ -114,21 +96,15 @@ test.describe('incomplete drafts', () => {
     page,
   }) => {
     await addSingleValueFilter(page, 'Name', 'contains', 'corp');
-    await filterToken(page, 'Name contains corp')
-      .getByTitle('Change value')
-      .click();
+    await filterToken(page, 'Name contains corp').getByTitle('Change value').click();
     await popover(page).getByLabel('Value').fill('labs');
     await page.getByRole('heading', { name: 'Filter' }).click();
     await expect(popover(page)).toBeHidden();
     await expect(filterToken(page, 'Name contains corp')).toBeVisible();
-    await expect(
-      page.getByRole('group', { name: /Incomplete filter/ }),
-    ).toHaveCount(0);
+    await expect(page.getByRole('group', { name: /Incomplete filter/ })).toHaveCount(0);
   });
 
-  test('resuming an incomplete draft reopens the stage it was left at', async ({
-    page,
-  }) => {
+  test('resuming an incomplete draft reopens the stage it was left at', async ({ page }) => {
     await pickField(page, 'Name');
     await pickOption(page, 'contains');
     await popover(page).getByLabel('Value').fill('acm');
@@ -151,24 +127,16 @@ test.describe('incomplete drafts', () => {
   }) => {
     await pickField(page, 'Name');
     await page.getByRole('heading', { name: 'Filter' }).click();
-    await page
-      .getByRole('button', { name: 'Discard incomplete filter' })
-      .click();
-    await expect(
-      page.getByRole('group', { name: 'Incomplete filter: Name' }),
-    ).toBeHidden();
+    await page.getByRole('button', { name: 'Discard incomplete filter' }).click();
+    await expect(page.getByRole('group', { name: 'Incomplete filter: Name' })).toBeHidden();
     await expect(addFilterInput(page)).toBeFocused();
   });
 
-  test('cancelling with Escape discards the draft without preserving it', async ({
-    page,
-  }) => {
+  test('cancelling with Escape discards the draft without preserving it', async ({ page }) => {
     await pickField(page, 'Name');
     await page.keyboard.press('Escape');
     await expect(popover(page)).toBeHidden();
-    await expect(
-      page.getByRole('group', { name: 'Incomplete filter: Name' }),
-    ).toBeHidden();
+    await expect(page.getByRole('group', { name: 'Incomplete filter: Name' })).toBeHidden();
   });
 
   test('starting a new composition replaces the incomplete draft when abandoned again', async ({
@@ -176,16 +144,10 @@ test.describe('incomplete drafts', () => {
   }) => {
     await pickField(page, 'Name');
     await page.getByRole('heading', { name: 'Filter' }).click();
-    await expect(
-      page.getByRole('group', { name: 'Incomplete filter: Name' }),
-    ).toBeVisible();
+    await expect(page.getByRole('group', { name: 'Incomplete filter: Name' })).toBeVisible();
     await pickField(page, 'Stage');
     await page.getByRole('heading', { name: 'Filter' }).click();
-    await expect(
-      page.getByRole('group', { name: 'Incomplete filter: Stage' }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole('group', { name: 'Incomplete filter: Name' }),
-    ).toBeHidden();
+    await expect(page.getByRole('group', { name: 'Incomplete filter: Stage' })).toBeVisible();
+    await expect(page.getByRole('group', { name: 'Incomplete filter: Name' })).toBeHidden();
   });
 });

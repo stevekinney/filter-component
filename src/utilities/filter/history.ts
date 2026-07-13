@@ -36,38 +36,37 @@ function filterExpressionReducer(
       return {
         conditions: [...expression.conditions, action.filter],
         joiners:
-          expression.conditions.length > 0
-            ? [...expression.joiners, 'and']
-            : expression.joiners,
+          expression.conditions.length > 0 ? [...expression.joiners, 'and'] : expression.joiners,
       };
     case 'update': {
-      const index = expression.conditions.findIndex(
-        (filter) => filter.id === action.id,
-      );
+      const index = expression.conditions.findIndex((filter) => filter.id === action.id);
+
       if (index === -1) return expression;
       if (filtersEqual(expression.conditions[index], action.filter)) {
         return expression;
       }
       const conditions = expression.conditions.slice();
+
       conditions[index] = action.filter;
+
       return { conditions, joiners: expression.joiners };
     }
     case 'remove': {
-      const index = expression.conditions.findIndex(
-        (filter) => filter.id === action.id,
-      );
+      const index = expression.conditions.findIndex((filter) => filter.id === action.id);
+
       if (index === -1) return expression;
       return removeConditionAt(expression, index);
     }
     case 'clear':
-      return expression.conditions.length === 0
-        ? expression
-        : EMPTY_FILTER_EXPRESSION;
+      return expression.conditions.length === 0 ? expression : EMPTY_FILTER_EXPRESSION;
     case 'flipJoiner': {
       const joiner = expression.joiners[action.index];
+
       if (joiner === undefined) return expression;
       const joiners = expression.joiners.slice();
+
       joiners[action.index] = joiner === 'and' ? 'or' : 'and';
+
       return { conditions: expression.conditions, joiners };
     }
   }
@@ -84,6 +83,7 @@ export function filterHistoryReducer(
   switch (action.type) {
     case 'undo': {
       const previous = history.past[history.past.length - 1];
+
       if (previous === undefined) return history;
       return {
         past: history.past.slice(0, -1),
@@ -93,6 +93,7 @@ export function filterHistoryReducer(
     }
     case 'redo': {
       const next = history.future[0];
+
       if (next === undefined) return history;
       return {
         past: [...history.past, history.present],
@@ -112,6 +113,7 @@ export function filterHistoryReducer(
       };
     default: {
       const present = filterExpressionReducer(history.present, action);
+
       if (present === history.present) return history;
       return {
         past: [...history.past, history.present],

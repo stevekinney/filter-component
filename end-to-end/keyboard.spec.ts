@@ -16,9 +16,7 @@ test.describe('keyboard interaction', () => {
     await openReadyDemo(page);
   });
 
-  test('a filter can be composed entirely with the keyboard', async ({
-    page,
-  }) => {
+  test('a filter can be composed entirely with the keyboard', async ({ page }) => {
     await clearAllFilters(page);
     await addFilterInput(page).click();
     await page.keyboard.type('deal');
@@ -30,50 +28,38 @@ test.describe('keyboard interaction', () => {
     await page.keyboard.press('Enter'); // "greater than"
     await page.keyboard.type('50000');
     await page.keyboard.press('Enter');
-    await expect(
-      filterToken(page, 'Deal value greater than 50000'),
-    ).toBeVisible();
+    await expect(filterToken(page, 'Deal value greater than 50000')).toBeVisible();
     await expect(resultCount(page)).toHaveText('5 of 12 deals');
     await expect(addFilterInput(page)).toBeFocused();
   });
 
-  test('ArrowDown opens the field menu and ArrowUp wraps to the last field', async ({
-    page,
-  }) => {
+  test('ArrowDown opens the field menu and ArrowUp wraps to the last field', async ({ page }) => {
     await addFilterInput(page).click();
-    await expect(addFilterInput(page)).toHaveAttribute(
-      'aria-expanded',
-      'false',
-    );
+    await expect(addFilterInput(page)).toHaveAttribute('aria-expanded', 'false');
     await page.keyboard.press('ArrowDown');
     await expect(addFilterInput(page)).toHaveAttribute('aria-expanded', 'true');
-    await expect(
-      popover(page).getByRole('option', { name: 'Name' }),
-    ).toHaveAttribute('aria-selected', 'true');
+    await expect(popover(page).getByRole('option', { name: 'Name' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
     await page.keyboard.press('ArrowUp');
-    await expect(
-      popover(page).getByRole('option', { name: 'Last emailed' }),
-    ).toHaveAttribute('aria-selected', 'true');
+    await expect(popover(page).getByRole('option', { name: 'Last emailed' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
   });
 
-  test('Escape first clears the query, then closes the menu', async ({
-    page,
-  }) => {
+  test('Escape first clears the query, then closes the menu', async ({ page }) => {
     await addFilterInput(page).click();
     await addFilterInput(page).fill('na');
     await page.keyboard.press('Escape');
     await expect(addFilterInput(page)).toHaveValue('');
     await expect(addFilterInput(page)).toHaveAttribute('aria-expanded', 'true');
     await page.keyboard.press('Escape');
-    await expect(addFilterInput(page)).toHaveAttribute(
-      'aria-expanded',
-      'false',
-    );
+    await expect(addFilterInput(page)).toHaveAttribute('aria-expanded', 'false');
   });
 
-  test('Tab accepts the highlighted field suggestion once a query is typed', async ({
-    page,
-  }) => {
+  test('Tab accepts the highlighted field suggestion once a query is typed', async ({ page }) => {
     await addFilterInput(page).click();
     await addFilterInput(page).fill('sta');
     await page.keyboard.press('Tab');
@@ -124,9 +110,7 @@ test.describe('keyboard interaction', () => {
     await expect(token).toBeHidden();
   });
 
-  test('Tab visits every token in order and then the add-filter input', async ({
-    page,
-  }) => {
+  test('Tab visits every token in order and then the add-filter input', async ({ page }) => {
     await addSingleValueFilter(page, 'Name', 'contains', 'corp');
     await addSingleValueFilter(page, 'Deal value', 'greater than', '10');
     await page.getByRole('heading', { name: 'Filter' }).click();
@@ -171,22 +155,16 @@ test.describe('keyboard interaction', () => {
     await expect(joinerButton(page, 'and')).toBeFocused();
     await page.keyboard.press('Enter');
     await expect(joinerButton(page, 'or')).toBeFocused();
-    await expect(liveRegion(page)).toHaveText(
-      /Filters combined with or; grouping updated/,
-    );
+    await expect(liveRegion(page)).toHaveText(/Filters combined with or; grouping updated/);
     await page.keyboard.press(' ');
     await expect(joinerButton(page, 'and')).toBeFocused();
-    await expect(liveRegion(page)).toHaveText(
-      /Filters combined with and; grouping updated/,
-    );
+    await expect(liveRegion(page)).toHaveText(/Filters combined with and; grouping updated/);
   });
 
   test('Escape in an edit popover returns focus to the segment that opened it', async ({
     page,
   }) => {
-    const operatorSegment = filterToken(page, 'Active is true').getByTitle(
-      'Change operator',
-    );
+    const operatorSegment = filterToken(page, 'Active is true').getByTitle('Change operator');
     await operatorSegment.click();
     await expect(popover(page)).toBeVisible();
     await page.keyboard.press('Escape');
@@ -194,9 +172,7 @@ test.describe('keyboard interaction', () => {
     await expect(operatorSegment).toBeFocused();
   });
 
-  test('keyboard focus is indicated on the active option in choice lists', async ({
-    page,
-  }) => {
+  test('keyboard focus is indicated on the active option in choice lists', async ({ page }) => {
     await clearAllFilters(page);
     await addFilterInput(page).click();
     await page.keyboard.type('name');
@@ -205,14 +181,13 @@ test.describe('keyboard interaction', () => {
     await expect(activeOption).toHaveCSS('outline-style', 'solid');
     // The ring follows the active option as arrows move it.
     await page.keyboard.press('ArrowDown');
-    await expect(
-      popover(page).getByRole('option', { name: 'is not', exact: true }),
-    ).toHaveCSS('outline-style', 'solid');
+    await expect(popover(page).getByRole('option', { name: 'is not', exact: true })).toHaveCSS(
+      'outline-style',
+      'solid',
+    );
   });
 
-  test('multi-select supports Space to toggle and Enter to apply', async ({
-    page,
-  }) => {
+  test('multi-select supports Space to toggle and Enter to apply', async ({ page }) => {
     await clearAllFilters(page);
     await addFilterInput(page).click();
     await page.keyboard.type('stage');
@@ -224,9 +199,7 @@ test.describe('keyboard interaction', () => {
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Space'); // toggle "Contacted"
     await page.keyboard.press('Enter');
-    await expect(
-      filterToken(page, 'Stage is any of Lead, Contacted'),
-    ).toBeVisible();
+    await expect(filterToken(page, 'Stage is any of Lead, Contacted')).toBeVisible();
     await expect(resultCount(page)).toHaveText('4 of 12 deals');
   });
 });

@@ -147,12 +147,8 @@ describe('disabled and initialFilters', () => {
       />,
     );
 
-    expect(
-      screen.getByRole('group', { name: 'Name contains corp' }),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole('group', { name: 'Active is true' }),
-    ).not.toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Name contains corp' })).toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: 'Active is true' })).not.toBeInTheDocument();
     expect(onChange).not.toHaveBeenCalled();
   });
 });

@@ -30,10 +30,7 @@ type MultiSelectionValueDraft = {
 
 /** Discriminated transient state that keeps incompatible editor value shapes separate. */
 export type ValueDraft =
-  | ScalarValueDraft
-  | RangeValueDraft
-  | DurationValueDraft
-  | MultiSelectionValueDraft;
+  ScalarValueDraft | RangeValueDraft | DurationValueDraft | MultiSelectionValueDraft;
 
 export function createEmptyValueDraft(kind: ValueEditorKind): ValueDraft {
   switch (kind) {
@@ -56,9 +53,7 @@ export function createEmptyValueDraft(kind: ValueEditorKind): ValueDraft {
 
 type CommittedValue = NonNullable<FilterCondition['value']>;
 
-function isRange(
-  value: CommittedValue,
-): value is RangeValue<string> | RangeValue<number> {
+function isRange(value: CommittedValue): value is RangeValue<string> | RangeValue<number> {
   return typeof value === 'object' && 'from' in value;
 }
 
@@ -71,6 +66,7 @@ export function createValueDraftFromCommittedValue(
   kind: ValueEditorKind,
 ): ValueDraft {
   const emptyDraft = createEmptyValueDraft(kind);
+
   if (emptyDraft.kind === 'multiSelection') {
     return {
       ...emptyDraft,
@@ -108,6 +104,7 @@ export function convertCommittedValueToDraft(
   nextEditorKind: ValueEditorKind,
 ): ValueDraft {
   const emptyDraft = createEmptyValueDraft(nextEditorKind);
+
   switch (nextEditorKind) {
     case 'enumMulti':
       return typeof value === 'string'
@@ -116,6 +113,7 @@ export function convertCommittedValueToDraft(
     case 'enumSingle': {
       if (!Array.isArray(value)) return emptyDraft;
       const firstValue = value[0];
+
       return {
         kind: 'scalar',
         input: firstValue === undefined ? '' : String(firstValue),
@@ -128,9 +126,7 @@ export function convertCommittedValueToDraft(
         : emptyDraft;
     case 'number':
     case 'date':
-      return isRange(value)
-        ? { kind: 'scalar', input: String(value.from) }
-        : emptyDraft;
+      return isRange(value) ? { kind: 'scalar', input: String(value.from) } : emptyDraft;
     case 'none':
     case 'text':
     case 'boolean':

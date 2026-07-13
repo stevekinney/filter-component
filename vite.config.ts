@@ -21,10 +21,7 @@ export default defineConfig(({ mode }) => {
     // V8 coverage must measure authored branches, not the React Compiler's
     // generated memo-cache sentinels and dependency comparisons. The compiler
     // remains part of development, production, and the focused compiler tests.
-    plugins: [
-      react(),
-      ...(mode === 'test' ? [] : [babel({ presets: [compilerPreset] })]),
-    ],
+    plugins: [react(), ...(mode === 'test' ? [] : [babel({ presets: [compilerPreset] })])],
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),

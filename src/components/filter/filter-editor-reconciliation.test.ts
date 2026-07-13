@@ -5,10 +5,7 @@ import {
   reconcileIncompleteDraft,
 } from './filter-editor-reconciliation.ts';
 import { createFilterFieldRegistry } from '@/utilities/filter/field-registry.ts';
-import type {
-  FilterEditorState,
-  IncompleteDraft,
-} from './filter-editor-state.ts';
+import type { FilterEditorState, IncompleteDraft } from './filter-editor-state.ts';
 import type { FilterFieldDefinition } from '@/types/filter.ts';
 
 const FIELDS: readonly FilterFieldDefinition[] = [
@@ -78,9 +75,9 @@ describe('reconcileFilterEditor', () => {
   });
 
   it('closes a removed field and returns changed types to field selection', () => {
-    expect(
-      reconcileFilterEditor(valueEditor({ fieldKey: 'missing' }), registry),
-    ).toEqual({ stage: 'idle' });
+    expect(reconcileFilterEditor(valueEditor({ fieldKey: 'missing' }), registry)).toEqual({
+      stage: 'idle',
+    });
 
     expect(
       reconcileFilterEditor(

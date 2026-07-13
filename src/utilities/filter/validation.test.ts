@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ValueDraft } from './value-drafts.ts';
 import { parseFilterGroup } from './filter-schema.ts';
-import {
-  createFilterCondition,
-  getFilterValidationIssue,
-  validateDraft,
-} from './validation.ts';
+import { createFilterCondition, getFilterValidationIssue, validateDraft } from './validation.ts';
 import type { FilterEntry } from './filter-entry.ts';
 import type { FilterFieldDefinition } from '@/types/filter.ts';
 
@@ -72,24 +68,21 @@ describe('validateDraft', () => {
   });
 
   it('trims committed text', () => {
-    expect(
-      validateDraft(nameField, 'contains', scalarDraft(' Maria ')),
-    ).toEqual({
+    expect(validateDraft(nameField, 'contains', scalarDraft(' Maria '))).toEqual({
       ok: true,
       value: 'Maria',
     });
   });
 
   it('rejects non-numeric numbers', () => {
-    expect(
-      validateDraft(valueField, 'greaterThan', scalarDraft('12abc')),
-    ).toEqual({
+    expect(validateDraft(valueField, 'greaterThan', scalarDraft('12abc'))).toEqual({
       ok: false,
       error: 'Enter a number',
     });
-    expect(
-      validateDraft(valueField, 'greaterThan', rangeDraft('1', '2')),
-    ).toEqual({ ok: false, error: 'Enter a number' });
+    expect(validateDraft(valueField, 'greaterThan', rangeDraft('1', '2'))).toEqual({
+      ok: false,
+      error: 'Enter a number',
+    });
   });
 
   it('accepts zero as a valid number', () => {
@@ -100,9 +93,7 @@ describe('validateDraft', () => {
   });
 
   it('parses numbers', () => {
-    expect(
-      validateDraft(valueField, 'lessThan', scalarDraft(' 41.5 ')),
-    ).toEqual({
+    expect(validateDraft(valueField, 'lessThan', scalarDraft(' 41.5 '))).toEqual({
       ok: true,
       value: 41.5,
     });
@@ -138,12 +129,10 @@ describe('validateDraft', () => {
       ok: false,
       error: 'Choose a value',
     });
-    expect(validateDraft(stageField, 'equals', selectionDraft('Lead'))).toEqual(
-      {
-        ok: false,
-        error: 'Choose a value',
-      },
-    );
+    expect(validateDraft(stageField, 'equals', selectionDraft('Lead'))).toEqual({
+      ok: false,
+      error: 'Choose a value',
+    });
     expect(validateDraft(stageField, 'equals', scalarDraft('Bogus'))).toEqual({
       ok: false,
       error: 'Choose a listed option',
@@ -170,9 +159,10 @@ describe('validateDraft', () => {
       ok: false,
       error: 'Choose at least one option',
     });
-    expect(
-      validateDraft(stageField, 'in', selectionDraft('Lead', 'Contacted')),
-    ).toEqual({ ok: true, value: ['Lead', 'Contacted'] });
+    expect(validateDraft(stageField, 'in', selectionDraft('Lead', 'Contacted'))).toEqual({
+      ok: true,
+      value: ['Lead', 'Contacted'],
+    });
     expect(
       validateDraft(
         { key: 'stage', type: 'enum' } as unknown as FilterFieldDefinition,
@@ -183,9 +173,7 @@ describe('validateDraft', () => {
   });
 
   it('rejects unknown options in multi enum values', () => {
-    expect(
-      validateDraft(stageField, 'in', selectionDraft('Lead', 'Bogus')),
-    ).toEqual({
+    expect(validateDraft(stageField, 'in', selectionDraft('Lead', 'Bogus'))).toEqual({
       ok: false,
       error: 'Choose listed options',
     });
@@ -196,50 +184,40 @@ describe('validateDraft', () => {
       ok: false,
       error: 'Choose a date',
     });
-    expect(
-      validateDraft(closeDateField, 'on', scalarDraft('2026-07-01')),
-    ).toEqual({
+    expect(validateDraft(closeDateField, 'on', scalarDraft('2026-07-01'))).toEqual({
       ok: true,
       value: '2026-07-01',
     });
-    expect(
-      validateDraft(closeDateField, 'on', scalarDraft('2026-02-31')),
-    ).toEqual({ ok: false, error: 'Choose a valid date' });
+    expect(validateDraft(closeDateField, 'on', scalarDraft('2026-02-31'))).toEqual({
+      ok: false,
+      error: 'Choose a valid date',
+    });
   });
 
   it('rejects inverted date ranges', () => {
     expect(
-      validateDraft(
-        closeDateField,
-        'between',
-        rangeDraft('2026-08-01', '2026-07-01'),
-      ),
+      validateDraft(closeDateField, 'between', rangeDraft('2026-08-01', '2026-07-01')),
     ).toEqual({ ok: false, error: 'Start must not be after end' });
     expect(
-      validateDraft(
-        closeDateField,
-        'between',
-        rangeDraft('2026-02-31', '2026-03-01'),
-      ),
+      validateDraft(closeDateField, 'between', rangeDraft('2026-02-31', '2026-03-01')),
     ).toEqual({ ok: false, error: 'Choose valid dates' });
   });
 
   it('requires two dates in a date-range draft', () => {
+    expect(validateDraft(closeDateField, 'between', scalarDraft('2026-07-01'))).toEqual({
+      ok: false,
+      error: 'Choose both dates',
+    });
+    expect(validateDraft(closeDateField, 'between', rangeDraft('', '2026-07-02'))).toEqual({
+      ok: false,
+      error: 'Choose both dates',
+    });
+    expect(validateDraft(closeDateField, 'between', rangeDraft('2026-07-01', ''))).toEqual({
+      ok: false,
+      error: 'Choose both dates',
+    });
     expect(
-      validateDraft(closeDateField, 'between', scalarDraft('2026-07-01')),
-    ).toEqual({ ok: false, error: 'Choose both dates' });
-    expect(
-      validateDraft(closeDateField, 'between', rangeDraft('', '2026-07-02')),
-    ).toEqual({ ok: false, error: 'Choose both dates' });
-    expect(
-      validateDraft(closeDateField, 'between', rangeDraft('2026-07-01', '')),
-    ).toEqual({ ok: false, error: 'Choose both dates' });
-    expect(
-      validateDraft(
-        closeDateField,
-        'between',
-        rangeDraft('2026-07-01', '2026-07-02'),
-      ),
+      validateDraft(closeDateField, 'between', rangeDraft('2026-07-01', '2026-07-02')),
     ).toEqual({
       ok: true,
       value: { from: '2026-07-01', to: '2026-07-02' },
@@ -284,15 +262,18 @@ describe('validateDraft', () => {
   });
 
   it('requires a positive whole number and known unit for durations', () => {
-    expect(
-      validateDraft(lastEmailedField, 'withinLast', scalarDraft('7')),
-    ).toEqual({ ok: false, error: 'Enter a positive whole number' });
-    expect(
-      validateDraft(lastEmailedField, 'withinLast', durationDraft('0')),
-    ).toEqual({ ok: false, error: 'Enter a positive whole number' });
-    expect(
-      validateDraft(lastEmailedField, 'withinLast', durationDraft('1.5')),
-    ).toEqual({ ok: false, error: 'Enter a positive whole number' });
+    expect(validateDraft(lastEmailedField, 'withinLast', scalarDraft('7'))).toEqual({
+      ok: false,
+      error: 'Enter a positive whole number',
+    });
+    expect(validateDraft(lastEmailedField, 'withinLast', durationDraft('0'))).toEqual({
+      ok: false,
+      error: 'Enter a positive whole number',
+    });
+    expect(validateDraft(lastEmailedField, 'withinLast', durationDraft('1.5'))).toEqual({
+      ok: false,
+      error: 'Enter a positive whole number',
+    });
     expect(
       validateDraft(lastEmailedField, 'withinLast', {
         kind: 'duration',
@@ -300,9 +281,10 @@ describe('validateDraft', () => {
         unit: 'fortnights',
       } as unknown as ValueDraft),
     ).toEqual({ ok: false, error: 'Choose a unit' });
-    expect(
-      validateDraft(lastEmailedField, 'withinLast', durationDraft('7')),
-    ).toEqual({ ok: true, value: { amount: 7, unit: 'days' } });
+    expect(validateDraft(lastEmailedField, 'withinLast', durationDraft('7'))).toEqual({
+      ok: true,
+      value: { amount: 7, unit: 'days' },
+    });
   });
 });
 
@@ -313,9 +295,7 @@ describe('createFilterCondition', () => {
       type: 'string',
       operator: 'isEmpty',
     });
-    expect(
-      createFilterCondition(valueField, 'between', { from: 1, to: 2 }),
-    ).toEqual({
+    expect(createFilterCondition(valueField, 'between', { from: 1, to: 2 })).toEqual({
       fieldKey: 'dealValue',
       type: 'number',
       operator: 'between',
@@ -324,15 +304,15 @@ describe('createFilterCondition', () => {
   });
 
   it('rejects an operator excluded by the field definition', () => {
-    expect(() =>
-      createFilterCondition(nameField, 'between', { from: 1, to: 2 }),
-    ).toThrow('Operator "between" is not allowed for field "name"');
+    expect(() => createFilterCondition(nameField, 'between', { from: 1, to: 2 })).toThrow(
+      'Operator "between" is not allowed for field "name"',
+    );
   });
 
   it('rejects a malformed value after the operator check', () => {
-    expect(() =>
-      createFilterCondition(valueField, 'equals', Number.POSITIVE_INFINITY),
-    ).toThrow('Invalid condition for field "dealValue":');
+    expect(() => createFilterCondition(valueField, 'equals', Number.POSITIVE_INFINITY)).toThrow(
+      'Invalid condition for field "dealValue":',
+    );
   });
 });
 
@@ -396,9 +376,7 @@ describe('parseFilterGroup', () => {
       },
     },
   ])('rejects $label in initialFilters', ({ group }) => {
-    expect(() => parseFilterGroup(group, 'initialFilters')).toThrow(
-      /^Invalid initialFilters:/,
-    );
+    expect(() => parseFilterGroup(group, 'initialFilters')).toThrow(/^Invalid initialFilters:/);
   });
 });
 
@@ -417,9 +395,7 @@ describe('getFilterValidationIssue', () => {
   });
 
   it('flags a removed field at the field segment', () => {
-    expect(
-      getFilterValidationIssue(stageFilter, [nameField, valueField]),
-    ).toEqual({
+    expect(getFilterValidationIssue(stageFilter, [nameField, valueField])).toEqual({
       segment: 'field',
       reason: 'This field is no longer available',
     });
@@ -431,12 +407,8 @@ describe('getFilterValidationIssue', () => {
       label: 'Stage',
       type: 'string',
     };
-    expect(getFilterValidationIssue(stageFilter, [retyped])?.segment).toBe(
-      'field',
-    );
-    expect(
-      getFilterValidationIssue(stageFilter, [{ key: 'stage', type: 'string' }]),
-    ).toEqual({
+    expect(getFilterValidationIssue(stageFilter, [retyped])?.segment).toBe('field');
+    expect(getFilterValidationIssue(stageFilter, [{ key: 'stage', type: 'string' }])).toEqual({
       segment: 'field',
       reason: 'stage is now a string field',
     });
@@ -548,8 +520,7 @@ describe('seeded value shapes', () => {
       ),
     ).toEqual({
       segment: 'value',
-      reason:
-        'Duration needs a positive whole number of days, weeks, or months',
+      reason: 'Duration needs a positive whole number of days, weeks, or months',
     });
   });
 
@@ -642,8 +613,9 @@ describe('seeded value shapes', () => {
       closeDateField,
       { key: 'active', type: 'boolean' },
     ];
-    expect(
-      getFilterValidationIssue(filter as unknown as FilterEntry, fields),
-    ).toEqual({ segment: 'value', reason });
+    expect(getFilterValidationIssue(filter as unknown as FilterEntry, fields)).toEqual({
+      segment: 'value',
+      reason,
+    });
   });
 });

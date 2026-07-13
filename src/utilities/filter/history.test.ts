@@ -46,8 +46,7 @@ function reduceExpression(
   present: FilterExpression,
   action: Parameters<typeof filterHistoryReducer>[1],
 ): FilterExpression {
-  return filterHistoryReducer({ past: [], present, future: [] }, action)
-    .present;
+  return filterHistoryReducer({ past: [], present, future: [] }, action).present;
 }
 
 describe('committed filter actions', () => {
@@ -66,9 +65,7 @@ describe('committed filter actions', () => {
         type: 'add',
         filter: activeFilter,
       }),
-    ).toEqual(
-      expression([nameFilter, valueFilter, activeFilter], ['or', 'and']),
-    );
+    ).toEqual(expression([nameFilter, valueFilter, activeFilter], ['or', 'and']));
   });
 
   it('updates a filter by id without touching joiners', () => {
@@ -106,27 +103,25 @@ describe('committed filter actions', () => {
 
   it('removes a filter together with its leading joiner', () => {
     expect(
-      reduceExpression(
-        expression([nameFilter, valueFilter, activeFilter], ['and', 'or']),
-        { type: 'remove', id: 'b' },
-      ),
+      reduceExpression(expression([nameFilter, valueFilter, activeFilter], ['and', 'or']), {
+        type: 'remove',
+        id: 'b',
+      }),
     ).toEqual(expression([nameFilter, activeFilter], ['or']));
   });
 
   it('removes the first filter together with the first joiner', () => {
     expect(
-      reduceExpression(
-        expression([nameFilter, valueFilter, activeFilter], ['or', 'and']),
-        { type: 'remove', id: 'a' },
-      ),
+      reduceExpression(expression([nameFilter, valueFilter, activeFilter], ['or', 'and']), {
+        type: 'remove',
+        id: 'a',
+      }),
     ).toEqual(expression([valueFilter, activeFilter], ['and']));
   });
 
   it('returns the same expression when removing an unknown id', () => {
     const filters = expression([nameFilter]);
-    expect(reduceExpression(filters, { type: 'remove', id: 'zzz' })).toBe(
-      filters,
-    );
+    expect(reduceExpression(filters, { type: 'remove', id: 'zzz' })).toBe(filters);
   });
 
   it('clears all filters and joiners', () => {
@@ -144,13 +139,11 @@ describe('committed filter actions', () => {
 
   it('flips exactly the addressed joiner', () => {
     expect(
-      reduceExpression(
-        expression([nameFilter, valueFilter, activeFilter], ['and', 'and']),
-        { type: 'flipJoiner', index: 1 },
-      ),
-    ).toEqual(
-      expression([nameFilter, valueFilter, activeFilter], ['and', 'or']),
-    );
+      reduceExpression(expression([nameFilter, valueFilter, activeFilter], ['and', 'and']), {
+        type: 'flipJoiner',
+        index: 1,
+      }),
+    ).toEqual(expression([nameFilter, valueFilter, activeFilter], ['and', 'or']));
   });
 
   it('flips an or joiner back to and', () => {
@@ -164,9 +157,7 @@ describe('committed filter actions', () => {
 
   it('returns the same expression when flipping an out-of-range joiner', () => {
     const filters = expression([nameFilter, valueFilter], ['and']);
-    expect(reduceExpression(filters, { type: 'flipJoiner', index: 1 })).toBe(
-      filters,
-    );
+    expect(reduceExpression(filters, { type: 'flipJoiner', index: 1 })).toBe(filters);
   });
 });
 
@@ -203,9 +194,7 @@ describe('filterHistoryReducer', () => {
       type: 'flipJoiner',
       index: 0,
     });
-    expect(flipped.present).toEqual(
-      expression([nameFilter, valueFilter], ['or']),
-    );
+    expect(flipped.present).toEqual(expression([nameFilter, valueFilter], ['or']));
     expect(flipped.past).toEqual([seeded.present]);
 
     const undone = filterHistoryReducer(flipped, { type: 'undo' });
@@ -248,15 +237,11 @@ describe('filterHistoryReducer', () => {
   });
 
   it('undo with an empty past is a no-op', () => {
-    expect(filterHistoryReducer(EMPTY_HISTORY, { type: 'undo' })).toBe(
-      EMPTY_HISTORY,
-    );
+    expect(filterHistoryReducer(EMPTY_HISTORY, { type: 'undo' })).toBe(EMPTY_HISTORY);
   });
 
   it('redo with an empty future is a no-op', () => {
-    expect(filterHistoryReducer(EMPTY_HISTORY, { type: 'redo' })).toBe(
-      EMPTY_HISTORY,
-    );
+    expect(filterHistoryReducer(EMPTY_HISTORY, { type: 'redo' })).toBe(EMPTY_HISTORY);
   });
 
   it('a committed change after undo clears the future (no branching redo)', () => {
@@ -282,9 +267,7 @@ describe('filterHistoryReducer', () => {
       type: 'replace',
       expression: expression([valueFilter, activeFilter], ['or']),
     });
-    expect(replaced.present).toEqual(
-      expression([valueFilter, activeFilter], ['or']),
-    );
+    expect(replaced.present).toEqual(expression([valueFilter, activeFilter], ['or']));
     expect(replaced.past).toEqual([...added.past, added.present]);
     expect(replaced.future).toEqual([]);
 

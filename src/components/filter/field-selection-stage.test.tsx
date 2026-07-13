@@ -8,8 +8,7 @@ import type { FilterFieldDefinition } from '@/types/filter.ts';
 const fieldOptionRenderProbe = vi.hoisted(() => vi.fn());
 
 vi.mock('@/utilities/filter/formatting.ts', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@/utilities/filter/formatting.ts')>();
+  const actual = await importOriginal<typeof import('@/utilities/filter/formatting.ts')>();
   return {
     ...actual,
     fieldLabel: (...arguments_: Parameters<typeof actual.fieldLabel>) => {
@@ -80,9 +79,7 @@ describe('FieldSelectionStage', () => {
     const fieldResults = FIELDS.slice(0, 3);
     const initialState = fieldState({ activeIndex: 0 });
     const props = popoverProps(initialState, fieldResults);
-    const view = render(
-      <FieldSelectionStage {...props} state={initialState} />,
-    );
+    const view = render(<FieldSelectionStage {...props} state={initialState} />);
 
     expect(fieldOptionRenderProbe.mock.calls.map(([key]) => key)).toEqual([
       'name',
@@ -91,21 +88,11 @@ describe('FieldSelectionStage', () => {
     ]);
 
     fieldOptionRenderProbe.mockClear();
-    view.rerender(
-      <FieldSelectionStage {...props} state={fieldState({ activeIndex: 1 })} />,
-    );
-    expect(fieldOptionRenderProbe.mock.calls.map(([key]) => key)).toEqual([
-      'name',
-      'amount',
-    ]);
+    view.rerender(<FieldSelectionStage {...props} state={fieldState({ activeIndex: 1 })} />);
+    expect(fieldOptionRenderProbe.mock.calls.map(([key]) => key)).toEqual(['name', 'amount']);
 
     fieldOptionRenderProbe.mockClear();
-    view.rerender(
-      <FieldSelectionStage {...props} state={fieldState({ activeIndex: 2 })} />,
-    );
-    expect(fieldOptionRenderProbe.mock.calls.map(([key]) => key)).toEqual([
-      'amount',
-      'active',
-    ]);
+    view.rerender(<FieldSelectionStage {...props} state={fieldState({ activeIndex: 2 })} />);
+    expect(fieldOptionRenderProbe.mock.calls.map(([key]) => key)).toEqual(['amount', 'active']);
   });
 });

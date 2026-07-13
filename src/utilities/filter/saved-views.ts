@@ -11,8 +11,7 @@ const savedFilterGroupSchema = filterGroupSchema
     (group) =>
       group.conditions.every(
         (member) =>
-          !isFilterGroup(member) ||
-          member.conditions.every((child) => !isFilterGroup(child)),
+          !isFilterGroup(member) || member.conditions.every((child) => !isFilterGroup(child)),
       ),
     { message: 'Saved groups may not be nested more than two levels' },
   )
@@ -21,9 +20,7 @@ const savedFilterGroupSchema = filterGroupSchema
       group.combinator === 'or' ||
       group.conditions.every(
         (member) =>
-          !isFilterGroup(member) ||
-          member.combinator === 'and' ||
-          member.conditions.length < 2,
+          !isFilterGroup(member) || member.combinator === 'and' || member.conditions.length < 2,
       ),
     { message: 'An or group inside an and root is not expressible' },
   );
@@ -43,20 +40,22 @@ export function parseSavedViews(raw: unknown): SavedView[] {
   if (!Array.isArray(raw)) return [];
   const views: SavedView[] = [];
   const seenNames = new Set<string>();
+
   for (const entry of raw) {
     const result = savedViewSchema.safeParse(entry);
+
     if (!result.success || seenNames.has(result.data.name)) continue;
     seenNames.add(result.data.name);
     views.push(result.data);
   }
+
   return views;
 }
 
 /** Canonical, key-order-independent identity for active-view comparison. */
 export function savedViewKey(group: FilterGroup): string {
   let nextId = 0;
-  const canonical = toFilterGroup(
-    fromFilterGroup(group, () => `saved-view-key-${nextId++}`),
-  );
+  const canonical = toFilterGroup(fromFilterGroup(group, () => `saved-view-key-${nextId++}`));
+
   return stableSerialize(canonical);
 }

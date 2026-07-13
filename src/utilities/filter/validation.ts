@@ -14,8 +14,7 @@ import type {
 
 export const WITHIN_LAST_UNITS: WithinLastUnit[] = ['days', 'weeks', 'months'];
 
-type DraftValidation =
-  { ok: true; value: FilterCondition['value'] } | { ok: false; error: string };
+type DraftValidation = { ok: true; value: FilterCondition['value'] } | { ok: false; error: string };
 
 function invalid(error: string): DraftValidation {
   return { ok: false, error };
@@ -27,8 +26,10 @@ function valid(value: FilterCondition['value']): DraftValidation {
 
 function parseNumber(text: string): number | null {
   const trimmed = text.trim();
+
   if (trimmed === '') return null;
   const parsed = Number(trimmed);
+
   return Number.isFinite(parsed) ? parsed : null;
 }
 
@@ -43,12 +44,14 @@ const validateNoValue: DraftValidator = () => valid(undefined);
 const validateTextDraft: DraftValidator = (_field, _operator, draft) => {
   if (draft.kind !== 'scalar') return invalid('Enter a value');
   const text = draft.input.trim();
+
   return text === '' ? invalid('Enter a value') : valid(text);
 };
 
 const validateNumberDraft: DraftValidator = (_field, _operator, draft) => {
   if (draft.kind !== 'scalar') return invalid('Enter a number');
   const parsed = parseNumber(draft.input);
+
   return parsed === null ? invalid('Enter a number') : valid(parsed);
 };
 
@@ -56,16 +59,14 @@ const validateNumberRangeDraft: DraftValidator = (_field, _operator, draft) => {
   if (draft.kind !== 'range') return invalid('Enter both numbers');
   const from = parseNumber(draft.fromInput);
   const to = parseNumber(draft.toInput);
+
   if (from === null || to === null) return invalid('Enter both numbers');
   if (from > to) return invalid('First value must not exceed the second');
   return valid({ from, to });
 };
 
 const validateBooleanDraft: DraftValidator = (_field, _operator, draft) => {
-  if (
-    draft.kind !== 'scalar' ||
-    (draft.input !== 'true' && draft.input !== 'false')
-  ) {
+  if (draft.kind !== 'scalar' || (draft.input !== 'true' && draft.input !== 'false')) {
     return invalid('Choose a value');
   }
   return valid(draft.input === 'true');
@@ -86,6 +87,7 @@ const validateMultipleEnumDraft: DraftValidator = (field, _operator, draft) => {
     return invalid('Choose at least one option');
   }
   const options = field.options ?? [];
+
   if (draft.selectedOptions.some((option) => !options.includes(option))) {
     return invalid('Choose listed options');
   }
@@ -102,17 +104,12 @@ const validateDateDraft: DraftValidator = (field, operator, draft) => {
     operator,
     value: draft.input,
   });
-  return candidate.success
-    ? valid(draft.input)
-    : invalid('Choose a valid date');
+
+  return candidate.success ? valid(draft.input) : invalid('Choose a valid date');
 };
 
 const validateDateRangeDraft: DraftValidator = (field, operator, draft) => {
-  if (
-    draft.kind !== 'range' ||
-    draft.fromInput === '' ||
-    draft.toInput === ''
-  ) {
+  if (draft.kind !== 'range' || draft.fromInput === '' || draft.toInput === '') {
     return invalid('Choose both dates');
   }
   const value = { from: draft.fromInput, to: draft.toInput };
@@ -122,6 +119,7 @@ const validateDateRangeDraft: DraftValidator = (field, operator, draft) => {
     operator,
     value,
   });
+
   if (candidate.success) return valid(value);
   return draft.fromInput > draft.toInput
     ? invalid('Start must not be after end')
@@ -133,10 +131,12 @@ const validateDurationDraft: DraftValidator = (_field, _operator, draft) => {
     return invalid('Enter a positive whole number');
   }
   const amount = parseNumber(draft.amountInput);
+
   if (amount === null || !Number.isInteger(amount) || amount < 1) {
     return invalid('Enter a positive whole number');
   }
   const unit = WITHIN_LAST_UNITS.find((candidate) => candidate === draft.unit);
+
   return unit ? valid({ amount, unit }) : invalid('Choose a unit');
 };
 
@@ -167,6 +167,7 @@ export function validateDraft(
     return invalid('Choose a supported operator');
   }
   const kind = getValueEditorKind(field.type, operator);
+
   return DRAFT_VALIDATORS[kind](field, operator, draft);
 }
 
@@ -181,9 +182,7 @@ export function createFilterCondition(
   value: FilterCondition['value'],
 ): FilterCondition {
   if (!operatorsForField(field).includes(operator)) {
-    throw new TypeError(
-      `Operator "${operator}" is not allowed for field "${field.key}"`,
-    );
+    throw new TypeError(`Operator "${operator}" is not allowed for field "${field.key}"`);
   }
   const candidate = {
     fieldKey: field.key,
@@ -192,6 +191,7 @@ export function createFilterCondition(
     ...(value !== undefined ? { value } : {}),
   };
   const result = filterConditionSchema.safeParse(candidate);
+
   if (result.success) return result.data;
   throw new TypeError(
     `Invalid condition for field "${field.key}":\n${z.prettifyError(result.error)}`,
@@ -217,11 +217,11 @@ function getEnumValueIssue(
 ): FilterValidationIssue | null {
   if (field.type !== 'enum' || filter.value === undefined) return null;
   const options = field.options ?? [];
-  const missing = enumFilterValues(filter.value).filter(
-    (value) => !options.includes(value),
-  );
+  const missing = enumFilterValues(filter.value).filter((value) => !options.includes(value));
+
   if (missing.length === 0) return null;
   const verb = missing.length === 1 ? 'is' : 'are';
+
   return {
     segment: 'value',
     reason: `${missing.join(', ')} ${verb} no longer a valid option`,
@@ -240,10 +240,12 @@ export function getFilterValidationIssue(
   fields: readonly FilterFieldDefinition[],
 ): FilterValidationIssue | null {
   const field = fields.find((candidate) => candidate.key === filter.fieldKey);
+
   if (!field) {
     return { segment: 'field', reason: 'This field is no longer available' };
   }
   const label = field.label ?? field.key;
+
   if (field.type !== filter.type) {
     return {
       segment: 'field',
@@ -257,9 +259,11 @@ export function getFilterValidationIssue(
     };
   }
   const enumValueIssue = getEnumValueIssue(field, filter);
+
   if (enumValueIssue) return enumValueIssue;
   const { id: _id, ...condition } = filter;
   const intrinsic = filterConditionSchema.safeParse(condition);
+
   if (intrinsic.success) return null;
   return { segment: 'value', reason: intrinsicValueReason(filter) };
 }
@@ -274,17 +278,10 @@ export function getFilterValidationIssue(
 function isRangeValue(
   value: FilterEntry['value'],
 ): value is RangeValue<string> | RangeValue<number> {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'from' in value &&
-    'to' in value
-  );
+  return typeof value === 'object' && value !== null && 'from' in value && 'to' in value;
 }
 
-function isInvertedRange(
-  value: RangeValue<string> | RangeValue<number>,
-): boolean {
+function isInvertedRange(value: RangeValue<string> | RangeValue<number>): boolean {
   if (typeof value.from === 'number' && typeof value.to === 'number') {
     return value.from > value.to;
   }

@@ -16,6 +16,9 @@ pre-commit:
       run: bun run oxlint --fix --deny-warnings {staged_files}
       glob: '**/*.{ts,tsx,js,jsx}'
       stage_fixed: true
+    - name: check-conditional-braces
+      run: bun run check:conditional-braces
+      glob: '**/*.{ts,tsx,js,jsx}'
     - name: lint-css-fix
       run: bun run stylelint --fix {staged_files}
       glob: 'src/**/*.css'

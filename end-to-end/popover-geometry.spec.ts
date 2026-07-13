@@ -75,9 +75,7 @@ test.describe('popover geometry', () => {
     expect(popoverBox.y).toBeGreaterThanOrEqual(draftBox.y + draftBox.height);
   });
 
-  test('near the bottom edge the popover flips above its anchor', async ({
-    page,
-  }) => {
+  test('near the bottom edge the popover flips above its anchor', async ({ page }) => {
     // Push the filter row toward the bottom of the 800px-tall viewport so
     // the popover has no room below.
     await page.addStyleTag({
@@ -96,14 +94,10 @@ test.describe('popover geometry', () => {
     await expectPopoverWithinViewport(page);
   });
 
-  test('near the inline-start edge an edit popover stays inside the viewport', async ({
-    page,
-  }) => {
+  test('near the inline-start edge an edit popover stays inside the viewport', async ({ page }) => {
     // The seeded filter token is the first item in the row, close to the viewport's
     // inline-start edge.
-    await filterToken(page, 'Active is true')
-      .getByTitle('Change field')
-      .click();
+    await filterToken(page, 'Active is true').getByTitle('Change field').click();
     await expect(popover(page)).toBeVisible();
     await expectPopoverWithinViewport(page);
   });
@@ -122,9 +116,7 @@ test.describe('popover geometry', () => {
     await expectPopoverWithinViewport(page);
   });
 
-  test('the popover tracks its anchor while the page scrolls', async ({
-    page,
-  }) => {
+  test('the popover tracks its anchor while the page scrolls', async ({ page }) => {
     await page.addStyleTag({
       content: 'body { padding-block-start: 300px; min-block-size: 2400px; }',
     });
@@ -146,15 +138,11 @@ test.describe('popover geometry', () => {
     expect(before.y - after.y).toBeLessThan(121);
   });
 
-  test('an edit popover renders in the top layer above later page content', async ({
-    page,
-  }) => {
+  test('an edit popover renders in the top layer above later page content', async ({ page }) => {
     // The results table follows the filter row; a popover overlapping it must
     // stay on top (top layer) and receive clicks.
     await addSingleValueFilter(page, 'Name', 'contains', 'a');
-    await filterToken(page, 'Name contains a')
-      .getByTitle('Change value')
-      .click();
+    await filterToken(page, 'Name contains a').getByTitle('Change value').click();
     const value = popover(page).getByLabel('Value');
     await expect(value).toBeVisible();
     await value.fill('corp');
@@ -162,9 +150,7 @@ test.describe('popover geometry', () => {
     await expect(filterToken(page, 'Name contains corp')).toBeVisible();
   });
 
-  test('a long option list scrolls within a short viewport', async ({
-    page,
-  }) => {
+  test('a long option list scrolls within a short viewport', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 240 });
     await addFilterInput(page).click();
     await page.keyboard.press('ArrowDown');

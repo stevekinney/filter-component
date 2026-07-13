@@ -7,11 +7,10 @@ export function stableSerialize(value: unknown): string {
     const entries = Object.entries(value)
       .filter(([, entryValue]) => entryValue !== undefined)
       .sort(([a], [b]) => a.localeCompare(b))
-      .map(
-        ([key, entryValue]) =>
-          `${JSON.stringify(key)}:${stableSerialize(entryValue)}`,
-      );
+      .map(([key, entryValue]) => `${JSON.stringify(key)}:${stableSerialize(entryValue)}`);
+
     return `{${entries.join(',')}}`;
   }
+
   return JSON.stringify(value) ?? 'undefined';
 }

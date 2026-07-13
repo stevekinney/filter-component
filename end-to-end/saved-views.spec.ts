@@ -11,8 +11,7 @@ import {
   resultCount,
 } from './helpers.ts';
 
-const savedViewsButton = (page: Page) =>
-  page.getByRole('button', { name: 'Saved views' });
+const savedViewsButton = (page: Page) => page.getByRole('button', { name: 'Saved views' });
 
 const saveAction = (page: Page) =>
   popover(page).getByRole('button', { name: 'Save current filters…' });
@@ -21,9 +20,7 @@ async function saveCurrentViewAs(page: Page, name: string): Promise<void> {
   await savedViewsButton(page).click();
   await saveAction(page).click();
   await popover(page).getByLabel('View name').fill(name);
-  await popover(page)
-    .getByRole('button', { name: 'Save', exact: true })
-    .click();
+  await popover(page).getByRole('button', { name: 'Save', exact: true }).click();
 }
 
 test.describe('saved views', () => {
@@ -52,17 +49,13 @@ test.describe('saved views', () => {
     ).toBeVisible();
   });
 
-  test('loading a view replaces the row and undo/redo walk across it', async ({
-    page,
-  }) => {
+  test('loading a view replaces the row and undo/redo walk across it', async ({ page }) => {
     await saveCurrentViewAs(page, 'Active deals');
     await addSingleValueFilter(page, 'Name', 'contains', 'corp');
     await expect(resultCount(page)).toHaveText('1 of 12 deals');
 
     await savedViewsButton(page).click();
-    await popover(page)
-      .getByRole('button', { name: 'Active deals', exact: true })
-      .click();
+    await popover(page).getByRole('button', { name: 'Active deals', exact: true }).click();
     await expect(liveRegion(page)).toHaveText('View loaded: Active deals');
 
     await expect(filterTokenList(page).getByRole('listitem')).toHaveCount(1);
@@ -79,15 +72,11 @@ test.describe('saved views', () => {
     await expect(resultCount(page)).toHaveText('8 of 12 deals');
   });
 
-  test('removing the last view keeps the still-savable trigger alive', async ({
-    page,
-  }) => {
+  test('removing the last view keeps the still-savable trigger alive', async ({ page }) => {
     await saveCurrentViewAs(page, 'Active deals');
     await savedViewsButton(page).click();
 
-    await popover(page)
-      .getByRole('button', { name: 'Remove view: Active deals' })
-      .click();
+    await popover(page).getByRole('button', { name: 'Remove view: Active deals' }).click();
     await expect(liveRegion(page)).toHaveText('View removed: Active deals');
 
     await expect(popover(page)).not.toBeVisible();
@@ -99,17 +88,13 @@ test.describe('saved views', () => {
     await expect(saveAction(page)).toBeVisible();
   });
 
-  test('removing one of several views keeps the menu open on the next view', async ({
-    page,
-  }) => {
+  test('removing one of several views keeps the menu open on the next view', async ({ page }) => {
     await saveCurrentViewAs(page, 'Active deals');
     await addSingleValueFilter(page, 'Name', 'contains', 'corp');
     await saveCurrentViewAs(page, 'Corp deals');
 
     await savedViewsButton(page).click();
-    await popover(page)
-      .getByRole('button', { name: 'Remove view: Active deals' })
-      .click();
+    await popover(page).getByRole('button', { name: 'Remove view: Active deals' }).click();
 
     await expect(popover(page)).toBeVisible();
     const remaining = popover(page).getByRole('button', {
@@ -138,14 +123,10 @@ test.describe('saved views', () => {
     await expect(activeDeals).toBeFocused();
     const activeDealsRow = activeDeals.locator('..');
     await expect
-      .poll(() =>
-        activeDealsRow.evaluate((row) => getComputedStyle(row).outlineStyle),
-      )
+      .poll(() => activeDealsRow.evaluate((row) => getComputedStyle(row).outlineStyle))
       .toBe('solid');
     await expect
-      .poll(() =>
-        activeDeals.evaluate((button) => getComputedStyle(button).outlineStyle),
-      )
+      .poll(() => activeDeals.evaluate((button) => getComputedStyle(button).outlineStyle))
       .toBe('none');
 
     // Arrows wrap; Home/End jump; ArrowRight/ArrowLeft reach the trash button.
@@ -174,9 +155,7 @@ test.describe('saved views', () => {
       )
       .toEqual({ borderRadius: '50%', outlineStyle: 'solid' });
     await expect
-      .poll(() =>
-        activeDealsRow.evaluate((row) => getComputedStyle(row).outlineStyle),
-      )
+      .poll(() => activeDealsRow.evaluate((row) => getComputedStyle(row).outlineStyle))
       .toBe('none');
     await page.keyboard.press('ArrowLeft');
     await expect(activeDeals).toBeFocused();
@@ -189,9 +168,7 @@ test.describe('saved views', () => {
     // Enter loads the focused view (already applied → announced as such) and
     // the menu closes back to the trigger.
     await page.keyboard.press('Enter');
-    await expect(liveRegion(page)).toHaveText(
-      'View already applied: Corp deals',
-    );
+    await expect(liveRegion(page)).toHaveText('View already applied: Corp deals');
     await expect(popover(page)).not.toBeVisible();
     await expect(savedViewsButton(page)).toBeFocused();
 
@@ -205,9 +182,7 @@ test.describe('saved views', () => {
   test('an empty name is rejected inline', async ({ page }) => {
     await savedViewsButton(page).click();
     await saveAction(page).click();
-    await popover(page)
-      .getByRole('button', { name: 'Save', exact: true })
-      .click();
+    await popover(page).getByRole('button', { name: 'Save', exact: true }).click();
     await expect(popover(page).getByRole('alert')).toHaveText('Enter a name');
     const errorId = await popover(page).getByRole('alert').getAttribute('id');
     await expect(popover(page).getByLabel('View name')).toHaveAttribute(
@@ -216,9 +191,7 @@ test.describe('saved views', () => {
     );
   });
 
-  test('Escape closes the save flow and refocuses the trigger', async ({
-    page,
-  }) => {
+  test('Escape closes the save flow and refocuses the trigger', async ({ page }) => {
     await savedViewsButton(page).click();
     await saveAction(page).click();
     await expect(popover(page).getByLabel('View name')).toBeFocused();
@@ -228,9 +201,7 @@ test.describe('saved views', () => {
   });
 
   test('corrupted stored views are ignored', async ({ page }) => {
-    await page.evaluate(() =>
-      window.localStorage.setItem('filter.saved-views', '{corrupted'),
-    );
+    await page.evaluate(() => window.localStorage.setItem('filter.saved-views', '{corrupted'));
     await page.reload();
     await expect(resultCount(page)).toHaveText('8 of 12 deals');
     await expect(savedViewsButton(page)).toBeVisible();

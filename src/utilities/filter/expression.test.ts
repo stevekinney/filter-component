@@ -23,17 +23,9 @@ function condition(id: string): FilterEntry {
   };
 }
 
-const [a, b, c, d] = [
-  condition('a'),
-  condition('b'),
-  condition('c'),
-  condition('d'),
-];
+const [a, b, c, d] = [condition('a'), condition('b'), condition('c'), condition('d')];
 
-function expression(
-  conditions: FilterEntry[],
-  joiners: FilterCombinator[],
-): FilterExpression {
+function expression(conditions: FilterEntry[], joiners: FilterCombinator[]): FilterExpression {
   return { conditions, joiners };
 }
 
@@ -43,9 +35,7 @@ const externalMember = (member: FilterEntry | FilterGroup) => {
   return filterConditionSchema.parse(condition);
 };
 
-const andGroup = (
-  ...conditions: (FilterEntry | FilterGroup)[]
-): FilterGroup => ({
+const andGroup = (...conditions: (FilterEntry | FilterGroup)[]): FilterGroup => ({
   combinator: 'and',
   conditions: conditions.map(externalMember),
 });
@@ -88,9 +78,7 @@ describe('toFilterGroup', () => {
   });
 
   it('keeps an all-and expression flat', () => {
-    expect(toFilterGroup(expression([a, b, c], ['and', 'and']))).toEqual(
-      andGroup(a, b, c),
-    );
+    expect(toFilterGroup(expression([a, b, c], ['and', 'and']))).toEqual(andGroup(a, b, c));
   });
 
   it('derives [A and B or C] as or(and(A, B), C)', () => {
@@ -117,9 +105,7 @@ describe('toFilterGroup', () => {
 
 describe('fromFilterGroup', () => {
   it('loads v1 flat and groups as all-and joiners', () => {
-    expect(loadFilterGroup(andGroup(a, b, c))).toEqual(
-      expression([a, b, c], ['and', 'and']),
-    );
+    expect(loadFilterGroup(andGroup(a, b, c))).toEqual(expression([a, b, c], ['and', 'and']));
   });
 
   it('loads v1 flat or groups as all-or joiners', () => {
@@ -166,10 +152,7 @@ describe('fromFilterGroup', () => {
           externalMember(a),
           {
             combinator: 'or',
-            conditions: [
-              { combinator: 'and', conditions: [] },
-              externalMember(b),
-            ],
+            conditions: [{ combinator: 'and', conditions: [] }, externalMember(b)],
           },
         ],
       }),
@@ -233,10 +216,7 @@ describe('fromFilterGroup', () => {
     expect(
       loadFilterGroup({
         combinator: 'and',
-        conditions: [
-          externalMember(a),
-          { combinator: 'or', conditions: [externalMember(b)] },
-        ],
+        conditions: [externalMember(a), { combinator: 'or', conditions: [externalMember(b)] }],
       }),
     ).toEqual(expression([a, b], ['and']));
   });
@@ -277,9 +257,7 @@ describe('removeConditionAt', () => {
   });
 
   it('leaves no joiner behind when removing from a pair', () => {
-    expect(removeConditionAt(expression([a, b], ['or']), 1)).toEqual(
-      expression([a], []),
-    );
+    expect(removeConditionAt(expression([a, b], ['or']), 1)).toEqual(expression([a], []));
   });
 
   it('returns the input unchanged for out-of-range indexes', () => {
@@ -289,10 +267,7 @@ describe('removeConditionAt', () => {
   });
 
   it('touches no other joiner, so grouping re-derives around the gap', () => {
-    const removed = removeConditionAt(
-      expression([a, b, c, d], ['or', 'and', 'or']),
-      3,
-    );
+    const removed = removeConditionAt(expression([a, b, c, d], ['or', 'and', 'or']), 3);
     expect(removed).toEqual(expression([a, b, c], ['or', 'and']));
     expect(toFilterGroup(removed)).toEqual({
       combinator: 'or',
@@ -303,9 +278,9 @@ describe('removeConditionAt', () => {
 
 describe('filterExpression', () => {
   it('drops rejected conditions along with their adjacent joiners', () => {
-    expect(
-      filterExpression(expression([a, b, c], ['and', 'or']), (x) => x !== b),
-    ).toEqual(expression([a, c], ['or']));
+    expect(filterExpression(expression([a, b, c], ['and', 'or']), (x) => x !== b)).toEqual(
+      expression([a, c], ['or']),
+    );
   });
 
   it('drops several rejected conditions independently', () => {
@@ -313,10 +288,7 @@ describe('filterExpression', () => {
     // first 'and', dropping `c` takes the 'or' that led into it, so `b` and
     // `d` are left joined by the 'and' that sat between `c` and `d`.
     expect(
-      filterExpression(
-        expression([a, b, c, d], ['and', 'or', 'and']),
-        (x) => x === b || x === d,
-      ),
+      filterExpression(expression([a, b, c, d], ['and', 'or', 'and']), (x) => x === b || x === d),
     ).toEqual(expression([b, d], ['and']));
   });
 

@@ -4,14 +4,8 @@ import { createFilterEntry } from '@/utilities/filter/filter-entry.ts';
 import { filterConditionSchema } from '@/utilities/filter/filter-schema.ts';
 import { fieldLabel, tokenPhrase } from '@/utilities/filter/formatting.ts';
 import { operatorsForField } from '@/utilities/filter/operators.ts';
-import {
-  createFilterCondition,
-  getFilterValidationIssue,
-} from '@/utilities/filter/validation.ts';
-import type {
-  FilterHistory,
-  FilterHistoryAction,
-} from '@/utilities/filter/history.ts';
+import { createFilterCondition, getFilterValidationIssue } from '@/utilities/filter/validation.ts';
+import type { FilterHistory, FilterHistoryAction } from '@/utilities/filter/history.ts';
 import type { FilterCondition, FilterOperator } from '@/types/filter.ts';
 
 type FilterEditorCommittedCommandsOptions = {
@@ -41,17 +35,17 @@ export function createFilterEditorCommittedCommands({
   ) => {
     const fieldRegistry = getFieldRegistry();
     const field = fieldRegistry.byKey.get(fieldKey);
+
     if (!field || !operatorsForField(field).includes(operator)) return;
     const condition = createFilterCondition(field, operator, value);
-    const validationEntry = createFilterEntry(
-      condition,
-      filterId ?? 'pending-filter',
-    );
+    const validationEntry = createFilterEntry(condition, filterId ?? 'pending-filter');
+
     if (getFilterValidationIssue(validationEntry, fieldRegistry.fields)) return;
 
     resetEditor();
     if (filterId === null) {
       const filter = createFilterEntry(condition, createConditionId());
+
       scheduleFocus({ type: 'addInput' });
       if (applyFilterHistoryAction({ type: 'add', filter })) {
         announce(`Filter added: ${tokenPhrase(filter, field)}`);
@@ -60,6 +54,7 @@ export function createFilterEditorCommittedCommands({
     }
 
     const filter = createFilterEntry(condition, filterId);
+
     scheduleFocus({ type: 'token', id: filterId });
     if (applyFilterHistoryAction({ type: 'update', id: filterId, filter })) {
       announce(`Filter updated: ${tokenPhrase(filter, field)}`);
@@ -71,16 +66,17 @@ export function createFilterEditorCommittedCommands({
     const filters = history.present.conditions;
     const index = filters.findIndex((candidate) => candidate.id === id);
     const token = filters[index];
+
     if (!token) return;
     const remaining = filters.filter((candidate) => candidate.id !== id);
     const neighbor = remaining[Math.min(index, remaining.length - 1)];
-    scheduleFocus(
-      neighbor ? { type: 'token', id: neighbor.id } : { type: 'addInput' },
-    );
+
+    scheduleFocus(neighbor ? { type: 'token', id: neighbor.id } : { type: 'addInput' });
     resetEditor();
     if (!applyFilterHistoryAction({ type: 'remove', id })) return;
     const field = getFieldRegistry().byKey.get(token.fieldKey);
     const label = field ? fieldLabel(field) : token.fieldKey;
+
     announce(
       history.present.joiners.includes('or')
         ? `Filter removed: ${label}; grouping updated`
@@ -89,11 +85,11 @@ export function createFilterEditorCommittedCommands({
   };
 
   const removeEnumValue = (id: string, value: string) => {
-    const token = getCurrentHistory().present.conditions.find(
-      (candidate) => candidate.id === id,
-    );
+    const token = getCurrentHistory().present.conditions.find((candidate) => candidate.id === id);
+
     if (!token || !Array.isArray(token.value)) return;
     const remaining = token.value.filter((candidate) => candidate !== value);
+
     if (remaining.length === 0) {
       removeFilter(id);
       return;
@@ -106,10 +102,8 @@ export function createFilterEditorCommittedCommands({
     const candidate = createFilterEntry(condition, id);
     const fieldRegistry = getFieldRegistry();
     const field = fieldRegistry.byKey.get(token.fieldKey);
-    if (
-      !field ||
-      getFilterValidationIssue(candidate, fieldRegistry.fields) !== null
-    ) {
+
+    if (!field || getFilterValidationIssue(candidate, fieldRegistry.fields) !== null) {
       return;
     }
     scheduleFocus({ type: 'token', id });
@@ -154,11 +148,10 @@ export function createFilterEditorCommittedCommands({
 
   const flipJoiner = (index: number) => {
     const joiner = getCurrentHistory().present.joiners[index];
+
     if (joiner === undefined) return;
     if (applyFilterHistoryAction({ type: 'flipJoiner', index })) {
-      announce(
-        `Filters combined with ${joiner === 'and' ? 'or' : 'and'}; grouping updated`,
-      );
+      announce(`Filters combined with ${joiner === 'and' ? 'or' : 'and'}; grouping updated`);
     }
   };
 

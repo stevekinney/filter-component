@@ -58,11 +58,7 @@
   background: var(--filter-resolved-color-background-primary);
 }
 
-:where(
-  .filter-token-value,
-  .filter-token-pill-label,
-  .filter-draft-preview-value
-) {
+:where(.filter-token-value, .filter-token-pill-label, .filter-draft-preview-value) {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

@@ -50,15 +50,11 @@ describe('createFilterFieldRegistry', () => {
     const changed = validFields.map((field) =>
       field.key === 'name' ? { ...field, label: 'Account name' } : field,
     );
-    expect(createFilterFieldRegistry(changed).signature).not.toBe(
-      registry.signature,
-    );
+    expect(createFilterFieldRegistry(changed).signature).not.toBe(registry.signature);
   });
 
   it('snapshots definitions so later in-place mutations cannot alter a registry', () => {
-    const mutableFields: FilterFieldDefinition[] = [
-      { key: 'name', label: 'Name', type: 'string' },
-    ];
+    const mutableFields: FilterFieldDefinition[] = [{ key: 'name', label: 'Name', type: 'string' }];
     const first = createFilterFieldRegistry(mutableFields);
 
     mutableFields[0] = {
@@ -132,9 +128,7 @@ describe('createFilterFieldRegistry', () => {
     },
   ])('rejects $label with its definition path', ({ fields, path }) => {
     const prettyPath = path.replace(/^0/, '[0]').replace(/\.(\d+)/g, '[$1]');
-    expect(() => createFilterFieldRegistry(invalidFields(fields))).toThrow(
-      `→ at ${prettyPath}`,
-    );
+    expect(() => createFilterFieldRegistry(invalidFields(fields))).toThrow(`→ at ${prettyPath}`);
   });
 
   it('rejects duplicate keys after each definition is valid', () => {
@@ -147,8 +141,6 @@ describe('createFilterFieldRegistry', () => {
   });
 
   it('reports an invalid registry root', () => {
-    expect(() => createFilterFieldRegistry(invalidFields(null))).toThrow(
-      'Invalid fields:',
-    );
+    expect(() => createFilterFieldRegistry(invalidFields(null))).toThrow('Invalid fields:');
   });
 });

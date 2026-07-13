@@ -1,15 +1,9 @@
 import clsx from 'clsx';
 import { memo, useId, useMemo, useRef, useState } from 'react';
-import {
-  activeEditorSegment,
-  findEditingFilter,
-} from './filter-editor-state.ts';
+import { activeEditorSegment, findEditingFilter } from './filter-editor-state.ts';
 import type { FilterEditorState } from './filter-editor-state.ts';
 import { searchFields } from '@/utilities/filter/field-search.ts';
-import {
-  FilterDraftPreview,
-  IncompleteDraftChip,
-} from './filter-draft-chips.tsx';
+import { FilterDraftPreview, IncompleteDraftChip } from './filter-draft-chips.tsx';
 import { FilterRail } from './filter-action-rail.tsx';
 import { AddFilterCombobox } from './add-filter-combobox.tsx';
 import { FilterPopover } from './filter-popover.tsx';
@@ -33,29 +27,25 @@ function useFilterFieldSelection(
   fields: readonly FilterFieldDefinition[],
 ) {
   const isChoosingFilterField = editorState.stage === 'field';
-  const isChoosingNewFilterField =
-    isChoosingFilterField && editorState.filterId === null;
+  const isChoosingNewFilterField = isChoosingFilterField && editorState.filterId === null;
   const fieldQuery = isChoosingFilterField ? editorState.query : null;
   const fieldResults = useMemo(
-    () =>
-      fieldQuery === null ? NO_FIELD_RESULTS : searchFields(fields, fieldQuery),
+    () => (fieldQuery === null ? NO_FIELD_RESULTS : searchFields(fields, fieldQuery)),
     [fieldQuery, fields],
   );
-  const matchingFields = isChoosingNewFilterField
-    ? fieldResults
-    : NO_FIELD_RESULTS;
+  const matchingFields = isChoosingNewFilterField ? fieldResults : NO_FIELD_RESULTS;
   const activeFieldIndex = isChoosingNewFilterField
     ? clampIndex(editorState.activeIndex, matchingFields.length)
     : 0;
   let inputQuery = '';
+
   if (isChoosingNewFilterField && editorState.stage === 'field') {
     inputQuery = editorState.query;
   }
 
   return {
     activeFieldIndex,
-    canFocusTokens:
-      editorState.stage === 'idle' || editorState.filterId === null,
+    canFocusTokens: editorState.stage === 'idle' || editorState.filterId === null,
     fieldResults,
     inputQuery,
     isChoosingNewFilterField,
@@ -74,6 +64,7 @@ function getEditorPresentation(
   editingSegment: TokenSegment | null;
 } {
   const editingFilter = findEditingFilter(editorState, filters);
+
   if (editorState.stage === 'idle') {
     return {
       activeDraftField: undefined,
@@ -82,16 +73,12 @@ function getEditorPresentation(
       editingSegment: null,
     };
   }
-
   return {
     activeDraftField:
-      editorState.stage === 'field'
-        ? undefined
-        : findFilterField(editorState.fieldKey),
+      editorState.stage === 'field' ? undefined : findFilterField(editorState.fieldKey),
     editingFilter,
     editingFilterId: editorState.filterId,
-    editingSegment:
-      editorState.filterId === null ? null : activeEditorSegment(editorState),
+    editingSegment: editorState.filterId === null ? null : activeEditorSegment(editorState),
   };
 }
 
@@ -108,12 +95,8 @@ export function Filter(properties: FilterProps) {
   // Keep that small content-version check outside the compiled state owner so
   // editor updates never repeat the serialization work.
   const fieldDefinitionSignature = stableSerialize(properties.fields);
-  return (
-    <CompiledFilter
-      {...properties}
-      fieldDefinitionSignature={fieldDefinitionSignature}
-    />
-  );
+
+  return <CompiledFilter {...properties} fieldDefinitionSignature={fieldDefinitionSignature} />;
 }
 
 const CompiledFilter = memo(function CompiledFilter(
@@ -135,20 +118,18 @@ const CompiledFilter = memo(function CompiledFilter(
   const ariaLabel = ariaLabelProperty ?? 'Filters';
   const idPrefix = useId();
   const filterIdCounterRef = useRef(0);
-  const createConditionId = () =>
-    `${idPrefix}-filter-${++filterIdCounterRef.current}`;
+  const createConditionId = () => `${idPrefix}-filter-${++filterIdCounterRef.current}`;
   const fieldRegistry = useMemo(
     () => createFilterFieldRegistry(fields, fieldDefinitionSignature),
     [fields, fieldDefinitionSignature],
   );
   const validatedFields = fieldRegistry.fields;
-  const { history, getCurrentHistory, applyFilterHistoryAction } =
-    useFilterHistory(
-      fieldRegistry,
-      onChange,
-      initialFilters,
-      createConditionId,
-    );
+  const { history, getCurrentHistory, applyFilterHistoryAction } = useFilterHistory(
+    fieldRegistry,
+    onChange,
+    initialFilters,
+    createConditionId,
+  );
   const [liveRegionMessage, setLiveRegionMessage] = useState('');
 
   const filterFieldsetRef = useRef<HTMLFieldSetElement | null>(null);
@@ -165,9 +146,7 @@ const CompiledFilter = memo(function CompiledFilter(
   // stay silent on the repeat (two undos in a row, for example); a zero-width
   // space forces a mutation without visible or spoken output.
   const announce = (message: string) =>
-    setLiveRegionMessage((previous) =>
-      previous === message ? `${message}\u200B` : message,
-    );
+    setLiveRegionMessage((previous) => (previous === message ? `${message}\u200B` : message));
   const {
     editorState,
     incompleteDraft,
@@ -210,11 +189,12 @@ const CompiledFilter = memo(function CompiledFilter(
   // the input when the invoker left the DOM (the incomplete-draft chip
   // unmounts on resume).
   const resolvePopoverAnchor = (): HTMLElement | null => {
-    const draftPreview = filterFieldsetRef.current?.querySelector<HTMLElement>(
-      '[data-draft-preview]',
-    );
+    const draftPreview =
+      filterFieldsetRef.current?.querySelector<HTMLElement>('[data-draft-preview]');
+
     if (draftPreview) return draftPreview;
     const captured = popoverAnchorRef.current;
+
     if (captured?.isConnected) return captured;
     return addFilterInputRef.current;
   };
@@ -253,6 +233,7 @@ const CompiledFilter = memo(function CompiledFilter(
 
   const focusLastFilterToken = (id: string) => {
     resetEditor();
+
     // Focus directly: when the editor is already idle, no state changes, so a
     // deferred request would wait on a render that never comes.
     focus({ type: 'token', id });
@@ -267,6 +248,7 @@ const CompiledFilter = memo(function CompiledFilter(
       return;
     }
     const joinerIndex = direction === 1 ? index : index - 1;
+
     if (joinerIndex < 0) return;
     focus({ type: 'joiner', index: joinerIndex });
   };
@@ -310,10 +292,7 @@ const CompiledFilter = memo(function CompiledFilter(
             onMoveFocusFromJoiner={moveFocusFromJoiner}
           />
 
-          <FilterDraftPreview
-            editorState={editorState}
-            field={activeDraftField}
-          />
+          <FilterDraftPreview editorState={editorState} field={activeDraftField} />
 
           <IncompleteDraftChip
             incompleteDraft={incompleteDraft}
@@ -339,9 +318,7 @@ const CompiledFilter = memo(function CompiledFilter(
               onOpenMenu={openNewFilterFieldPicker}
               onQueryChange={changeQuery}
               onNavigate={(delta) =>
-                changeActiveIndex(
-                  stepIndex(activeFieldIndex, delta, matchingFields.length),
-                )
+                changeActiveIndex(stepIndex(activeFieldIndex, delta, matchingFields.length))
               }
               onSelectActive={(field) => selectField(field.key)}
               onCloseMenu={resetEditor}
@@ -387,9 +364,7 @@ const CompiledFilter = memo(function CompiledFilter(
         />
       </fieldset>
 
-      {persistenceNotice && (
-        <p className="filter-storage-notice">{persistenceNotice}</p>
-      )}
+      {persistenceNotice && <p className="filter-storage-notice">{persistenceNotice}</p>}
 
       <span aria-live="polite" className="filter-visually-hidden">
         {liveRegionMessage}

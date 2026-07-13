@@ -13,8 +13,7 @@ const renderProbes = vi.hoisted(() => ({
 }));
 
 vi.mock('@/utilities/filter/field-search.ts', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@/utilities/filter/field-search.ts')>();
+  const actual = await importOriginal<typeof import('@/utilities/filter/field-search.ts')>();
 
   return {
     ...actual,
@@ -26,10 +25,7 @@ vi.mock('@/utilities/filter/field-search.ts', async (importOriginal) => {
 });
 
 vi.mock('@/utilities/filter/field-registry.ts', async (importOriginal) => {
-  const actual =
-    await importOriginal<
-      typeof import('@/utilities/filter/field-registry.ts')
-    >();
+  const actual = await importOriginal<typeof import('@/utilities/filter/field-registry.ts')>();
 
   return {
     ...actual,
@@ -43,12 +39,9 @@ vi.mock('@/utilities/filter/field-registry.ts', async (importOriginal) => {
 });
 
 vi.mock('./filter-action-rail.tsx', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('./filter-action-rail.tsx')>();
+  const actual = await importOriginal<typeof import('./filter-action-rail.tsx')>();
 
-  function FilterRailRenderProbe(
-    props: ComponentProps<typeof actual.FilterRail>,
-  ) {
+  function FilterRailRenderProbe(props: ComponentProps<typeof actual.FilterRail>) {
     renderProbes.filterRail();
     return <actual.FilterRail {...props} />;
   }
@@ -59,9 +52,7 @@ vi.mock('./filter-action-rail.tsx', async (importOriginal) => {
 vi.mock('./filter-token.tsx', async (importOriginal) => {
   const actual = await importOriginal<typeof import('./filter-token.tsx')>();
 
-  function FilterTokenRenderProbe(
-    props: ComponentProps<typeof actual.FilterToken>,
-  ) {
+  function FilterTokenRenderProbe(props: ComponentProps<typeof actual.FilterToken>) {
     renderProbes.filterToken();
     return <actual.FilterToken {...props} />;
   }
@@ -70,12 +61,9 @@ vi.mock('./filter-token.tsx', async (importOriginal) => {
 });
 
 vi.mock('./filter-token-list.tsx', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('./filter-token-list.tsx')>();
+  const actual = await importOriginal<typeof import('./filter-token-list.tsx')>();
 
-  function FilterTokenListRenderProbe(
-    props: ComponentProps<typeof actual.FilterTokenList>,
-  ) {
+  function FilterTokenListRenderProbe(props: ComponentProps<typeof actual.FilterTokenList>) {
     renderProbes.filterTokenList();
     return <actual.FilterTokenList {...props} />;
   }
@@ -122,26 +110,16 @@ describe('compiled Filter render boundaries', () => {
       filterToken: renderProbes.filterToken.mock.calls.length,
       filterTokenList: renderProbes.filterTokenList.mock.calls.length,
     };
-    expect(Object.values(rendersBeforeTyping).every((count) => count > 0)).toBe(
-      true,
-    );
+    expect(Object.values(rendersBeforeTyping).every((count) => count > 0)).toBe(true);
 
     const valueInput = screen.getByRole('textbox', { name: 'Value' });
     await user.type(valueInput, 'Nadia');
 
     expect(valueInput).toHaveValue('Nadia');
-    expect(renderProbes.fieldRegistry).toHaveBeenCalledTimes(
-      rendersBeforeTyping.fieldRegistry,
-    );
-    expect(renderProbes.filterRail).toHaveBeenCalledTimes(
-      rendersBeforeTyping.filterRail,
-    );
-    expect(renderProbes.filterToken).toHaveBeenCalledTimes(
-      rendersBeforeTyping.filterToken,
-    );
-    expect(renderProbes.filterTokenList).toHaveBeenCalledTimes(
-      rendersBeforeTyping.filterTokenList,
-    );
+    expect(renderProbes.fieldRegistry).toHaveBeenCalledTimes(rendersBeforeTyping.fieldRegistry);
+    expect(renderProbes.filterRail).toHaveBeenCalledTimes(rendersBeforeTyping.filterRail);
+    expect(renderProbes.filterToken).toHaveBeenCalledTimes(rendersBeforeTyping.filterToken);
+    expect(renderProbes.filterTokenList).toHaveBeenCalledTimes(rendersBeforeTyping.filterTokenList);
   });
 
   it('rebuilds field metadata when nested options mutate in place', async () => {
@@ -169,9 +147,7 @@ describe('compiled Filter render boundaries', () => {
     view.rerender(<Filter fields={fields} onChange={onChange} />);
 
     expect(screen.queryByRole('option', { name: 'Won' })).toBeNull();
-    expect(renderProbes.fieldRegistry).toHaveBeenCalledTimes(
-      buildsBeforeMutation + 1,
-    );
+    expect(renderProbes.fieldRegistry).toHaveBeenCalledTimes(buildsBeforeMutation + 1);
   });
 
   it('reuses field search results while only the active index changes', async () => {
@@ -191,9 +167,7 @@ describe('compiled Filter render boundaries', () => {
 
     await user.keyboard('{ArrowDown}{ArrowDown}{ArrowDown}');
 
-    expect(renderProbes.fieldSearch).toHaveBeenCalledTimes(
-      searchesBeforeNavigation,
-    );
+    expect(renderProbes.fieldSearch).toHaveBeenCalledTimes(searchesBeforeNavigation);
   });
 
   it('shares field search results with an existing token editor', async () => {

@@ -39,9 +39,7 @@ test.describe('visual regression', () => {
     await pickOption(page, 'Lead');
     await pickOption(page, 'Negotiation');
     await applyValue(page);
-    await expect(
-      filterToken(page, 'Stage is any of Lead, Negotiation'),
-    ).toBeVisible();
+    await expect(filterToken(page, 'Stage is any of Lead, Negotiation')).toBeVisible();
     await expect(filterForm(page)).toHaveScreenshot('row-mixed-chips.png');
   });
 
@@ -50,9 +48,7 @@ test.describe('visual regression', () => {
     await addSingleValueFilter(page, 'Deal value', 'greater than', '10');
     // Flip the last gap: the first two chips become a bracketed and-run.
     await joinerButton(page, 'and').last().click();
-    await expect(
-      filterToken(page, /^Active is true \(in a group matching all\)/),
-    ).toBeVisible();
+    await expect(filterToken(page, /^Active is true \(in a group matching all\)/)).toBeVisible();
     await expect(filterForm(page)).toHaveScreenshot('row-grouped-chips.png');
   });
 
@@ -61,9 +57,7 @@ test.describe('visual regression', () => {
     // initialFilterGroup); it renders flagged without any user action.
     await page.goto('/?invalid');
     await page.evaluate(() => document.fonts.ready);
-    await expect(
-      page.getByRole('button', { name: /Fix invalid filter/ }),
-    ).toBeVisible();
+    await expect(page.getByRole('button', { name: /Fix invalid filter/ })).toBeVisible();
     await expect(filterForm(page)).toHaveScreenshot('row-invalid-chip.png');
   });
 
@@ -71,12 +65,8 @@ test.describe('visual regression', () => {
     await pickField(page, 'Name');
     await pickOption(page, 'contains');
     await page.getByRole('heading', { name: 'Filter' }).click();
-    await expect(
-      page.getByRole('group', { name: 'Incomplete filter: Name' }),
-    ).toBeVisible();
-    await expect(filterForm(page)).toHaveScreenshot(
-      'row-incomplete-draft-token.png',
-    );
+    await expect(page.getByRole('group', { name: 'Incomplete filter: Name' })).toBeVisible();
+    await expect(filterForm(page)).toHaveScreenshot('row-incomplete-draft-token.png');
   });
 
   test('filter row while disabled', async ({ page }) => {
@@ -94,22 +84,16 @@ test.describe('visual regression', () => {
 
   test('save-view flow', async ({ page }) => {
     await page.getByRole('button', { name: 'Saved views' }).click();
-    await popover(page)
-      .getByRole('button', { name: 'Save current filters…' })
-      .click();
+    await popover(page).getByRole('button', { name: 'Save current filters…' }).click();
     await popover(page).getByLabel('View name').fill('Active deals');
     await expect(popoverBox(page)).toHaveScreenshot('popover-save-view.png');
   });
 
   test('saved-views menu', async ({ page }) => {
     await page.getByRole('button', { name: 'Saved views' }).click();
-    await popover(page)
-      .getByRole('button', { name: 'Save current filters…' })
-      .click();
+    await popover(page).getByRole('button', { name: 'Save current filters…' }).click();
     await popover(page).getByLabel('View name').fill('Active deals');
-    await popover(page)
-      .getByRole('button', { name: 'Save', exact: true })
-      .click();
+    await popover(page).getByRole('button', { name: 'Save', exact: true }).click();
     await page.getByRole('button', { name: 'Saved views' }).click();
     await expect(
       popover(page).getByRole('button', { name: 'Active deals', exact: true }),
@@ -125,26 +109,18 @@ test.describe('visual regression', () => {
   });
 
   test('field search while editing a token', async ({ page }) => {
-    await filterToken(page, 'Active is true')
-      .getByTitle('Change field')
-      .click();
+    await filterToken(page, 'Active is true').getByTitle('Change field').click();
     await popover(page).getByLabel('Search fields').fill('date');
     await expect(popoverBox(page)).toHaveScreenshot('popover-field-search.png');
   });
 
   test('operator list', async ({ page }) => {
     await pickField(page, 'Name');
-    await expect(popoverBox(page)).toHaveScreenshot(
-      'popover-operator-list.png',
-    );
+    await expect(popoverBox(page)).toHaveScreenshot('popover-operator-list.png');
   });
 
-  test('boolean collapsed list with the current choice checked', async ({
-    page,
-  }) => {
-    await filterToken(page, 'Active is true')
-      .getByTitle('Change value')
-      .click();
+  test('boolean collapsed list with the current choice checked', async ({ page }) => {
+    await filterToken(page, 'Active is true').getByTitle('Change value').click();
     await expect(popoverBox(page)).toHaveScreenshot('popover-boolean-list.png');
   });
 

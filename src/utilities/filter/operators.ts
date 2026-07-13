@@ -102,6 +102,7 @@ export function booleanChoicesForField(
   field: FilterFieldDefinition<'boolean'>,
 ): readonly { value: BooleanChoice; label: string }[] {
   const operators = operatorsForField(field);
+
   return BOOLEAN_CHOICES.filter(({ value }) =>
     value === 'true' || value === 'false'
       ? operators.includes('equals')
@@ -115,9 +116,7 @@ export function isValuelessOperator(
   return operator === 'isEmpty' || operator === 'isNotEmpty';
 }
 
-export function operatorsForField(
-  field: FilterFieldDefinition,
-): readonly FilterOperator[] {
+export function operatorsForField(field: FilterFieldDefinition): readonly FilterOperator[] {
   return field.operators ?? OPERATORS_BY_TYPE[field.type];
 }
 
@@ -147,9 +146,7 @@ export function getValueEditorKind(
     case 'boolean':
       return 'boolean';
     case 'enum':
-      return operator === 'in' || operator === 'notIn'
-        ? 'enumMulti'
-        : 'enumSingle';
+      return operator === 'in' || operator === 'notIn' ? 'enumMulti' : 'enumSingle';
     case 'date':
       if (operator === 'withinLast') return 'duration';
       return operator === 'between' ? 'dateRange' : 'date';

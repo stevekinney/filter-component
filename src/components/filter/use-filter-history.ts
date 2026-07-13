@@ -7,10 +7,7 @@ import {
 } from '@/utilities/filter/expression.ts';
 import type { FilterExpression } from '@/utilities/filter/expression.ts';
 import { filterHistoryReducer } from '@/utilities/filter/history.ts';
-import type {
-  FilterHistory,
-  FilterHistoryAction,
-} from '@/utilities/filter/history.ts';
+import type { FilterHistory, FilterHistoryAction } from '@/utilities/filter/history.ts';
 import { parseFilterGroup } from '@/utilities/filter/filter-schema.ts';
 import { stableSerialize } from '@/utilities/filter/stable-serialize.ts';
 import { getFilterValidationIssue } from '@/utilities/filter/validation.ts';
@@ -37,19 +34,15 @@ function deriveValidGroup(
 
 export function useFilterHistory(
   fieldRegistry: FilterFieldRegistry,
-  onChange:
-    | ((filters: FilterGroup, abortController: AbortController) => void)
-    | undefined,
+  onChange: ((filters: FilterGroup, abortController: AbortController) => void) | undefined,
   initialFilters: FilterGroup | undefined,
   createConditionId: () => string,
 ): UseFilterHistoryResult {
   const [history, setHistory] = useState<FilterHistory>(() => {
     const present = initialFilters
-      ? fromFilterGroup(
-          parseFilterGroup(initialFilters, 'initialFilters'),
-          createConditionId,
-        )
+      ? fromFilterGroup(parseFilterGroup(initialFilters, 'initialFilters'), createConditionId)
       : EMPTY_FILTER_EXPRESSION;
+
     return { past: [], present, future: [] };
   });
   const historyRef = useRef(history);
@@ -71,6 +64,7 @@ export function useFilterHistory(
     lastNotifiedGroupKeyRef.current = stableSerialize(validGroup);
     abortControllerRef.current?.abort();
     const abortController = new AbortController();
+
     abortControllerRef.current = abortController;
     onChangeRef.current?.(validGroup, abortController);
   };
@@ -78,18 +72,18 @@ export function useFilterHistory(
   const applyFilterHistoryAction = (action: FilterHistoryAction): boolean => {
     const current = historyRef.current;
     const next = filterHistoryReducer(current, action);
+
     if (next === current) return false;
     historyRef.current = next;
     setHistory(next);
     notifyFiltersChange(deriveValidGroup(next.present, fieldsRef.current));
+
     return true;
   };
 
   useEffect(() => {
-    const validGroup = deriveValidGroup(
-      historyRef.current.present,
-      fieldsRef.current,
-    );
+    const validGroup = deriveValidGroup(historyRef.current.present, fieldsRef.current);
+
     if (stableSerialize(validGroup) === lastNotifiedGroupKeyRef.current) return;
     notifyFiltersChange(validGroup);
   }, [fieldRegistry.signature]);

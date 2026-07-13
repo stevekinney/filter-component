@@ -20,23 +20,15 @@ test.describe('composing new filters', () => {
     await clearAllFilters(page);
   });
 
-  test('string: contains commits a token and narrows results', async ({
-    page,
-  }) => {
+  test('string: contains commits a token and narrows results', async ({ page }) => {
     await addSingleValueFilter(page, 'Name', 'contains', 'corp');
     await expect(filterToken(page, 'Name contains corp')).toBeVisible();
     await expect(resultCount(page)).toHaveText('1 of 12 deals');
-    await expect(page.locator('.example-table tbody tr')).toHaveText([
-      /Acme Corp renewal/,
-    ]);
-    await expect(onChangePayloadPane(page)).toContainText(
-      '"operator": "contains"',
-    );
+    await expect(page.locator('.example-table tbody tr')).toHaveText([/Acme Corp renewal/]);
+    await expect(onChangePayloadPane(page)).toContainText('"operator": "contains"');
   });
 
-  test('string: committing with Enter works like the apply button', async ({
-    page,
-  }) => {
+  test('string: committing with Enter works like the apply button', async ({ page }) => {
     await pickField(page, 'Name');
     await pickOption(page, 'starts with');
     await popover(page).getByLabel('Value').fill('m');
@@ -45,9 +37,7 @@ test.describe('composing new filters', () => {
     await expect(resultCount(page)).toHaveText('4 of 12 deals');
   });
 
-  test('string: empty text value surfaces inline validation', async ({
-    page,
-  }) => {
+  test('string: empty text value surfaces inline validation', async ({ page }) => {
     await pickField(page, 'Name');
     await pickOption(page, 'contains');
     await applyValue(page);
@@ -58,9 +48,7 @@ test.describe('composing new filters', () => {
     await expect(filterToken(page, 'Name contains acme')).toBeVisible();
   });
 
-  test('valueless operator commits immediately without a value editor', async ({
-    page,
-  }) => {
+  test('valueless operator commits immediately without a value editor', async ({ page }) => {
     await pickField(page, 'Name');
     await pickOption(page, 'is empty');
     await expect(popover(page)).toBeHidden();
@@ -70,9 +58,7 @@ test.describe('composing new filters', () => {
 
   test('number: greater than', async ({ page }) => {
     await addSingleValueFilter(page, 'Deal value', 'greater than', '50000');
-    await expect(
-      filterToken(page, 'Deal value greater than 50000'),
-    ).toBeVisible();
+    await expect(filterToken(page, 'Deal value greater than 50000')).toBeVisible();
     await expect(resultCount(page)).toHaveText('5 of 12 deals');
   });
 
@@ -89,15 +75,11 @@ test.describe('composing new filters', () => {
     await popover(page).getByLabel('From').fill('10000');
     await popover(page).getByLabel('To').fill('70000');
     await applyValue(page);
-    await expect(
-      filterToken(page, 'Deal value between 10000 and 70000'),
-    ).toBeVisible();
+    await expect(filterToken(page, 'Deal value between 10000 and 70000')).toBeVisible();
     await expect(resultCount(page)).toHaveText('5 of 12 deals');
   });
 
-  test('number: inverted range surfaces validation and recovers', async ({
-    page,
-  }) => {
+  test('number: inverted range surfaces validation and recovers', async ({ page }) => {
     await pickField(page, 'Deal value');
     await pickOption(page, 'between');
     await popover(page).getByLabel('From').fill('70000');
@@ -108,40 +90,27 @@ test.describe('composing new filters', () => {
     );
     await popover(page).getByLabel('To').fill('90000');
     await applyValue(page);
-    await expect(
-      filterToken(page, 'Deal value between 70000 and 90000'),
-    ).toBeVisible();
+    await expect(filterToken(page, 'Deal value between 70000 and 90000')).toBeVisible();
   });
 
-  test('boolean: collapsed single-pick list commits in one step', async ({
-    page,
-  }) => {
+  test('boolean: collapsed single-pick list commits in one step', async ({ page }) => {
     await pickField(page, 'Active');
-    await expect(
-      popover(page).getByRole('option', { name: 'is true' }),
-    ).toBeVisible();
+    await expect(popover(page).getByRole('option', { name: 'is true' })).toBeVisible();
     await pickOption(page, 'is false');
     await expect(filterToken(page, 'Active is false')).toBeVisible();
     await expect(resultCount(page)).toHaveText('3 of 12 deals');
     await expect(onChangePayloadPane(page)).toContainText('"value": false');
   });
 
-  test('boolean: a narrowed field shows only its allowed choices', async ({
-    page,
-  }) => {
+  test('boolean: a narrowed field shows only its allowed choices', async ({ page }) => {
     await page.goto('/?narrowBoolean');
     await expect(resultCount(page)).toHaveText('8 of 12 deals');
     await clearAllFilters(page);
     await pickField(page, 'Active');
-    await expect(popover(page).getByRole('option')).toHaveText([
-      'is true',
-      'is false',
-    ]);
+    await expect(popover(page).getByRole('option')).toHaveText(['is true', 'is false']);
   });
 
-  test('enum: single select commits from the options list', async ({
-    page,
-  }) => {
+  test('enum: single select commits from the options list', async ({ page }) => {
     await pickField(page, 'Stage');
     await pickOption(page, 'is');
     await pickOption(page, 'Negotiation');
@@ -149,9 +118,7 @@ test.describe('composing new filters', () => {
     await expect(resultCount(page)).toHaveText('2 of 12 deals');
   });
 
-  test('enum: multi select renders value pills and applies as one filter', async ({
-    page,
-  }) => {
+  test('enum: multi select renders value pills and applies as one filter', async ({ page }) => {
     await pickField(page, 'Stage');
     await pickOption(page, 'is any of');
     await pickOption(page, 'Lead');
@@ -163,15 +130,11 @@ test.describe('composing new filters', () => {
     await expect(resultCount(page)).toHaveText('4 of 12 deals');
   });
 
-  test('enum: multi select with nothing chosen is rejected', async ({
-    page,
-  }) => {
+  test('enum: multi select with nothing chosen is rejected', async ({ page }) => {
     await pickField(page, 'Stage');
     await pickOption(page, 'is none of');
     await applyValue(page);
-    await expect(popover(page).getByRole('alert')).toHaveText(
-      'Choose at least one option',
-    );
+    await expect(popover(page).getByRole('alert')).toHaveText('Choose at least one option');
   });
 
   test('date: before a chosen day', async ({ page }) => {
@@ -179,9 +142,7 @@ test.describe('composing new filters', () => {
     await pickOption(page, 'is before');
     await popover(page).getByLabel('Value').fill('2026-06-01');
     await applyValue(page);
-    await expect(
-      filterToken(page, 'Close date is before 2026-06-01'),
-    ).toBeVisible();
+    await expect(filterToken(page, 'Close date is before 2026-06-01')).toBeVisible();
     await expect(resultCount(page)).toHaveText('3 of 12 deals');
   });
 
@@ -190,9 +151,7 @@ test.describe('composing new filters', () => {
     await pickOption(page, 'between');
     await popover(page).getByLabel('From').fill('2026-07-01');
     await applyValue(page);
-    await expect(popover(page).getByRole('alert')).toHaveText(
-      'Choose both dates',
-    );
+    await expect(popover(page).getByRole('alert')).toHaveText('Choose both dates');
   });
 
   test('date: after a specific day', async ({ page }) => {
@@ -200,9 +159,7 @@ test.describe('composing new filters', () => {
     await pickOption(page, 'is after');
     await popover(page).getByLabel('Value').fill('2026-07-01');
     await applyValue(page);
-    await expect(
-      filterToken(page, 'Last emailed is after 2026-07-01'),
-    ).toBeVisible();
+    await expect(filterToken(page, 'Last emailed is after 2026-07-01')).toBeVisible();
     await expect(resultCount(page)).toHaveText('6 of 12 deals');
   });
 
@@ -212,9 +169,7 @@ test.describe('composing new filters', () => {
     await popover(page).getByLabel('Amount').fill('30');
     await popover(page).getByLabel('Unit').selectOption('days');
     await applyValue(page);
-    await expect(
-      filterToken(page, 'Last emailed within last 30 days'),
-    ).toBeVisible();
+    await expect(filterToken(page, 'Last emailed within last 30 days')).toBeVisible();
     await expect(onChangePayloadPane(page)).toContainText('"amount": 30');
     await expect(onChangePayloadPane(page)).toContainText('"unit": "days"');
   });
@@ -224,14 +179,10 @@ test.describe('composing new filters', () => {
     await pickOption(page, 'within last');
     await popover(page).getByLabel('Amount').fill('0');
     await applyValue(page);
-    await expect(popover(page).getByRole('alert')).toHaveText(
-      'Enter a positive whole number',
-    );
+    await expect(popover(page).getByRole('alert')).toHaveText('Enter a positive whole number');
   });
 
-  test('joiner: appears only between chips, so it needs two filters', async ({
-    page,
-  }) => {
+  test('joiner: appears only between chips, so it needs two filters', async ({ page }) => {
     await expect(page.getByRole('button', { name: /^Joined by/ })).toBeHidden();
     await addSingleValueFilter(page, 'Name', 'contains', 'a');
     await expect(page.getByRole('button', { name: /^Joined by/ })).toBeHidden();
@@ -245,9 +196,7 @@ test.describe('composing new filters', () => {
     await pickField(page, 'Active');
     await pickOption(page, 'is false');
     await joinerButton(page, 'and').last().click();
-    await expect(
-      filterToken(page, 'Name contains a (in a group matching all)'),
-    ).toBeVisible();
+    await expect(filterToken(page, 'Name contains a (in a group matching all)')).toBeVisible();
     await expect(onChangePayloadPane(page)).toContainText('"combinator": "or"');
 
     await joinerButton(page, 'or').click();

@@ -115,9 +115,7 @@ function SavedViewSaveControl({
   nameInputRef: RefObject<HTMLInputElement | null>;
   errorId: string;
   dispatchMenu: Dispatch<SavedViewsMenuAction>;
-  submitName: (
-    namingState: Extract<SavedViewsMenuState, { stage: 'naming' }>,
-  ) => void;
+  submitName: (namingState: Extract<SavedViewsMenuState, { stage: 'naming' }>) => void;
   handleNameKeyDown: (
     event: KeyboardEvent<HTMLInputElement>,
     namingState: Extract<SavedViewsMenuState, { stage: 'naming' }>,
@@ -157,7 +155,6 @@ function SavedViewSaveControl({
       </div>
     );
   }
-
   return (
     <div className="filter-saved-views-save">
       <button
@@ -197,10 +194,7 @@ export function SavedViewsControls({
   onLoadView: (view: SavedView) => void;
   onRemoveView: (name: string) => void;
 }) {
-  const [menuState, dispatchMenu] = useReducer(
-    savedViewsMenuReducer,
-    CLOSED_SAVED_VIEWS_MENU,
-  );
+  const [menuState, dispatchMenu] = useReducer(savedViewsMenuReducer, CLOSED_SAVED_VIEWS_MENU);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const nameInputRef = useRef<HTMLInputElement | null>(null);
   const errorId = `${useId()}-view-name-error`;
@@ -233,10 +227,9 @@ export function SavedViewsControls({
     openMenu(event.key === 'ArrowDown' ? 0 : views.length - 1);
   };
 
-  const submitName = (
-    namingState: Extract<SavedViewsMenuState, { stage: 'naming' }>,
-  ) => {
+  const submitName = (namingState: Extract<SavedViewsMenuState, { stage: 'naming' }>) => {
     const name = namingState.nameDraft.trim();
+
     if (name === '') {
       dispatchMenu({
         type: 'rejectName',
@@ -282,9 +275,7 @@ export function SavedViewsControls({
         title="Saved views"
         aria-haspopup="dialog"
         aria-expanded={menuState.stage !== 'closed'}
-        onClick={() =>
-          menuState.stage === 'closed' ? openMenu(0) : closeMenu(false)
-        }
+        onClick={() => (menuState.stage === 'closed' ? openMenu(0) : closeMenu(false))}
         onKeyDown={handleTriggerKeyDown}
       >
         <Bookmark aria-hidden="true" size={18} />

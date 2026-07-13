@@ -17,9 +17,7 @@ import {
 } from './helpers.ts';
 
 async function expectNoAxeViolations(page: Page): Promise<void> {
-  const results = await new AxeBuilder({ page })
-    .include('form.filter')
-    .analyze();
+  const results = await new AxeBuilder({ page }).include('form.filter').analyze();
   expect(results.violations).toEqual([]);
 }
 
@@ -59,30 +57,22 @@ test.describe('accessibility', () => {
     await pickOption(page, 'Lead');
     await pickOption(page, 'Negotiation');
     await applyValue(page);
-    await expect(
-      filterToken(page, 'Stage is any of Lead, Negotiation'),
-    ).toBeVisible();
+    await expect(filterToken(page, 'Stage is any of Lead, Negotiation')).toBeVisible();
     await expectNoAxeViolations(page);
   });
 
   test('the in-menu save flow has no axe violations', async ({ page }) => {
     await page.getByRole('button', { name: 'Saved views' }).click();
-    await popover(page)
-      .getByRole('button', { name: 'Save current filters…' })
-      .click();
+    await popover(page).getByRole('button', { name: 'Save current filters…' }).click();
     await expect(popover(page).getByLabel('View name')).toBeVisible();
     await expectNoAxeViolations(page);
   });
 
   test('the saved-views menu has no axe violations', async ({ page }) => {
     await page.getByRole('button', { name: 'Saved views' }).click();
-    await popover(page)
-      .getByRole('button', { name: 'Save current filters…' })
-      .click();
+    await popover(page).getByRole('button', { name: 'Save current filters…' }).click();
     await popover(page).getByLabel('View name').fill('Active deals');
-    await popover(page)
-      .getByRole('button', { name: 'Save', exact: true })
-      .click();
+    await popover(page).getByRole('button', { name: 'Save', exact: true }).click();
     await page.getByRole('button', { name: 'Saved views' }).click();
     await expect(
       popover(page).getByRole('button', { name: 'Active deals', exact: true }),
@@ -90,15 +80,11 @@ test.describe('accessibility', () => {
     await expectNoAxeViolations(page);
   });
 
-  test('a grouped row with joiners and brackets has no axe violations', async ({
-    page,
-  }) => {
+  test('a grouped row with joiners and brackets has no axe violations', async ({ page }) => {
     await addSingleValueFilter(page, 'Name', 'contains', 'a');
     await addSingleValueFilter(page, 'Deal value', 'greater than', '10');
     await joinerButton(page, 'and').last().click();
-    await expect(
-      filterToken(page, /^Active is true \(in a group matching all\)/),
-    ).toBeVisible();
+    await expect(filterToken(page, /^Active is true \(in a group matching all\)/)).toBeVisible();
     await expectNoAxeViolations(page);
   });
 
@@ -118,24 +104,16 @@ test.describe('accessibility', () => {
     // ?invalid seeds a token whose field is not in the schema, so it renders
     // flagged on load (see the demo's initialFilterGroup).
     await page.goto('/?invalid');
-    await expect(
-      page.getByRole('button', { name: /Fix invalid filter/ }),
-    ).toBeVisible();
+    await expect(page.getByRole('button', { name: /Fix invalid filter/ })).toBeVisible();
     await expectNoAxeViolations(page);
   });
 
-  test('a token exposes its full phrase as the accessible name', async ({
-    page,
-  }) => {
+  test('a token exposes its full phrase as the accessible name', async ({ page }) => {
     await addSingleValueFilter(page, 'Deal value', 'at least', '10000');
-    await expect(
-      page.getByRole('group', { name: 'Deal value at least 10000' }),
-    ).toBeVisible();
+    await expect(page.getByRole('group', { name: 'Deal value at least 10000' })).toBeVisible();
   });
 
-  test('the token row is a labelled list with one item per filter', async ({
-    page,
-  }) => {
+  test('the token row is a labelled list with one item per filter', async ({ page }) => {
     await addSingleValueFilter(page, 'Name', 'contains', 'a');
     await expect(filterTokenList(page)).toBeVisible();
     await expect(filterTokenList(page).getByRole('listitem')).toHaveCount(2);
@@ -157,14 +135,10 @@ test.describe('accessibility', () => {
     await expect(input).toHaveAttribute('aria-expanded', 'true');
     const activeDescendant = await input.getAttribute('aria-activedescendant');
     if (activeDescendant === null) {
-      throw new Error(
-        'Expected the open combobox to identify an active option',
-      );
+      throw new Error('Expected the open combobox to identify an active option');
     }
     expect(activeDescendant).not.toMatch(/\s/);
-    await expect(
-      page.locator(`[id=${JSON.stringify(activeDescendant)}]`),
-    ).toHaveRole('option');
+    await expect(page.locator(`[id=${JSON.stringify(activeDescendant)}]`)).toHaveRole('option');
   });
 
   test('changes are announced through the live region', async ({ page }) => {
@@ -172,22 +146,14 @@ test.describe('accessibility', () => {
     await expect(liveRegion(page)).toHaveText('All filters cleared');
 
     await addSingleValueFilter(page, 'Name', 'contains', 'corp');
-    await expect(liveRegion(page)).toHaveText(
-      'Filter added: Name contains corp',
-    );
+    await expect(liveRegion(page)).toHaveText('Filter added: Name contains corp');
 
-    await filterToken(page, 'Name contains corp')
-      .getByTitle('Change value')
-      .click();
+    await filterToken(page, 'Name contains corp').getByTitle('Change value').click();
     await popover(page).getByLabel('Value').fill('labs');
     await applyValue(page);
-    await expect(liveRegion(page)).toHaveText(
-      'Filter updated: Name contains labs',
-    );
+    await expect(liveRegion(page)).toHaveText('Filter updated: Name contains labs');
 
-    await page
-      .getByRole('button', { name: 'Remove Name contains labs filter' })
-      .click();
+    await page.getByRole('button', { name: 'Remove Name contains labs filter' }).click();
     await expect(liveRegion(page)).toHaveText('Filter removed: Name');
 
     await page.getByRole('button', { name: 'Undo filter change' }).click();
@@ -200,18 +166,12 @@ test.describe('accessibility', () => {
   test('abandoning and discarding a draft is announced', async ({ page }) => {
     await pickField(page, 'Name');
     await page.getByRole('heading', { name: 'Filter' }).click();
-    await expect(liveRegion(page)).toHaveText(
-      'Filter incomplete — kept for later',
-    );
-    await page
-      .getByRole('button', { name: 'Discard incomplete filter' })
-      .click();
+    await expect(liveRegion(page)).toHaveText('Filter incomplete — kept for later');
+    await page.getByRole('button', { name: 'Discard incomplete filter' }).click();
     await expect(liveRegion(page)).toHaveText('Incomplete filter discarded');
   });
 
-  test('validation errors are exposed as alerts tied to the input', async ({
-    page,
-  }) => {
+  test('validation errors are exposed as alerts tied to the input', async ({ page }) => {
     await pickField(page, 'Deal value');
     await pickOption(page, 'is');
     await applyValue(page);

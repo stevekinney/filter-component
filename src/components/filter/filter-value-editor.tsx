@@ -38,6 +38,7 @@ function ScalarValueInput({
   onKeyDown: InputKeyDownHandler;
 }) {
   const inputType = kind === 'text' ? 'text' : kind;
+
   return (
     <input
       data-autofocus="1"
@@ -46,9 +47,7 @@ function ScalarValueInput({
       aria-describedby={describedBy}
       placeholder="Value"
       value={draft.input}
-      onChange={(event) =>
-        onDraftChange({ ...draft, input: event.target.value })
-      }
+      onChange={(event) => onDraftChange({ ...draft, input: event.target.value })}
       onKeyDown={onKeyDown}
     />
   );
@@ -68,6 +67,7 @@ function RangeValueInputs({
   onKeyDown: InputKeyDownHandler;
 }) {
   const inputType = kind === 'numberRange' ? 'number' : 'date';
+
   return (
     <>
       <input
@@ -76,9 +76,7 @@ function RangeValueInputs({
         aria-label="From"
         aria-describedby={describedBy}
         value={draft.fromInput}
-        onChange={(event) =>
-          onDraftChange({ ...draft, fromInput: event.target.value })
-        }
+        onChange={(event) => onDraftChange({ ...draft, fromInput: event.target.value })}
         onKeyDown={onKeyDown}
       />
       <span aria-hidden="true" className="filter-value-joiner">
@@ -89,9 +87,7 @@ function RangeValueInputs({
         aria-label="To"
         aria-describedby={describedBy}
         value={draft.toInput}
-        onChange={(event) =>
-          onDraftChange({ ...draft, toInput: event.target.value })
-        }
+        onChange={(event) => onDraftChange({ ...draft, toInput: event.target.value })}
         onKeyDown={onKeyDown}
       />
     </>
@@ -120,9 +116,7 @@ function DurationValueInputs({
         placeholder="7"
         className="filter-value-amount"
         value={draft.amountInput}
-        onChange={(event) =>
-          onDraftChange({ ...draft, amountInput: event.target.value })
-        }
+        onChange={(event) => onDraftChange({ ...draft, amountInput: event.target.value })}
         onKeyDown={onKeyDown}
       />
       <select
@@ -130,9 +124,8 @@ function DurationValueInputs({
         className="filter-value-unit"
         value={draft.unit}
         onChange={(event) => {
-          const unit = WITHIN_LAST_UNITS.find(
-            (candidate) => candidate === event.target.value,
-          );
+          const unit = WITHIN_LAST_UNITS.find((candidate) => candidate === event.target.value);
+
           if (unit) onDraftChange({ ...draft, unit });
         }}
         onKeyDown={onKeyDown}
@@ -222,12 +215,7 @@ export function FilterValueEditor({
     <>
       <div className="filter-popover-header">
         <div className="filter-popover-heading">{heading}</div>
-        <button
-          type="button"
-          aria-label="Cancel"
-          className="filter-icon-button"
-          onClick={onCancel}
-        >
+        <button type="button" aria-label="Cancel" className="filter-icon-button" onClick={onCancel}>
           <X aria-hidden="true" size={13} />
         </button>
       </div>

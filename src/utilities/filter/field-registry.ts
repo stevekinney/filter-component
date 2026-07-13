@@ -16,18 +16,10 @@ const label = z
     'Expected a nonblank, trimmed label',
   )
   .optional();
-const unique = <T>(values: readonly T[]) =>
-  new Set(values).size === values.length;
+const unique = <T>(values: readonly T[]) => new Set(values).size === values.length;
 const operators = <T extends readonly [string, ...string[]]>(values: T) =>
-  z
-    .array(z.enum(values))
-    .min(1)
-    .refine(unique, 'Operators must be unique')
-    .optional();
-const options = z
-  .array(key)
-  .min(1)
-  .refine(unique, 'Enum options must be unique');
+  z.array(z.enum(values)).min(1).refine(unique, 'Operators must be unique').optional();
+const options = z.array(key).min(1).refine(unique, 'Enum options must be unique');
 
 const fieldDefinitionSchema = z.discriminatedUnion('type', [
   z
@@ -85,17 +77,20 @@ export function createFilterFieldRegistry(
   signature = stableSerialize(value),
 ): FilterFieldRegistry {
   const result = z.array(fieldDefinitionSchema).safeParse(value);
+
   if (!result.success) {
     throw new TypeError(`Invalid fields:\n${z.prettifyError(result.error)}`);
   }
   const fields = structuredClone(value);
   const byKey = new Map<string, FilterFieldDefinition>();
+
   for (const field of fields) {
     if (byKey.has(field.key)) {
       throw new TypeError(`Invalid fields: duplicate field key "${field.key}"`);
     }
     byKey.set(field.key, field);
   }
+
   return {
     fields,
     byKey,

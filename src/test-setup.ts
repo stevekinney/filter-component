@@ -19,19 +19,13 @@ const formatConsoleArgument = (argument: unknown): string => {
 beforeEach(() => {
   unexpectedConsoleCalls = [];
   const warningSpy = vi.spyOn(console, 'warn').mockImplementation((...args) => {
-    unexpectedConsoleCalls.push(
-      `console.warn: ${args.map(formatConsoleArgument).join(' ')}`,
-    );
+    unexpectedConsoleCalls.push(`console.warn: ${args.map(formatConsoleArgument).join(' ')}`);
   });
   const errorSpy = vi.spyOn(console, 'error').mockImplementation((...args) => {
-    unexpectedConsoleCalls.push(
-      `console.error: ${args.map(formatConsoleArgument).join(' ')}`,
-    );
+    unexpectedConsoleCalls.push(`console.error: ${args.map(formatConsoleArgument).join(' ')}`);
   });
-  restoreConsoleSpies = [
-    () => warningSpy.mockRestore(),
-    () => errorSpy.mockRestore(),
-  ];
+
+  restoreConsoleSpies = [() => warningSpy.mockRestore(), () => errorSpy.mockRestore()];
 });
 
 afterEach(() => {
@@ -43,9 +37,7 @@ afterEach(() => {
   restoreConsoleSpies = [];
 
   if (unexpectedConsoleCalls.length > 0) {
-    throw new Error(
-      `Unexpected console output:\n${unexpectedConsoleCalls.join('\n')}`,
-    );
+    throw new Error(`Unexpected console output:\n${unexpectedConsoleCalls.join('\n')}`);
   }
 });
 
@@ -68,6 +60,7 @@ if (typeof HTMLElement.prototype.showPopover !== 'function') {
     newState: 'open' | 'closed',
   ) => {
     const event = new Event(type, { cancelable: type === 'beforetoggle' });
+
     Object.assign(event, { oldState, newState });
     element.dispatchEvent(event);
   };
@@ -76,6 +69,7 @@ if (typeof HTMLElement.prototype.showPopover !== 'function') {
     if (!openPopovers.has(element)) return;
     openPopovers.delete(element);
     const listener = dismissListeners.get(element);
+
     if (listener) {
       document.removeEventListener('pointerdown', listener);
       dismissListeners.delete(element);
@@ -84,9 +78,7 @@ if (typeof HTMLElement.prototype.showPopover !== 'function') {
     fireToggle(element, 'toggle', 'open', 'closed');
   };
 
-  HTMLElement.prototype.showPopover = function (options?: {
-    source?: HTMLElement;
-  }) {
+  HTMLElement.prototype.showPopover = function (options?: { source?: HTMLElement }) {
     if (openPopovers.has(this)) {
       throw new DOMException('Popover is already open', 'InvalidStateError');
     }
@@ -101,11 +93,13 @@ if (typeof HTMLElement.prototype.showPopover !== 'function') {
           return;
         }
         const target = event.target instanceof Node ? event.target : null;
+
         if (!target) return;
         if (this.contains(target)) return;
         if (source?.contains(target)) return;
         hide(this);
       };
+
       document.addEventListener('pointerdown', listener);
       dismissListeners.set(this, listener);
     }
@@ -124,5 +118,6 @@ if (typeof HTMLElement.prototype.showPopover !== 'function') {
 // let a plain author rule beat its popover UA rule; this is test-shim CSS,
 // not component CSS.
 const popoverShimStyle = document.createElement('style');
+
 popoverShimStyle.textContent = '[popover] { display: block !important; }';
 document.head.appendChild(popoverShimStyle);

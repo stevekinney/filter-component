@@ -114,10 +114,9 @@ type FilterConditionForOperator<
  * operator so that narrowing `type` narrows `operator`, and narrowing
  * `operator` narrows `value`.
  */
-export type FilterCondition<T extends FilterFieldType = FilterFieldType> =
-  T extends FilterFieldType
-    ? FilterConditionForOperator<T, FilterOperatorsByFieldType[T]>
-    : never;
+export type FilterCondition<T extends FilterFieldType = FilterFieldType> = T extends FilterFieldType
+  ? FilterConditionForOperator<T, FilterOperatorsByFieldType[T]>
+  : never;
 
 /**
  * A field the parent makes available for filtering. `operators` may narrow

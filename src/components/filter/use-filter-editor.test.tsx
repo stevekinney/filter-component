@@ -9,10 +9,7 @@ import { createFilterFieldRegistry } from '@/utilities/filter/field-registry.ts'
 import { EMPTY_FILTER_EXPRESSION } from '@/utilities/filter/expression.ts';
 import type { FilterExpression } from '@/utilities/filter/expression.ts';
 import { filterHistoryReducer } from '@/utilities/filter/history.ts';
-import type {
-  FilterHistory,
-  FilterHistoryAction,
-} from '@/utilities/filter/history.ts';
+import type { FilterHistory, FilterHistoryAction } from '@/utilities/filter/history.ts';
 import type { FilterFieldDefinition } from '@/types/filter.ts';
 
 const FIELDS: readonly FilterFieldDefinition[] = [
@@ -55,15 +52,13 @@ function setupEditor(
   };
   let acceptActions = true;
   let nextId = 0;
-  const applyFilterHistoryAction = vi.fn(
-    (action: FilterHistoryAction): boolean => {
-      if (!acceptActions) return false;
-      const next = filterHistoryReducer(history, action);
-      if (next === history) return false;
-      history = next;
-      return true;
-    },
-  );
+  const applyFilterHistoryAction = vi.fn((action: FilterHistoryAction): boolean => {
+    if (!acceptActions) return false;
+    const next = filterHistoryReducer(history, action);
+    if (next === history) return false;
+    history = next;
+    return true;
+  });
   const scheduleFocus = vi.fn<(target: FocusTarget) => void>();
   const announce = vi.fn<(message: string) => void>();
   const fieldset = document.createElement('fieldset');
@@ -110,10 +105,7 @@ function setupEditor(
 
 describe('useFilterEditor stage commands', () => {
   it('reduces each same-event command exactly once against the latest state', () => {
-    const reducerSpy = vi.spyOn(
-      filterEditorReducerModule,
-      'filterEditorControllerReducer',
-    );
+    const reducerSpy = vi.spyOn(filterEditorReducerModule, 'filterEditorControllerReducer');
     const hook = setupEditor();
     reducerSpy.mockClear();
 
@@ -155,9 +147,7 @@ describe('useFilterEditor stage commands', () => {
 
     const connected = document.createElement('button');
     hook.fieldset.append(connected);
-    act(() =>
-      hook.result.current.openTokenSegment(nameEntry(), 'field', connected),
-    );
+    act(() => hook.result.current.openTokenSegment(nameEntry(), 'field', connected));
     act(() => hook.result.current.cancel());
     expect(hook.scheduleFocus).toHaveBeenLastCalledWith({
       type: 'element',
@@ -165,9 +155,7 @@ describe('useFilterEditor stage commands', () => {
     });
 
     const detached = document.createElement('button');
-    act(() =>
-      hook.result.current.openTokenSegment(nameEntry(), 'operator', detached),
-    );
+    act(() => hook.result.current.openTokenSegment(nameEntry(), 'operator', detached));
     act(() => hook.result.current.cancel());
     expect(hook.scheduleFocus).toHaveBeenLastCalledWith({
       type: 'segment',
@@ -193,9 +181,7 @@ describe('useFilterEditor stage commands', () => {
       stage: 'operator',
       fieldKey: 'name',
     });
-    expect(hook.announce).toHaveBeenCalledWith(
-      'Filter incomplete — kept for later',
-    );
+    expect(hook.announce).toHaveBeenCalledWith('Filter incomplete — kept for later');
 
     act(() => hook.result.current.browserDismiss());
     expect(hook.result.current.editorState).toEqual({ stage: 'idle' });
@@ -216,15 +202,11 @@ describe('useFilterEditor stage commands', () => {
 
     const anchor = document.createElement('button');
     hook.fieldset.append(anchor);
-    act(() =>
-      hook.result.current.openTokenSegment(nameEntry(), 'field', anchor),
-    );
+    act(() => hook.result.current.openTokenSegment(nameEntry(), 'field', anchor));
     act(() => hook.result.current.selectField('name'));
     expect(hook.result.current.editorState).toEqual({ stage: 'idle' });
 
-    act(() =>
-      hook.result.current.openTokenSegment(nameEntry(), 'field', anchor),
-    );
+    act(() => hook.result.current.openTokenSegment(nameEntry(), 'field', anchor));
     act(() => hook.result.current.selectField('amount'));
     expect(hook.result.current.editorState).toMatchObject({
       stage: 'operator',
@@ -247,9 +229,7 @@ describe('useFilterEditor commit commands', () => {
       stage: 'value',
       error: 'Enter a value',
     });
-    act(() =>
-      hook.result.current.changeDraft({ kind: 'scalar', input: 'Maria' }),
-    );
+    act(() => hook.result.current.changeDraft({ kind: 'scalar', input: 'Maria' }));
     expect(hook.result.current.editorState).toMatchObject({ error: null });
     act(() => hook.result.current.commitDraft());
     expect(hook.result.current.editorState).toEqual({ stage: 'idle' });
@@ -350,17 +330,13 @@ describe('useFilterEditor commit commands', () => {
     const hook = setupEditor(FIELDS, expression([existing, number], ['and']));
     const anchor = document.createElement('button');
 
-    act(() =>
-      hook.result.current.openTokenSegment(existing, 'operator', anchor),
-    );
+    act(() => hook.result.current.openTokenSegment(existing, 'operator', anchor));
     act(() => hook.result.current.selectOperator('contains'));
     expect(hook.getHistory().present.conditions[0]).toMatchObject({
       operator: 'contains',
       value: 'Maria',
     });
-    expect(hook.announce).toHaveBeenCalledWith(
-      'Filter updated: Name contains Maria',
-    );
+    expect(hook.announce).toHaveBeenCalledWith('Filter updated: Name contains Maria');
 
     act(() => hook.result.current.openTokenSegment(number, 'operator', anchor));
     act(() => hook.result.current.selectOperator('between'));
@@ -382,11 +358,7 @@ describe('useFilterEditor commit commands', () => {
     );
     const hook = setupEditor(FIELDS, expression([invalid]));
     act(() =>
-      hook.result.current.openTokenSegment(
-        invalid,
-        'operator',
-        document.createElement('button'),
-      ),
+      hook.result.current.openTokenSegment(invalid, 'operator', document.createElement('button')),
     );
     act(() => hook.result.current.selectOperator('notEquals'));
     expect(hook.result.current.editorState).toMatchObject({
@@ -515,11 +487,7 @@ describe('useFilterEditor token and incomplete-draft flows', () => {
     const anchor = document.createElement('button');
 
     act(() =>
-      hook.result.current.openTokenSegment(
-        { ...name, fieldKey: 'removed' },
-        'operator',
-        anchor,
-      ),
+      hook.result.current.openTokenSegment({ ...name, fieldKey: 'removed' }, 'operator', anchor),
     );
     expect(hook.result.current.editorState).toMatchObject({ stage: 'field' });
 
@@ -549,9 +517,7 @@ describe('useFilterEditor token and incomplete-draft flows', () => {
 
     const missingValue = nameEntry('Temporary', 'missing-value');
     Reflect.deleteProperty(missingValue, 'value');
-    act(() =>
-      hook.result.current.openTokenSegment(missingValue, 'value', anchor),
-    );
+    act(() => hook.result.current.openTokenSegment(missingValue, 'value', anchor));
     expect(hook.result.current.editorState).toMatchObject({
       stage: 'value',
       draft: { kind: 'scalar', input: '' },
@@ -564,19 +530,13 @@ describe('useFilterEditor token and incomplete-draft flows', () => {
     act(() => {
       hook.result.current.openNewFieldPicker('');
       hook.result.current.selectField('stage');
-      hook.result.current.openTokenSegment(
-        name,
-        'field',
-        document.createElement('button'),
-      );
+      hook.result.current.openTokenSegment(name, 'field', document.createElement('button'));
     });
     expect(hook.result.current.incompleteDraft).toMatchObject({
       stage: 'operator',
       fieldKey: 'stage',
     });
-    expect(hook.announce).toHaveBeenCalledWith(
-      'Filter incomplete — kept for later',
-    );
+    expect(hook.announce).toHaveBeenCalledWith('Filter incomplete — kept for later');
   });
 
   it('resumes operator and value drafts and can discard them', () => {
@@ -623,9 +583,7 @@ describe('useFilterEditor token and incomplete-draft flows', () => {
       hook.result.current.selectOperator('equals');
       hook.result.current.browserDismiss();
     });
-    const changedRegistry = createFilterFieldRegistry([
-      { key: 'flex', type: 'number' },
-    ]);
+    const changedRegistry = createFilterFieldRegistry([{ key: 'flex', type: 'number' }]);
     hook.rerender({ fieldRegistry: changedRegistry, disabled: false });
     act(() => hook.result.current.resumeIncompleteDraft(hook.resumeButton));
     expect(hook.result.current.editorState).toMatchObject({
@@ -683,21 +641,12 @@ describe('useFilterEditor token and incomplete-draft flows', () => {
 
   it('restores focus to an existing token when its open editor is reconciled away', () => {
     const existing = nameEntry();
-    const hook = setupEditor(
-      [{ key: 'name', type: 'string' }],
-      expression([existing]),
-    );
+    const hook = setupEditor([{ key: 'name', type: 'string' }], expression([existing]));
     act(() =>
-      hook.result.current.openTokenSegment(
-        existing,
-        'operator',
-        document.createElement('button'),
-      ),
+      hook.result.current.openTokenSegment(existing, 'operator', document.createElement('button')),
     );
     hook.rerender({
-      fieldRegistry: createFilterFieldRegistry([
-        { key: 'active', type: 'boolean' },
-      ]),
+      fieldRegistry: createFilterFieldRegistry([{ key: 'active', type: 'boolean' }]),
       disabled: false,
     });
     expect(hook.result.current.editorState).toEqual({ stage: 'idle' });
@@ -728,11 +677,7 @@ describe('useFilterEditor token and incomplete-draft flows', () => {
       disabled: false,
     });
     act(() => {
-      hook.result.current.openTokenSegment(
-        existing,
-        'field',
-        document.createElement('button'),
-      );
+      hook.result.current.openTokenSegment(existing, 'field', document.createElement('button'));
     });
     hook.rerender({
       fieldRegistry: createFilterFieldRegistry(FIELDS),

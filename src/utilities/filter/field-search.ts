@@ -6,18 +6,18 @@ function rankFields(
 ): readonly FilterFieldDefinition[] {
   const prefix: FilterFieldDefinition[] = [];
   const contains: FilterFieldDefinition[] = [];
+
   for (const field of fields) {
     const label = (field.label ?? field.key).toLowerCase();
     const key = field.key.toLowerCase();
+
     if (label.startsWith(normalizedQuery) || key.startsWith(normalizedQuery)) {
       prefix.push(field);
-    } else if (
-      label.includes(normalizedQuery) ||
-      key.includes(normalizedQuery)
-    ) {
+    } else if (label.includes(normalizedQuery) || key.includes(normalizedQuery)) {
       contains.push(field);
     }
   }
+
   return [...prefix, ...contains];
 }
 
@@ -31,6 +31,7 @@ export function searchFields(
   query: string,
 ): readonly FilterFieldDefinition[] {
   const normalized = query.trim().toLowerCase();
+
   if (normalized === '') return fields;
   return rankFields(fields, normalized);
 }

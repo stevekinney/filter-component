@@ -9,10 +9,7 @@ import {
 } from '@/utilities/filter/operators.ts';
 import { clampIndex, stepIndex } from '@/utilities/list-navigation.ts';
 import { PopoverValidationError } from './filter-popover-error.tsx';
-import type {
-  ActiveFilterEditorState,
-  FilterPopoverProps,
-} from './filter-popover.tsx';
+import type { ActiveFilterEditorState, FilterPopoverProps } from './filter-popover.tsx';
 import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
 import type { FilterFieldDefinition } from '@/types/filter.ts';
 
@@ -25,32 +22,29 @@ function buildOperatorOrBooleanChoices(
       editingFilter?.operator === 'equals'
         ? String(editingFilter.value)
         : (editingFilter?.operator ?? null);
+
     return booleanChoicesForField(field).map((choice) => ({
       ...choice,
       selected: choice.value === selected,
     }));
   }
+
   return operatorsForField(field).map((operator) => ({
     value: operator,
     label: OPERATOR_LABELS[operator],
-    selected:
-      editingFilter?.operator === operator &&
-      editingFilter.fieldKey === field.key,
+    selected: editingFilter?.operator === operator && editingFilter.fieldKey === field.key,
   }));
 }
 
 function SelectedChoiceCheck({ selected }: { selected: boolean }) {
   if (!selected) return null;
-  return (
-    <Check aria-hidden="true" size={14} className="filter-popover-check" />
-  );
+  return <Check aria-hidden="true" size={14} className="filter-popover-check" />;
 }
 
 function ChoiceCheckbox({ checked }: { checked: boolean }) {
   const Icon = checked ? SquareCheck : Square;
-  return (
-    <Icon aria-hidden="true" size={15} className="filter-popover-checkbox" />
-  );
+
+  return <Icon aria-hidden="true" size={15} className="filter-popover-checkbox" />;
 }
 
 function FieldSearchInput({
@@ -76,9 +70,7 @@ function FieldSearchInput({
         role="combobox"
         aria-expanded="true"
         aria-controls={`${idPrefix}-fields`}
-        aria-activedescendant={
-          activeResult ? `${idPrefix}-field-${activeIndex}` : undefined
-        }
+        aria-activedescendant={activeResult ? `${idPrefix}-field-${activeIndex}` : undefined}
         aria-autocomplete="list"
         aria-label="Search fields"
         placeholder="Search fields"
@@ -142,6 +134,7 @@ export function FieldSelectionStage({
     event.preventDefault();
     if (fieldResults.length === 0) return;
     const delta = event.key === 'ArrowDown' ? 1 : -1;
+
     onChangeActiveIndex(stepIndex(activeIndex, delta, fieldResults.length));
   };
 
@@ -211,35 +204,25 @@ export function SingleChoiceStage(
     field: FilterFieldDefinition;
   },
 ) {
-  const {
-    state,
-    field,
-    heading,
-    idPrefix,
-    editingFilter,
-    onChangeActiveIndex,
-  } = props;
+  const { state, field, heading, idPrefix, editingFilter, onChangeActiveIndex } = props;
   const options =
     state.stage === 'value'
       ? (field.options ?? []).map((option) => ({
           value: option,
           label: option,
-          selected:
-            state.draft.kind === 'scalar' && state.draft.input === option,
+          selected: state.draft.kind === 'scalar' && state.draft.input === option,
         }))
       : buildOperatorOrBooleanChoices(field, editingFilter);
   const activeIndex = clampIndex(state.activeIndex, options.length);
 
   const selectChoice = (value: string) => {
     if (state.stage === 'operator' && field.type === 'boolean') {
-      const choice = booleanChoicesForField(field).find(
-        (candidate) => candidate.value === value,
-      );
+      const choice = booleanChoicesForField(field).find((candidate) => candidate.value === value);
+
       if (choice) props.onPickBoolean(choice.value);
     } else if (state.stage === 'operator') {
-      const operator = operatorsForField(field).find(
-        (candidate) => candidate === value,
-      );
+      const operator = operatorsForField(field).find((candidate) => candidate === value);
+
       if (operator) props.onSelectOperator(operator);
     } else {
       props.onPickSingleValue(value);
@@ -251,12 +234,14 @@ export function SingleChoiceStage(
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
       const delta = event.key === 'ArrowDown' ? 1 : -1;
+
       onChangeActiveIndex(stepIndex(activeIndex, delta, options.length));
       return;
     }
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       const active = options[activeIndex];
+
       if (active) selectChoice(active.value);
     }
   };
@@ -269,9 +254,7 @@ export function SingleChoiceStage(
         tabIndex={0}
         role="listbox"
         aria-label={heading}
-        aria-activedescendant={
-          options.length > 0 ? `${idPrefix}-option-${activeIndex}` : undefined
-        }
+        aria-activedescendant={options.length > 0 ? `${idPrefix}-option-${activeIndex}` : undefined}
         className="filter-popover-list"
         onKeyDown={handleKeyDown}
         onMouseDown={(event) => event.preventDefault()}
@@ -314,14 +297,14 @@ export function MultipleChoiceStage(
     onCancel,
   } = props;
   const options = field.options ?? [];
-  const selectedOptions =
-    state.draft.kind === 'multiSelection' ? state.draft.selectedOptions : [];
+  const selectedOptions = state.draft.kind === 'multiSelection' ? state.draft.selectedOptions : [];
   const activeIndex = clampIndex(state.activeIndex, options.length);
 
   const toggleChoice = (option: string) => {
     const nextSelectedOptions = selectedOptions.includes(option)
       ? selectedOptions.filter((candidate) => candidate !== option)
       : [...selectedOptions, option];
+
     onChangeDraft({
       kind: 'multiSelection',
       selectedOptions: nextSelectedOptions,
@@ -334,12 +317,14 @@ export function MultipleChoiceStage(
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
       const delta = event.key === 'ArrowDown' ? 1 : -1;
+
       onChangeActiveIndex(stepIndex(activeIndex, delta, options.length));
       return;
     }
     if (event.key === ' ') {
       event.preventDefault();
       const active = options[activeIndex];
+
       if (active !== undefined) toggleChoice(active);
       return;
     }
@@ -353,12 +338,7 @@ export function MultipleChoiceStage(
     <>
       <div className="filter-popover-header">
         <div className="filter-popover-heading">{heading}</div>
-        <button
-          type="button"
-          aria-label="Cancel"
-          className="filter-icon-button"
-          onClick={onCancel}
-        >
+        <button type="button" aria-label="Cancel" className="filter-icon-button" onClick={onCancel}>
           <X aria-hidden="true" size={13} />
         </button>
       </div>
@@ -368,9 +348,7 @@ export function MultipleChoiceStage(
         role="listbox"
         aria-multiselectable="true"
         aria-label={heading}
-        aria-activedescendant={
-          options.length > 0 ? `${idPrefix}-option-${activeIndex}` : undefined
-        }
+        aria-activedescendant={options.length > 0 ? `${idPrefix}-option-${activeIndex}` : undefined}
         className="filter-popover-list"
         onKeyDown={handleKeyDown}
         onMouseDown={(event) => event.preventDefault()}

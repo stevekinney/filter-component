@@ -5,16 +5,12 @@ import { addStringFilter, queryTokens, setup } from './filter-test-setup.tsx';
 describe('undo and redo', () => {
   it('renders undo/redo icons only when available and emits restored filter lists', async () => {
     const { onChange, user, addFilterInput } = setup();
-    expect(
-      screen.queryByRole('button', { name: 'Undo filter change' }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Undo filter change' })).not.toBeInTheDocument();
     await addStringFilter(user, addFilterInput);
     const undoButton = screen.getByRole('button', {
       name: 'Undo filter change',
     });
-    expect(
-      screen.queryByRole('button', { name: 'Redo filter change' }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Redo filter change' })).not.toBeInTheDocument();
 
     await user.click(undoButton);
     expect(onChange).toHaveBeenLastCalledWith(
@@ -22,13 +18,9 @@ describe('undo and redo', () => {
       expect.any(AbortController),
     );
     expect(queryTokens()).toHaveLength(0);
-    expect(
-      screen.queryByRole('button', { name: 'Undo filter change' }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Undo filter change' })).not.toBeInTheDocument();
 
-    await user.click(
-      screen.getByRole('button', { name: 'Redo filter change' }),
-    );
+    await user.click(screen.getByRole('button', { name: 'Redo filter change' }));
     expect(onChange).toHaveBeenLastCalledWith(
       {
         combinator: 'and',
@@ -36,21 +28,15 @@ describe('undo and redo', () => {
       },
       expect.any(AbortController),
     );
-    expect(
-      screen.getByRole('group', { name: 'Name is Maria' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Name is Maria' })).toBeInTheDocument();
   });
 
   it('clears the redo branch after a new committed change', async () => {
     const { user, addFilterInput } = setup();
     await addStringFilter(user, addFilterInput);
-    await user.click(
-      screen.getByRole('button', { name: 'Undo filter change' }),
-    );
+    await user.click(screen.getByRole('button', { name: 'Undo filter change' }));
     await addStringFilter(user, addFilterInput, 'Nadia');
-    expect(
-      screen.queryByRole('button', { name: 'Redo filter change' }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Redo filter change' })).not.toBeInTheDocument();
   });
 });
 
@@ -66,9 +52,7 @@ describe('clear all', () => {
       { combinator: 'and', conditions: [] },
       expect.any(AbortController),
     );
-    expect(
-      screen.queryByRole('button', { name: 'Clear all filters' }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Clear all filters' })).not.toBeInTheDocument();
   });
 });
 
@@ -93,13 +77,11 @@ describe('smart joiners', () => {
       expect.any(AbortController),
     );
     expect(joinerButton('or')).toBeInTheDocument();
-    expect(
-      view.container.querySelector('[aria-live="polite"]'),
-    ).toHaveTextContent('Filters combined with or; grouping updated');
-
-    await user.click(
-      screen.getByRole('button', { name: 'Undo filter change' }),
+    expect(view.container.querySelector('[aria-live="polite"]')).toHaveTextContent(
+      'Filters combined with or; grouping updated',
     );
+
+    await user.click(screen.getByRole('button', { name: 'Undo filter change' }));
     expect(onChange.mock.lastCall?.[0].combinator).toBe('and');
     expect(joinerButton('and')).toBeInTheDocument();
   });
@@ -145,15 +127,11 @@ describe('smart joiners', () => {
         name: 'Name is Maria (in a group matching all)',
       }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole('group', { name: 'Name is Cora' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Name is Cora' })).toBeInTheDocument();
 
     await user.click(joinerButton('or'));
     expect(brackets()).toHaveLength(0);
-    expect(
-      screen.getByRole('group', { name: 'Name is Maria' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Name is Maria' })).toBeInTheDocument();
   });
 
   it('appends new filters into the trailing and-run', async () => {
@@ -214,9 +192,9 @@ describe('smart joiners', () => {
       },
       expect.any(AbortController),
     );
-    expect(
-      view.container.querySelector('[aria-live="polite"]'),
-    ).toHaveTextContent('Filter removed: Name; grouping updated');
+    expect(view.container.querySelector('[aria-live="polite"]')).toHaveTextContent(
+      'Filter removed: Name; grouping updated',
+    );
   });
 
   it('loads a nested initialFilters tree into joiners and brackets', async () => {
@@ -279,9 +257,7 @@ describe('smart joiners', () => {
         ],
       },
     });
-    expect(
-      await screen.findByRole('group', { name: 'Name is a' }),
-    ).toBeVisible();
+    expect(await screen.findByRole('group', { name: 'Name is a' })).toBeVisible();
     expect(joinerButton('or')).toBeInTheDocument();
     expect(view.container.querySelectorAll('.filter-bracket')).toHaveLength(0);
   });

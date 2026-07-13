@@ -21,18 +21,15 @@ export const FIELDS: FilterFieldDefinition[] = [
 export function setup(props: Partial<Parameters<typeof Filter>[0]> = {}) {
   const onChange = vi.fn();
   const user = userEvent.setup();
-  const view = render(
-    <Filter fields={FIELDS} onChange={onChange} {...props} />,
-  );
+  const view = render(<Filter fields={FIELDS} onChange={onChange} {...props} />);
   const addFilterInput = screen.getByRole('combobox', { name: 'Add filter' });
+
   return { onChange, user, view, addFilterInput };
 }
 
 /** Committed tokens only — scoped to the row so the fieldset's group role is excluded. */
 export function queryTokens() {
-  return within(
-    screen.getByRole('list', { name: 'Active filters' }),
-  ).queryAllByRole('group');
+  return within(screen.getByRole('list', { name: 'Active filters' })).queryAllByRole('group');
 }
 
 export async function addStringFilter(

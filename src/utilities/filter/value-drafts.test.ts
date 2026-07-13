@@ -49,9 +49,7 @@ describe('createValueDraftFromCommittedValue', () => {
   });
 
   it('rebuilds multi-select drafts', () => {
-    expect(
-      createValueDraftFromCommittedValue(['Lead', 'Contacted'], 'enumMulti'),
-    ).toEqual({
+    expect(createValueDraftFromCommittedValue(['Lead', 'Contacted'], 'enumMulti')).toEqual({
       kind: 'multiSelection',
       selectedOptions: ['Lead', 'Contacted'],
     });
@@ -62,9 +60,11 @@ describe('createValueDraftFromCommittedValue', () => {
   });
 
   it('rebuilds range drafts', () => {
-    expect(
-      createValueDraftFromCommittedValue({ from: 1, to: 9 }, 'numberRange'),
-    ).toEqual({ kind: 'range', fromInput: '1', toInput: '9' });
+    expect(createValueDraftFromCommittedValue({ from: 1, to: 9 }, 'numberRange')).toEqual({
+      kind: 'range',
+      fromInput: '1',
+      toInput: '9',
+    });
     expect(createValueDraftFromCommittedValue(1, 'numberRange')).toEqual({
       kind: 'range',
       fromInput: '',
@@ -73,12 +73,11 @@ describe('createValueDraftFromCommittedValue', () => {
   });
 
   it('rebuilds duration drafts', () => {
-    expect(
-      createValueDraftFromCommittedValue(
-        { amount: 7, unit: 'weeks' },
-        'duration',
-      ),
-    ).toEqual({ kind: 'duration', amountInput: '7', unit: 'weeks' });
+    expect(createValueDraftFromCommittedValue({ amount: 7, unit: 'weeks' }, 'duration')).toEqual({
+      kind: 'duration',
+      amountInput: '7',
+      unit: 'weeks',
+    });
     expect(createValueDraftFromCommittedValue(7, 'duration')).toEqual({
       kind: 'duration',
       amountInput: '',
@@ -87,9 +86,10 @@ describe('createValueDraftFromCommittedValue', () => {
   });
 
   it('does not coerce structured values into scalar drafts', () => {
-    expect(
-      createValueDraftFromCommittedValue({ amount: 7, unit: 'days' }, 'text'),
-    ).toEqual({ kind: 'scalar', input: '' });
+    expect(createValueDraftFromCommittedValue({ amount: 7, unit: 'days' }, 'text')).toEqual({
+      kind: 'scalar',
+      input: '',
+    });
   });
 });
 
@@ -102,9 +102,10 @@ describe('convertCommittedValueToDraft', () => {
   });
 
   it('carries the first multi value back to a single selection', () => {
-    expect(
-      convertCommittedValueToDraft(['Lead', 'Contacted'], 'enumSingle'),
-    ).toEqual({ kind: 'scalar', input: 'Lead' });
+    expect(convertCommittedValueToDraft(['Lead', 'Contacted'], 'enumSingle')).toEqual({
+      kind: 'scalar',
+      input: 'Lead',
+    });
     expect(convertCommittedValueToDraft([], 'enumSingle')).toEqual({
       kind: 'scalar',
       input: '',
@@ -129,17 +130,16 @@ describe('convertCommittedValueToDraft', () => {
       fromInput: '2026-07-01',
       toInput: '',
     });
-    expect(
-      convertCommittedValueToDraft(
-        { from: '2026-07-01', to: '2026-08-01' },
-        'date',
-      ),
-    ).toEqual({ kind: 'scalar', input: '2026-07-01' });
+    expect(convertCommittedValueToDraft({ from: '2026-07-01', to: '2026-08-01' }, 'date')).toEqual({
+      kind: 'scalar',
+      input: '2026-07-01',
+    });
   });
 
   it('falls back to an empty draft for incompatible shapes', () => {
-    expect(
-      convertCommittedValueToDraft({ amount: 7, unit: 'days' }, 'date'),
-    ).toEqual({ kind: 'scalar', input: '' });
+    expect(convertCommittedValueToDraft({ amount: 7, unit: 'days' }, 'date')).toEqual({
+      kind: 'scalar',
+      input: '',
+    });
   });
 });

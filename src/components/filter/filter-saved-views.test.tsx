@@ -15,11 +15,9 @@ function seedViews(views: SavedView[]): void {
   window.localStorage.setItem(SAVED_VIEWS_STORAGE_KEY, JSON.stringify(views));
 }
 
-const savedViewsButton = () =>
-  screen.queryByRole('button', { name: 'Saved views' });
+const savedViewsButton = () => screen.queryByRole('button', { name: 'Saved views' });
 
-const saveAction = () =>
-  screen.queryByRole('button', { name: 'Save current filters…' });
+const saveAction = () => screen.queryByRole('button', { name: 'Save current filters…' });
 
 const menu = () => screen.getByRole('dialog', { name: 'Saved views' });
 
@@ -32,9 +30,7 @@ async function saveCurrentViewAs(
   name: string,
 ): Promise<void> {
   await openMenu(user);
-  await user.click(
-    screen.getByRole('button', { name: 'Save current filters…' }),
-  );
+  await user.click(screen.getByRole('button', { name: 'Save current filters…' }));
   await user.keyboard(name);
   await user.keyboard('{Enter}');
 }
@@ -43,15 +39,11 @@ const MARIA_VIEW: SavedView = {
   name: 'Maria deals',
   group: {
     combinator: 'and',
-    conditions: [
-      { fieldKey: 'name', type: 'string', operator: 'equals', value: 'Maria' },
-    ],
+    conditions: [{ fieldKey: 'name', type: 'string', operator: 'equals', value: 'Maria' }],
   },
 };
 
-function lastReportedGroup(
-  onChange: ReturnType<typeof setup>['onChange'],
-): FilterGroup {
+function lastReportedGroup(onChange: ReturnType<typeof setup>['onChange']): FilterGroup {
   const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1];
   return lastCall?.[0] as FilterGroup;
 }
@@ -108,9 +100,7 @@ describe('the in-menu save action', () => {
     await saveCurrentViewAs(user, 'Maria deals');
 
     expect(storedViews()).toEqual([MARIA_VIEW]);
-    expect(
-      screen.queryByRole('dialog', { name: 'Saved views' }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Saved views' })).not.toBeInTheDocument();
     expect(savedViewsButton()).toHaveFocus();
   });
 
@@ -131,11 +121,9 @@ describe('the in-menu save action', () => {
   it('shows a visible session-only notice when saving cannot reach storage', async () => {
     const { user, addFilterInput } = setup();
     await addStringFilter(user, addFilterInput);
-    const setItemSpy = vi
-      .spyOn(Storage.prototype, 'setItem')
-      .mockImplementation(() => {
-        throw new DOMException('blocked', 'SecurityError');
-      });
+    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('blocked', 'SecurityError');
+    });
 
     await saveCurrentViewAs(user, 'Session view');
 
@@ -152,9 +140,7 @@ describe('the in-menu save action', () => {
     await addStringFilter(user, addFilterInput);
 
     await openMenu(user);
-    await user.click(
-      screen.getByRole('button', { name: 'Save current filters…' }),
-    );
+    await user.click(screen.getByRole('button', { name: 'Save current filters…' }));
     await user.keyboard('{Enter}');
 
     expect(screen.getByRole('alert')).toHaveTextContent('Enter a name');
@@ -180,15 +166,11 @@ describe('the in-menu save action', () => {
     await addStringFilter(user, addFilterInput);
 
     await openMenu(user);
-    await user.click(
-      screen.getByRole('button', { name: 'Save current filters…' }),
-    );
+    await user.click(screen.getByRole('button', { name: 'Save current filters…' }));
     expect(screen.getByRole('textbox', { name: 'View name' })).toHaveFocus();
     await user.keyboard('{Escape}');
 
-    expect(
-      screen.queryByRole('dialog', { name: 'Saved views' }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Saved views' })).not.toBeInTheDocument();
     expect(savedViewsButton()).toHaveFocus();
     expect(storedViews()).toEqual([]);
   });
@@ -237,9 +219,7 @@ describe('saved rows', () => {
     ]);
     const { user } = setup();
     await openMenu(user);
-    expect(
-      within(menu()).getByText('3 filters · Any · Name, Active'),
-    ).toBeInTheDocument();
+    expect(within(menu()).getByText('3 filters · Any · Name, Active')).toBeInTheDocument();
   });
 });
 
@@ -251,9 +231,7 @@ describe('loading a view', () => {
     const callsBeforeLoad = onChange.mock.calls.length;
 
     await openMenu(user);
-    await user.click(
-      within(menu()).getByRole('button', { name: 'Maria deals' }),
-    );
+    await user.click(within(menu()).getByRole('button', { name: 'Maria deals' }));
 
     expect(onChange.mock.calls.length).toBe(callsBeforeLoad + 1);
     const loaded = lastReportedGroup(onChange);
@@ -266,16 +244,12 @@ describe('loading a view', () => {
     });
     expect(loaded).not.toHaveProperty('conditions.0.id');
 
-    await user.click(
-      screen.getByRole('button', { name: 'Undo filter change' }),
-    );
+    await user.click(screen.getByRole('button', { name: 'Undo filter change' }));
     const undone = lastReportedGroup(onChange);
     expect(undone.conditions).toHaveLength(1);
     expect(undone.conditions[0]).toMatchObject({ value: 'Nadia' });
 
-    await user.click(
-      screen.getByRole('button', { name: 'Redo filter change' }),
-    );
+    await user.click(screen.getByRole('button', { name: 'Redo filter change' }));
     expect(lastReportedGroup(onChange).conditions[0]).toMatchObject({
       value: 'Maria',
     });
@@ -288,17 +262,11 @@ describe('loading a view', () => {
     const callsBeforeLoad = onChange.mock.calls.length;
 
     await openMenu(user);
-    await user.click(
-      within(menu()).getByRole('button', { name: 'Maria deals' }),
-    );
+    await user.click(within(menu()).getByRole('button', { name: 'Maria deals' }));
 
     expect(onChange.mock.calls.length).toBe(callsBeforeLoad);
-    expect(
-      screen.getByRole('button', { name: 'Undo filter change' }),
-    ).toBeVisible();
-    expect(
-      screen.queryByRole('button', { name: 'Redo filter change' }),
-    ).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Undo filter change' })).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Redo filter change' })).not.toBeInTheDocument();
   });
 });
 
@@ -308,14 +276,10 @@ describe('removing a view', () => {
     const { user } = setup();
 
     await openMenu(user);
-    await user.click(
-      screen.getByRole('button', { name: 'Remove view: Maria deals' }),
-    );
+    await user.click(screen.getByRole('button', { name: 'Remove view: Maria deals' }));
 
     expect(storedViews()).toEqual([]);
-    expect(
-      screen.queryByRole('dialog', { name: 'Saved views' }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Saved views' })).not.toBeInTheDocument();
     expect(savedViewsButton()).not.toBeInTheDocument();
   });
 
@@ -325,9 +289,7 @@ describe('removing a view', () => {
     await saveCurrentViewAs(user, 'Maria deals');
 
     await openMenu(user);
-    await user.click(
-      screen.getByRole('button', { name: 'Remove view: Maria deals' }),
-    );
+    await user.click(screen.getByRole('button', { name: 'Remove view: Maria deals' }));
 
     expect(storedViews()).toEqual([]);
     expect(savedViewsButton()).toBeVisible();
@@ -337,16 +299,12 @@ describe('removing a view', () => {
   it('shows a visible session-only notice when removal cannot reach storage', async () => {
     seedViews([MARIA_VIEW]);
     const { user } = setup();
-    const setItemSpy = vi
-      .spyOn(Storage.prototype, 'setItem')
-      .mockImplementation(() => {
-        throw new DOMException('blocked', 'SecurityError');
-      });
+    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('blocked', 'SecurityError');
+    });
 
     await openMenu(user);
-    await user.click(
-      screen.getByRole('button', { name: 'Remove view: Maria deals' }),
-    );
+    await user.click(screen.getByRole('button', { name: 'Remove view: Maria deals' }));
 
     expect(
       screen.getByText(
@@ -365,14 +323,10 @@ describe('removing a view', () => {
     const { user } = setup();
 
     await openMenu(user);
-    await user.click(
-      screen.getByRole('button', { name: 'Remove view: Maria deals' }),
-    );
+    await user.click(screen.getByRole('button', { name: 'Remove view: Maria deals' }));
 
     expect(storedViews()).toEqual([secondView]);
-    expect(
-      within(menu()).getByRole('button', { name: 'Empty row' }),
-    ).toHaveFocus();
+    expect(within(menu()).getByRole('button', { name: 'Empty row' })).toHaveFocus();
   });
 });
 
@@ -467,9 +421,7 @@ describe('menu keyboard navigation', () => {
     trigger.focus();
     await user.keyboard('{ArrowDown}');
 
-    expect(
-      screen.getByRole('button', { name: 'Save current filters…' }),
-    ).toHaveFocus();
+    expect(screen.getByRole('button', { name: 'Save current filters…' })).toHaveFocus();
   });
 });
 
@@ -507,9 +459,7 @@ describe('nested structure persistence', () => {
 
     await user.click(screen.getByRole('button', { name: 'Clear all filters' }));
     await openMenu(user);
-    await user.click(
-      within(menu()).getByRole('button', { name: 'Split view' }),
-    );
+    await user.click(within(menu()).getByRole('button', { name: 'Split view' }));
     expect(lastReportedGroup(onChange)).toEqual({
       combinator: 'or',
       conditions: [

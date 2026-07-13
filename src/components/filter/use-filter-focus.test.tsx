@@ -30,10 +30,7 @@ describe('useFilterFocus semantic targets', () => {
       [{ type: 'addInput' }, '[data-add-filter-input]'],
       [{ type: 'autofocus' }, '[data-autofocus]'],
       [{ type: 'token', id: 'condition-1' }, '[data-token]'],
-      [
-        { type: 'segment', id: 'condition-1', segment: 'field' },
-        '[data-token-segment]',
-      ],
+      [{ type: 'segment', id: 'condition-1', segment: 'field' }, '[data-token-segment]'],
       [{ type: 'joiner', index: 0 }, '[data-joiner]'],
       [{ type: 'savedViewsTrigger' }, '[data-saved-views-button]'],
       [{ type: 'savedView', index: 2 }, '[data-saved-view-item]'],
@@ -45,13 +42,9 @@ describe('useFilterFocus semantic targets', () => {
 
     const connected = document.createElement('button');
     root.appendChild(connected);
-    expect(result.current.focus({ type: 'element', element: connected })).toBe(
-      true,
-    );
+    expect(result.current.focus({ type: 'element', element: connected })).toBe(true);
     connected.remove();
-    expect(result.current.focus({ type: 'element', element: connected })).toBe(
-      false,
-    );
+    expect(result.current.focus({ type: 'element', element: connected })).toBe(false);
     expect(result.current.focus({ type: 'token', id: 'missing' })).toBe(false);
     expect(
       result.current.focus({

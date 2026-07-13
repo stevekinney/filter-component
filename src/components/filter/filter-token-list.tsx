@@ -14,11 +14,7 @@ type FilterTokenListProps = {
   disabled: boolean;
   editingFilterId: string | null;
   editingSegment: TokenSegment | null;
-  onOpenSegment: (
-    filter: FilterEntry,
-    segment: TokenSegment,
-    anchor: HTMLElement,
-  ) => void;
+  onOpenSegment: (filter: FilterEntry, segment: TokenSegment, anchor: HTMLElement) => void;
   onRemove: (id: string) => void;
   onRemoveEnumValue: (id: string, value: string) => void;
   onFlipJoiner: (index: number) => void;
@@ -26,10 +22,7 @@ type FilterTokenListProps = {
   onMoveFocusFromJoiner: (id: string) => void;
 };
 
-type FilterTokenListItemProps = Omit<
-  FilterTokenListProps,
-  'expression' | 'editingFilterId'
-> & {
+type FilterTokenListItemProps = Omit<FilterTokenListProps, 'expression' | 'editingFilterId'> & {
   filter: FilterEntry;
   index: number;
   leadingJoiner: FilterExpression['joiners'][number] | undefined;
@@ -67,9 +60,7 @@ const FilterTokenListItem = memo(function FilterTokenListItem({
           disabled={disabled}
           onFlip={() => onFlipJoiner(index - 1)}
           onMoveFocus={(direction) =>
-            onMoveFocusFromJoiner(
-              direction === 1 ? filter.id : previousFilterId,
-            )
+            onMoveFocusFromJoiner(direction === 1 ? filter.id : previousFilterId)
           }
         />
       )}
@@ -81,9 +72,7 @@ const FilterTokenListItem = memo(function FilterTokenListItem({
         editingSegment={editingSegment}
         inAndRun={inAndRun}
         disabled={disabled}
-        onOpenSegment={(segment, anchorElement) =>
-          onOpenSegment(filter, segment, anchorElement)
-        }
+        onOpenSegment={(segment, anchorElement) => onOpenSegment(filter, segment, anchorElement)}
         onRemove={() => onRemove(filter.id)}
         onRemoveEnumValue={(value) => onRemoveEnumValue(filter.id, value)}
         onMoveFocus={(direction) => onMoveFocusFromToken(index, direction)}
@@ -126,6 +115,7 @@ export function FilterTokenList({
         const opensRun = marker ? marker.opensRun : false;
         const closesRun = marker ? marker.closesRun : false;
         const inAndRun = marker ? marker.inRun : false;
+
         return (
           <FilterTokenListItem
             key={filter.id}
@@ -138,9 +128,7 @@ export function FilterTokenList({
             inAndRun={inAndRun}
             fields={fields}
             disabled={disabled}
-            editingSegment={
-              editingFilterId === filter.id ? editingSegment : null
-            }
+            editingSegment={editingFilterId === filter.id ? editingSegment : null}
             onOpenSegment={onOpenSegment}
             onRemove={onRemove}
             onRemoveEnumValue={onRemoveEnumValue}

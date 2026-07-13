@@ -6,11 +6,7 @@ import { defineConfig, devices } from '@playwright/test';
 delete process.env['NO_COLOR'];
 
 const testServerPort = Number(process.env['PLAYWRIGHT_TEST_PORT'] ?? '4173');
-if (
-  !Number.isInteger(testServerPort) ||
-  testServerPort < 1 ||
-  testServerPort > 65_535
-) {
+if (!Number.isInteger(testServerPort) || testServerPort < 1 || testServerPort > 65_535) {
   throw new Error('PLAYWRIGHT_TEST_PORT must be an integer from 1 to 65535.');
 }
 const testServerUrl = `http://localhost:${testServerPort}`;

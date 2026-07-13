@@ -1,9 +1,6 @@
 import type { ReactNode } from 'react';
 import { fieldLabel } from '@/utilities/filter/formatting.ts';
-import {
-  OPERATOR_LABELS,
-  getValueEditorKind,
-} from '@/utilities/filter/operators.ts';
+import { OPERATOR_LABELS, getValueEditorKind } from '@/utilities/filter/operators.ts';
 import type { BooleanChoice } from '@/utilities/filter/operators.ts';
 import { FilterValueEditor } from './filter-value-editor.tsx';
 import {
@@ -17,10 +14,7 @@ import type { ValueDraft } from '@/utilities/filter/value-drafts.ts';
 import type { FilterFieldDefinition, FilterOperator } from '@/types/filter.ts';
 import { useNativePopover } from './use-native-popover.ts';
 
-export type ActiveFilterEditorState = Exclude<
-  FilterEditorState,
-  { stage: 'idle' }
->;
+export type ActiveFilterEditorState = Exclude<FilterEditorState, { stage: 'idle' }>;
 
 export type FilterPopoverProps = {
   state: FilterEditorState;
@@ -58,10 +52,7 @@ export function FilterPopover(props: FilterPopoverProps) {
 function OpenFilterPopover(props: OpenFilterPopoverProps) {
   const { state, resolveAnchor, onBrowserDismiss, onCancel } = props;
   const { popoverRef, handleBeforeToggle, handleKeyDown } = useNativePopover({
-    anchorKey:
-      state.filterId === null && state.stage !== 'field'
-        ? 'new-draft-preview'
-        : 'invoker',
+    anchorKey: state.filterId === null && state.stage !== 'field' ? 'new-draft-preview' : 'invoker',
     resolveAnchor,
     onBrowserDismiss,
     onEscape: onCancel,
@@ -69,38 +60,27 @@ function OpenFilterPopover(props: OpenFilterPopoverProps) {
 
   let ariaLabel = 'Edit filter';
   let content: ReactNode = null;
+
   if (state.stage === 'field') {
     ariaLabel = 'Choose field';
     content = <FieldSelectionStage {...props} state={state} />;
   } else if (state.stage === 'operator') {
-    const field = props.fields.find(
-      (candidate) => candidate.key === state.fieldKey,
-    );
+    const field = props.fields.find((candidate) => candidate.key === state.fieldKey);
+
     if (!field) return null;
     ariaLabel = fieldLabel(field);
-    content = (
-      <SingleChoiceStage {...props} heading={ariaLabel} field={field} />
-    );
+    content = <SingleChoiceStage {...props} heading={ariaLabel} field={field} />;
   } else {
-    const field = props.fields.find(
-      (candidate) => candidate.key === state.fieldKey,
-    );
+    const field = props.fields.find((candidate) => candidate.key === state.fieldKey);
+
     if (!field) return null;
     const kind = getValueEditorKind(field.type, state.operator);
+
     ariaLabel = `${fieldLabel(field)} ${OPERATOR_LABELS[state.operator]}`;
     if (kind === 'enumSingle') {
-      content = (
-        <SingleChoiceStage {...props} heading={ariaLabel} field={field} />
-      );
+      content = <SingleChoiceStage {...props} heading={ariaLabel} field={field} />;
     } else if (kind === 'enumMulti') {
-      content = (
-        <MultipleChoiceStage
-          {...props}
-          heading={ariaLabel}
-          field={field}
-          state={state}
-        />
-      );
+      content = <MultipleChoiceStage {...props} heading={ariaLabel} field={field} state={state} />;
     } else {
       content = (
         <FilterValueEditor

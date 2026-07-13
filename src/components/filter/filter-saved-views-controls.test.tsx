@@ -7,8 +7,7 @@ const savedViewDerivationProbes = vi.hoisted(() => ({
 }));
 
 vi.mock('@/utilities/filter/saved-views.ts', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@/utilities/filter/saved-views.ts')>();
+  const actual = await importOriginal<typeof import('@/utilities/filter/saved-views.ts')>();
   return {
     ...actual,
     savedViewKey: (...arguments_: Parameters<typeof actual.savedViewKey>) => {
@@ -92,9 +91,7 @@ describe('SavedViewsControls lifecycle', () => {
     fireEvent.click(trigger);
     fireEvent.keyDown(trigger, { key: 'ArrowDown' });
     fireEvent.click(trigger);
-    expect(
-      screen.queryByRole('dialog', { name: 'Saved views' }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Saved views' })).not.toBeInTheDocument();
 
     fireEvent.click(trigger);
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));
@@ -102,15 +99,11 @@ describe('SavedViewsControls lifecycle', () => {
 
     fireEvent.click(trigger);
     fireEvent.pointerDown(document.body);
-    expect(
-      screen.queryByRole('dialog', { name: 'Saved views' }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Saved views' })).not.toBeInTheDocument();
 
     fireEvent.click(trigger);
     view.rerender(<SavedViewsControls {...props} disabled />);
-    expect(
-      screen.queryByRole('dialog', { name: 'Saved views' }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Saved views' })).not.toBeInTheDocument();
   });
 
   it('does not recompute unchanged saved-view rows while typing a name', () => {
@@ -120,9 +113,7 @@ describe('SavedViewsControls lifecycle', () => {
     });
     render(<SavedViewsControls {...props} />);
     fireEvent.click(screen.getByRole('button', { name: 'Saved views' }));
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Save current filters…' }),
-    );
+    fireEvent.click(screen.getByRole('button', { name: 'Save current filters…' }));
 
     savedViewDerivationProbes.savedViewKey.mockClear();
 

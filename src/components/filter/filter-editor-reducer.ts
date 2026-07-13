@@ -1,8 +1,5 @@
 import { IDLE_FILTER_EDITOR_STATE } from './filter-editor-state.ts';
-import type {
-  FilterEditorState,
-  IncompleteDraft,
-} from './filter-editor-state.ts';
+import type { FilterEditorState, IncompleteDraft } from './filter-editor-state.ts';
 import type { ValueDraft } from '@/utilities/filter/value-drafts.ts';
 
 export type FilterEditorControllerState = {
@@ -24,14 +21,8 @@ export type FilterEditorControllerAction =
   | { type: 'replaceIncomplete'; draft: IncompleteDraft | null }
   | { type: 'discardIncomplete' };
 
-export function incompleteFromEditor(
-  editor: FilterEditorState,
-): IncompleteDraft | null {
-  if (
-    editor.stage === 'idle' ||
-    editor.stage === 'field' ||
-    editor.filterId !== null
-  ) {
+export function incompleteFromEditor(editor: FilterEditorState): IncompleteDraft | null {
+  if (editor.stage === 'idle' || editor.stage === 'field' || editor.filterId !== null) {
     return null;
   }
   return editor.stage === 'operator'
@@ -62,10 +53,8 @@ function idleEditor(
   preserveCurrent: boolean,
 ): FilterEditorControllerState {
   const incompleteDraft = preservedIncompleteDraft(state, preserveCurrent);
-  if (
-    state.editor.stage === 'idle' &&
-    incompleteDraft === state.incompleteDraft
-  ) {
+
+  if (state.editor.stage === 'idle' && incompleteDraft === state.incompleteDraft) {
     return state;
   }
   return { editor: IDLE_FILTER_EDITOR_STATE, incompleteDraft };
@@ -107,8 +96,7 @@ function setValidationError(
   error: string,
 ): FilterEditorControllerState {
   if (state.editor.stage !== 'value') return state;
-  if (state.editor.draft === draft && state.editor.error === error)
-    return state;
+  if (state.editor.draft === draft && state.editor.error === error) return state;
   return {
     ...state,
     editor: { ...state.editor, draft, error },
@@ -123,20 +111,14 @@ export function filterEditorControllerReducer(
     case 'open':
       return {
         editor: action.editor,
-        incompleteDraft: preservedIncompleteDraft(
-          state,
-          action.preserveCurrent,
-        ),
+        incompleteDraft: preservedIncompleteDraft(state, action.preserveCurrent),
       };
     case 'idle':
       return idleEditor(state, action.preserveCurrent);
     case 'changeQuery':
       return changeQuery(state, action.query);
     case 'changeActiveIndex':
-      if (
-        state.editor.stage === 'idle' ||
-        state.editor.activeIndex === action.index
-      ) {
+      if (state.editor.stage === 'idle' || state.editor.activeIndex === action.index) {
         return state;
       }
       return {

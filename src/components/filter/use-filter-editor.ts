@@ -1,13 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
-import {
-  IDLE_FILTER_EDITOR_STATE,
-  activeEditorSegment,
-} from './filter-editor-state.ts';
-import {
-  filterEditorControllerReducer,
-  incompleteFromEditor,
-} from './filter-editor-reducer.ts';
+import { IDLE_FILTER_EDITOR_STATE, activeEditorSegment } from './filter-editor-state.ts';
+import { filterEditorControllerReducer, incompleteFromEditor } from './filter-editor-reducer.ts';
 import type {
   FilterEditorControllerAction,
   FilterEditorControllerState,
@@ -24,10 +18,7 @@ import {
 import type { FocusTarget } from './use-filter-focus.ts';
 import type { FilterFieldRegistry } from '@/utilities/filter/field-registry.ts';
 import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
-import type {
-  FilterHistory,
-  FilterHistoryAction,
-} from '@/utilities/filter/history.ts';
+import type { FilterHistory, FilterHistoryAction } from '@/utilities/filter/history.ts';
 import {
   getValueEditorKind,
   isValuelessOperator,
@@ -37,11 +28,7 @@ import type { BooleanChoice } from '@/utilities/filter/operators.ts';
 import { validateDraft } from '@/utilities/filter/validation.ts';
 import type { TokenSegment } from '@/utilities/filter/validation.ts';
 import type { ValueDraft } from '@/utilities/filter/value-drafts.ts';
-import type {
-  FilterCondition,
-  FilterFieldDefinition,
-  FilterOperator,
-} from '@/types/filter.ts';
+import type { FilterCondition, FilterFieldDefinition, FilterOperator } from '@/types/filter.ts';
 
 type UseFilterEditorOptions = {
   fieldRegistry: FilterFieldRegistry;
@@ -64,11 +51,10 @@ export function useFilterEditor({
   scheduleFocus,
   announce,
 }: UseFilterEditorOptions) {
-  const [controllerState, setControllerState] =
-    useState<FilterEditorControllerState>(() => ({
-      editor: IDLE_FILTER_EDITOR_STATE,
-      incompleteDraft: null,
-    }));
+  const [controllerState, setControllerState] = useState<FilterEditorControllerState>(() => ({
+    editor: IDLE_FILTER_EDITOR_STATE,
+    incompleteDraft: null,
+  }));
   const stateRef = useRef(controllerState);
   const registryRef = useRef(fieldRegistry);
   const scheduleFocusRef = useRef(scheduleFocus);
@@ -84,14 +70,14 @@ export function useFilterEditor({
   const send = (action: FilterEditorControllerAction) => {
     const previousState = stateRef.current;
     const nextState = filterEditorControllerReducer(previousState, action);
+
     if (nextState === previousState) return;
 
     stateRef.current = nextState;
     setControllerState(nextState);
   };
 
-  const preserveCurrent = (): boolean =>
-    incompleteFromEditor(stateRef.current.editor) !== null;
+  const preserveCurrent = (): boolean => incompleteFromEditor(stateRef.current.editor) !== null;
 
   const resetEditor = () => send({ type: 'idle', preserveCurrent: false });
 
@@ -117,6 +103,7 @@ export function useFilterEditor({
 
   const cancel = () => {
     const editor = stateRef.current.editor;
+
     if (editor.stage === 'idle') return;
     send({ type: 'idle', preserveCurrent: false });
     if (editor.filterId === null) {
@@ -134,12 +121,14 @@ export function useFilterEditor({
 
   const browserDismiss = () => {
     const preserved = preserveCurrent();
+
     send({ type: 'idle', preserveCurrent: true });
     if (preserved) announce('Filter incomplete — kept for later');
   };
 
   const openNewFieldPicker = (query: string) => {
     const preserved = preserveCurrent();
+
     send({
       type: 'open',
       preserveCurrent: true,
@@ -155,6 +144,7 @@ export function useFilterEditor({
     draft: ValueDraft,
   ) => {
     const kind = getValueEditorKind(field.type, operator);
+
     send({
       type: 'open',
       preserveCurrent: false,
@@ -174,13 +164,16 @@ export function useFilterEditor({
 
   const selectField = (key: string) => {
     const editor = stateRef.current.editor;
+
     if (editor.stage !== 'field') return;
     const field = registryRef.current.byKey.get(key);
+
     if (!field) return;
     if (editor.filterId !== null) {
       const token = getCurrentHistory().present.conditions.find(
         (candidate) => candidate.id === editor.filterId,
       );
+
       if (token?.fieldKey === key && token.type === field.type) {
         cancel();
         return;
@@ -202,13 +195,11 @@ export function useFilterEditor({
 
   const selectOperator = (operator: FilterOperator) => {
     const editor = stateRef.current.editor;
+
     if (editor.stage !== 'operator') return;
     const field = registryRef.current.byKey.get(editor.fieldKey);
-    if (
-      !field ||
-      field.type !== editor.fieldType ||
-      !operatorsForField(field).includes(operator)
-    ) {
+
+    if (!field || field.type !== editor.fieldType || !operatorsForField(field).includes(operator)) {
       return;
     }
     if (isValuelessOperator(operator)) {
@@ -218,12 +209,8 @@ export function useFilterEditor({
     const token = getCurrentHistory().present.conditions.find(
       (candidate) => candidate.id === editor.filterId,
     );
-    const resolution = resolveOperatorSelection(
-      field,
-      operator,
-      token,
-      registryRef.current.fields,
-    );
+    const resolution = resolveOperatorSelection(field, operator, token, registryRef.current.fields);
+
     if (resolution.type === 'commit') {
       commitFilter(field.key, operator, resolution.value, editor.filterId);
       return;
@@ -233,12 +220,13 @@ export function useFilterEditor({
 
   const selectBooleanChoice = (choice: BooleanChoice) => {
     const editor = stateRef.current.editor;
+
     if (editor.stage !== 'operator') return;
     const field = registryRef.current.byKey.get(editor.fieldKey);
-    if (!field || field.type !== 'boolean' || field.type !== editor.fieldType)
-      return;
-    const operator =
-      choice === 'true' || choice === 'false' ? 'equals' : choice;
+
+    if (!field || field.type !== 'boolean' || field.type !== editor.fieldType) return;
+    const operator = choice === 'true' || choice === 'false' ? 'equals' : choice;
+
     if (!operatorsForField(field).includes(operator)) return;
     commitFilter(
       field.key,
@@ -250,10 +238,13 @@ export function useFilterEditor({
 
   const commitValueDraft = (draft: ValueDraft | null) => {
     const editor = stateRef.current.editor;
+
     if (editor.stage !== 'value' || draft === null) return;
     const field = registryRef.current.byKey.get(editor.fieldKey);
+
     if (!field || field.type !== editor.fieldType) return;
     const result = validateDraft(field, editor.operator, draft);
+
     if (!result.ok) {
       send({ type: 'validationError', draft, error: result.error });
       return;
@@ -263,17 +254,16 @@ export function useFilterEditor({
 
   const commitDraft = () => {
     const editor = stateRef.current.editor;
+
     commitValueDraft(editor.stage === 'value' ? editor.draft : null);
   };
 
-  const openTokenSegment = (
-    token: FilterEntry,
-    segment: TokenSegment,
-    invoker: HTMLElement,
-  ) => {
+  const openTokenSegment = (token: FilterEntry, segment: TokenSegment, invoker: HTMLElement) => {
     const preserved = preserveCurrent();
+
     popoverAnchorRef.current = invoker;
     const editor = editorForTokenSegment(token, segment, registryRef.current);
+
     if (!editor) return;
     send({ type: 'open', editor, preserveCurrent: true });
     if (preserved) announce('Filter incomplete — kept for later');
@@ -282,8 +272,10 @@ export function useFilterEditor({
 
   const resumeIncompleteDraft = (anchor: HTMLElement) => {
     const incomplete = stateRef.current.incompleteDraft;
+
     if (!incomplete) return;
     const field = registryRef.current.byKey.get(incomplete.fieldKey);
+
     send({ type: 'discardIncomplete' });
     if (!field) return;
     popoverAnchorRef.current = anchor;
@@ -295,10 +287,7 @@ export function useFilterEditor({
           stage: 'field',
           filterId: null,
           query: '',
-          activeIndex: fieldActiveIndex(
-            registryRef.current,
-            incomplete.fieldKey,
-          ),
+          activeIndex: fieldActiveIndex(registryRef.current, incomplete.fieldKey),
         },
       });
       scheduleFocus({ type: 'addInput' });
@@ -337,19 +326,13 @@ export function useFilterEditor({
   const clearAll = () => getCommittedCommands().clearAll();
   const undo = () => getCommittedCommands().undo();
   const redo = () => getCommittedCommands().redo();
-  const flipJoiner = (index: number) =>
-    getCommittedCommands().flipJoiner(index);
+  const flipJoiner = (index: number) => getCommittedCommands().flipJoiner(index);
 
   useEffect(() => {
     const current = stateRef.current;
-    const nextEditor = reconcileFilterEditor(
-      current.editor,
-      registryRef.current,
-    );
-    const nextIncomplete = reconcileIncompleteDraft(
-      current.incompleteDraft,
-      registryRef.current,
-    );
+    const nextEditor = reconcileFilterEditor(current.editor, registryRef.current);
+    const nextIncomplete = reconcileIncompleteDraft(current.incompleteDraft, registryRef.current);
+
     if (nextIncomplete !== current.incompleteDraft) {
       send({ type: 'replaceIncomplete', draft: nextIncomplete });
     }
@@ -376,6 +359,7 @@ export function useFilterEditor({
   useEffect(() => {
     if (!disabled || stateRef.current.editor.stage === 'idle') return;
     const preserved = preserveCurrent();
+
     send({ type: 'idle', preserveCurrent: true });
     if (preserved) {
       announceRef.current('Filter incomplete — kept for later');
@@ -394,11 +378,9 @@ export function useFilterEditor({
     selectOperator,
     selectBooleanChoice,
     changeQuery: (query: string) => send({ type: 'changeQuery', query }),
-    changeActiveIndex: (index: number) =>
-      send({ type: 'changeActiveIndex', index }),
+    changeActiveIndex: (index: number) => send({ type: 'changeActiveIndex', index }),
     changeDraft: (draft: ValueDraft) => send({ type: 'changeDraft', draft }),
-    pickSingleValue: (value: string) =>
-      commitValueDraft({ kind: 'scalar', input: value }),
+    pickSingleValue: (value: string) => commitValueDraft({ kind: 'scalar', input: value }),
     commitDraft,
     resumeIncompleteDraft,
     discardIncompleteDraft,

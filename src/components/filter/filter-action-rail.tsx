@@ -13,23 +13,14 @@ function RowActionButton(properties: {
   onClick: () => void;
   children: ReactNode;
 }) {
-  const {
-    disabled,
-    destructive: destructiveOption,
-    label,
-    title,
-    onClick,
-    children,
-  } = properties;
+  const { disabled, destructive: destructiveOption, label, title, onClick, children } = properties;
   const destructive = destructiveOption ?? false;
 
   return (
     <button
       type="button"
       disabled={disabled}
-      className={
-        destructive ? 'filter-icon-button is-destructive' : 'filter-icon-button'
-      }
+      className={destructive ? 'filter-icon-button is-destructive' : 'filter-icon-button'}
       aria-label={label}
       title={title}
       onClick={onClick}
@@ -115,6 +106,7 @@ export function FilterRail({
   const historyVisible = canUndo || canRedo;
 
   const clusters: ReactNode[] = [];
+
   if (viewsVisible) {
     clusters.push(
       <SavedViewsControls
@@ -155,14 +147,11 @@ export function FilterRail({
   }
 
   if (clusters.length === 0) return null;
-
   return (
     <div className="filter-rail">
       {clusters.map((cluster, index) => (
         <Fragment key={index}>
-          {index > 0 && (
-            <span className="filter-rail-divider" aria-hidden="true" />
-          )}
+          {index > 0 && <span className="filter-rail-divider" aria-hidden="true" />}
           {cluster}
         </Fragment>
       ))}

@@ -48,11 +48,7 @@
   .filter-draft-preview-divider {
     width: 1px;
     padding: 0;
-    background: color-mix(
-      in oklch,
-      var(--filter-resolved-color-border-editing) 24%,
-      transparent
-    );
+    background: color-mix(in oklch, var(--filter-resolved-color-border-editing) 24%, transparent);
   }
 }
 

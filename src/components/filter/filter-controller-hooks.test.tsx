@@ -33,9 +33,7 @@ describe('useFilterHistory', () => {
     const { result, unmount } = renderHook(() =>
       useFilterHistory(registry, undefined, undefined, () => 'new'),
     );
-    expect(result.current.applyFilterHistoryAction({ type: 'clear' })).toBe(
-      false,
-    );
+    expect(result.current.applyFilterHistoryAction({ type: 'clear' })).toBe(false);
     act(() => {
       expect(
         result.current.applyFilterHistoryAction({
@@ -83,19 +81,12 @@ describe('useFilterHistory', () => {
     };
     const { rerender } = renderHook(
       ({ currentRegistry }) =>
-        useFilterHistory(
-          currentRegistry,
-          onChange,
-          initialFilters,
-          () => 'seed',
-        ),
+        useFilterHistory(currentRegistry, onChange, initialFilters, () => 'seed'),
       { initialProps: { currentRegistry: registry } },
     );
     expect(onChange).not.toHaveBeenCalled();
 
-    const withoutName = createFilterFieldRegistry([
-      { key: 'active', type: 'boolean' },
-    ]);
+    const withoutName = createFilterFieldRegistry([{ key: 'active', type: 'boolean' }]);
     rerender({ currentRegistry: withoutName });
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(onChange.mock.lastCall?.[0]).toEqual({
@@ -116,14 +107,10 @@ describe('useFilterHistory', () => {
 });
 
 describe('useSavedViews', () => {
-  function createMemoryStorage(
-    initial: ReturnType<SavedViewsStorage['getSavedViews']> = [],
-  ) {
+  function createMemoryStorage(initial: ReturnType<SavedViewsStorage['getSavedViews']> = []) {
     return {
       getSavedViews: vi.fn<SavedViewsStorage['getSavedViews']>(() => initial),
-      saveSavedViews: vi.fn<SavedViewsStorage['saveSavedViews']>(
-        () => undefined,
-      ),
+      saveSavedViews: vi.fn<SavedViewsStorage['saveSavedViews']>(() => undefined),
     };
   }
 
@@ -131,9 +118,7 @@ describe('useSavedViews', () => {
     expression: FilterExpression,
     savedViewsStorage: SavedViewsStorage = createMemoryStorage(),
   ) {
-    const applyFilterHistoryAction = vi.fn<
-      (action: FilterHistoryAction) => boolean
-    >(() => true);
+    const applyFilterHistoryAction = vi.fn<(action: FilterHistoryAction) => boolean>(() => true);
     const resetEditor = vi.fn<() => void>();
     const announce = vi.fn<(message: string) => void>();
     const scheduleFocus = vi.fn<(target: FocusTarget) => void>();
@@ -184,9 +169,7 @@ describe('useSavedViews', () => {
       throw new DOMException('blocked', 'SecurityError');
     });
     act(() => hook.result.current.saveCurrentView('Session'));
-    expect(
-      hook.result.current.savedViews.some((view) => view.name === 'Session'),
-    ).toBe(true);
+    expect(hook.result.current.savedViews.some((view) => view.name === 'Session')).toBe(true);
     expect(hook.announce).toHaveBeenLastCalledWith(
       'View saved for this session only: storage is unavailable',
     );
@@ -225,19 +208,13 @@ describe('useSavedViews', () => {
     synchronousFailure.getSavedViews.mockImplementation(() => {
       throw new Error('blocked');
     });
-    const synchronousHook = setupSavedViews(
-      nameEntry('Maria'),
-      synchronousFailure,
-    );
+    const synchronousHook = setupSavedViews(nameEntry('Maria'), synchronousFailure);
     expect(synchronousHook.result.current.savedViews).toEqual([]);
     expect(synchronousHook.result.current.canSaveCurrentGroup).toBe(true);
 
     const asynchronousFailure = createMemoryStorage();
     asynchronousFailure.getSavedViews.mockRejectedValue(new Error('offline'));
-    const asynchronousHook = setupSavedViews(
-      nameEntry('Maria'),
-      asynchronousFailure,
-    );
+    const asynchronousHook = setupSavedViews(nameEntry('Maria'), asynchronousFailure);
     expect(asynchronousHook.result.current.canSaveCurrentGroup).toBe(false);
     await waitFor(() => {
       expect(asynchronousHook.result.current.canSaveCurrentGroup).toBe(true);
@@ -414,9 +391,7 @@ describe('useSavedViews', () => {
     expect(hook.applyFilterHistoryAction).toHaveBeenCalledWith({
       type: 'replace',
       expression: {
-        conditions: [
-          expect.objectContaining({ id: 'restored-1', value: 'Nadia' }),
-        ],
+        conditions: [expect.objectContaining({ id: 'restored-1', value: 'Nadia' })],
         joiners: [],
       },
     });
@@ -428,9 +403,7 @@ describe('useSavedViews', () => {
     act(() => hook.result.current.saveCurrentView('One'));
     act(() => hook.result.current.saveCurrentView('Two'));
     act(() => hook.result.current.removeSavedView('One'));
-    expect(hook.result.current.savedViews.map((view) => view.name)).toEqual([
-      'Two',
-    ]);
+    expect(hook.result.current.savedViews.map((view) => view.name)).toEqual(['Two']);
     expect(hook.scheduleFocus).toHaveBeenLastCalledWith({
       type: 'savedView',
       index: 0,

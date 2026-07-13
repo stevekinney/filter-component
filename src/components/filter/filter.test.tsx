@@ -1,11 +1,6 @@
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import {
-  FIELDS,
-  addStringFilter,
-  queryTokens,
-  setup,
-} from './filter-test-setup.tsx';
+import { FIELDS, addStringFilter, queryTokens, setup } from './filter-test-setup.tsx';
 
 describe('add-filter combobox', () => {
   it('shows the empty-state placeholder and does not open the dropdown on focus alone', async () => {
@@ -22,9 +17,7 @@ describe('add-filter combobox', () => {
     const { user, addFilterInput } = setup();
     await user.click(addFilterInput);
     await user.keyboard('{ArrowDown}');
-    const options = within(
-      screen.getByRole('listbox', { name: 'Fields' }),
-    ).getAllByRole('option');
+    const options = within(screen.getByRole('listbox', { name: 'Fields' })).getAllByRole('option');
     expect(options).toHaveLength(FIELDS.length);
   });
 
@@ -49,9 +42,7 @@ describe('add-filter combobox', () => {
     await user.type(addFilterInput, 'deal');
     const addOptionId = addFilterInput.getAttribute('aria-activedescendant');
     expect(addOptionId).not.toMatch(/\s/);
-    expect(document.getElementById(addOptionId ?? '')).toHaveTextContent(
-      'Deal stage',
-    );
+    expect(document.getElementById(addOptionId ?? '')).toHaveTextContent('Deal stage');
 
     await user.keyboard('{Enter}{Enter}Open{Enter}');
     const token = screen.getByRole('group', { name: 'Deal stage is Open' });
@@ -59,9 +50,7 @@ describe('add-filter combobox', () => {
     const searchInput = screen.getByRole('combobox', { name: 'Search fields' });
     const editOptionId = searchInput.getAttribute('aria-activedescendant');
     expect(editOptionId).not.toMatch(/\s/);
-    expect(document.getElementById(editOptionId ?? '')).toHaveTextContent(
-      'Deal stage',
-    );
+    expect(document.getElementById(editOptionId ?? '')).toHaveTextContent('Deal stage');
   });
 
   it('dismisses the dropdown on blur', async () => {
@@ -110,9 +99,7 @@ describe('adding filters', () => {
   it('commits a string filter and reports it through onChange', async () => {
     const { onChange, user, addFilterInput } = setup();
     await addStringFilter(user, addFilterInput);
-    expect(
-      screen.getByRole('group', { name: 'Name is Maria' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Name is Maria' })).toBeInTheDocument();
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(onChange).toHaveBeenLastCalledWith(
       {
@@ -137,9 +124,7 @@ describe('adding filters', () => {
     await user.click(addFilterInput);
     await user.keyboard('na{Enter}');
     await user.click(screen.getByRole('option', { name: 'is empty' }));
-    expect(
-      screen.getByRole('group', { name: 'Name is empty' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Name is empty' })).toBeInTheDocument();
     expect(onChange).toHaveBeenLastCalledWith(
       {
         combinator: 'and',
@@ -147,9 +132,7 @@ describe('adding filters', () => {
       },
       expect.any(AbortController),
     );
-    expect(onChange.mock.lastCall?.[0].conditions[0]).not.toHaveProperty(
-      'value',
-    );
+    expect(onChange.mock.lastCall?.[0].conditions[0]).not.toHaveProperty('value');
   });
 
   it('collapses boolean fields into a single list that commits in one pick', async () => {
@@ -163,9 +146,7 @@ describe('adding filters', () => {
         .map((option) => option.textContent),
     ).toEqual(['is true', 'is false', 'is empty', 'is not empty']);
     await user.keyboard('{ArrowDown}{Enter}');
-    expect(
-      screen.getByRole('group', { name: 'Active is false' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Active is false' })).toBeInTheDocument();
     expect(onChange).toHaveBeenLastCalledWith(
       {
         combinator: 'and',
@@ -200,9 +181,7 @@ describe('adding filters', () => {
         .getAllByRole('option')
         .map((option) => option.textContent),
     ).toEqual(['is true', 'is false', 'is not empty']);
-    expect(
-      within(list).queryByRole('option', { name: 'is empty' }),
-    ).not.toBeInTheDocument();
+    expect(within(list).queryByRole('option', { name: 'is empty' })).not.toBeInTheDocument();
   });
 
   it('multi-select enums toggle with Space and commit with Enter', async () => {
@@ -261,9 +240,7 @@ describe('adding filters', () => {
     const input = screen.getByRole('spinbutton', { name: 'Value' });
     expect(input).not.toHaveAttribute('placeholder', '0');
     await user.keyboard('0{Enter}');
-    expect(
-      screen.getByRole('group', { name: 'Deal value is 0' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Deal value is 0' })).toBeInTheDocument();
     expect(onChange).toHaveBeenLastCalledWith(
       {
         combinator: 'and',
@@ -297,9 +274,7 @@ describe('adding filters', () => {
     await user.type(screen.getByRole('spinbutton', { name: 'From' }), '9');
     await user.type(screen.getByRole('spinbutton', { name: 'To' }), '2');
     await user.keyboard('{Enter}');
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'First value must not exceed the second',
-    );
+    expect(screen.getByRole('alert')).toHaveTextContent('First value must not exceed the second');
     expect(onChange).not.toHaveBeenCalled();
   });
 });
@@ -313,9 +288,7 @@ describe('editing tokens', () => {
     const first = screen.getByRole('group', { name: 'Name is Maria' });
     await user.click(within(first).getByTitle('Change value'));
     expect(screen.getByRole('dialog', { name: 'Name is' })).toBeInTheDocument();
-    await user.keyboard(
-      '{Backspace}{Backspace}{Backspace}{Backspace}{Backspace}Nadia{Enter}',
-    );
+    await user.keyboard('{Backspace}{Backspace}{Backspace}{Backspace}{Backspace}Nadia{Enter}');
     const groups = queryTokens();
     expect(groups[0]).toHaveAccessibleName('Name is Nadia');
     expect(groups[1]).toHaveAccessibleName('Deal value is 42');
@@ -328,17 +301,13 @@ describe('editing tokens', () => {
     const token = screen.getByRole('group', { name: 'Name is Maria' });
     await user.click(within(token).getByTitle('Change operator'));
     await user.keyboard('{ArrowDown}{Enter}');
-    expect(
-      screen.getByRole('group', { name: 'Name is not Maria' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Name is not Maria' })).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(onChange).toHaveBeenLastCalledWith(
       {
         combinator: 'and',
-        conditions: [
-          expect.objectContaining({ operator: 'notEquals', value: 'Maria' }),
-        ],
+        conditions: [expect.objectContaining({ operator: 'notEquals', value: 'Maria' })],
       },
       expect.any(AbortController),
     );
@@ -358,9 +327,7 @@ describe('editing tokens', () => {
       'true',
     );
     await user.keyboard('{Enter}');
-    expect(
-      screen.getByRole('group', { name: 'Stage is any of Lead' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Stage is any of Lead' })).toBeInTheDocument();
   });
 
   it('re-runs operator selection when the field changes', async () => {
@@ -371,17 +338,11 @@ describe('editing tokens', () => {
     const search = screen.getByRole('combobox', { name: 'Search fields' });
     expect(search).toHaveFocus();
     await user.keyboard('deal{Enter}');
-    expect(
-      screen.getByRole('dialog', { name: 'Deal value' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Deal value' })).toBeInTheDocument();
     await user.keyboard('{Enter}');
     await user.keyboard('42{Enter}');
-    expect(
-      screen.getByRole('group', { name: 'Deal value is 42' }),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole('group', { name: 'Name is Maria' }),
-    ).not.toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Deal value is 42' })).toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: 'Name is Maria' })).not.toBeInTheDocument();
   });
 });
 
@@ -400,9 +361,7 @@ describe('enum pills', () => {
         name: 'Remove Lead from Stage filter',
       }),
     );
-    expect(
-      screen.getByRole('group', { name: 'Stage is any of Contacted' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Stage is any of Contacted' })).toBeInTheDocument();
     expect(onChange).toHaveBeenLastCalledWith(
       {
         combinator: 'and',

@@ -10,10 +10,7 @@ type NativePopoverOptions = {
   autofocusOnOpen?: boolean;
 };
 
-function performPopoverReanchoring(
-  isReanchoringRef: RefObject<boolean>,
-  reanchor: () => void,
-) {
+function performPopoverReanchoring(isReanchoringRef: RefObject<boolean>, reanchor: () => void) {
   isReanchoringRef.current = true;
   try {
     reanchor();
@@ -42,9 +39,11 @@ export function useNativePopover(options: NativePopoverOptions) {
 
   const reanchorPopover = useEffectEvent(() => {
     const popover = popoverRef.current;
+
     if (!popover) return;
 
     const anchor = resolveAnchor();
+
     if (isPopoverOpenRef.current && currentAnchorRef.current === anchor) return;
 
     performPopoverReanchoring(isReanchoringRef, () => {

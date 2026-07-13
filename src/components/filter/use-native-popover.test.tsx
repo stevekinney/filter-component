@@ -74,9 +74,7 @@ describe('useNativePopover lifecycle', () => {
     const secondAnchor = document.createElement('button');
     document.body.append(firstAnchor, secondAnchor);
     const onBrowserDismiss = vi.fn();
-    const resolveAnchor = vi.fn(
-      (currentAnchor: HTMLElement | null) => currentAnchor,
-    );
+    const resolveAnchor = vi.fn((currentAnchor: HTMLElement | null) => currentAnchor);
     const props = {
       autofocusOnOpen: true,
       includeAutofocus: true,
@@ -84,9 +82,7 @@ describe('useNativePopover lifecycle', () => {
       onEscape: vi.fn(),
       resolveAnchor,
     };
-    const view = render(
-      <NativePopoverHarness {...props} anchor={firstAnchor} />,
-    );
+    const view = render(<NativePopoverHarness {...props} anchor={firstAnchor} />);
     expect(screen.getByRole('button', { name: 'First' })).toHaveFocus();
     expect(resolveAnchor).toHaveBeenCalledOnce();
     view.rerender(<NativePopoverHarness {...props} anchor={firstAnchor} />);
@@ -95,11 +91,7 @@ describe('useNativePopover lifecycle', () => {
     expect(resolveAnchor).toHaveBeenCalledTimes(2);
     expect(onBrowserDismiss).not.toHaveBeenCalled();
     view.rerender(
-      <NativePopoverHarness
-        {...props}
-        anchor={secondAnchor}
-        includeAutofocus={false}
-      />,
+      <NativePopoverHarness {...props} anchor={secondAnchor} includeAutofocus={false} />,
     );
   });
 });

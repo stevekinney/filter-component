@@ -23,18 +23,12 @@ describe('searchFields', () => {
   });
 
   it('matches on key as well as label, case-insensitively', () => {
-    expect(searchFields(fields, 'DEALV').map((field) => field.key)).toEqual([
-      'dealValue',
-    ]);
+    expect(searchFields(fields, 'DEALV').map((field) => field.key)).toEqual(['dealValue']);
   });
 
   it('uses the key as the searchable label when a label is omitted', () => {
-    const keyOnly: readonly FilterFieldDefinition[] = [
-      { key: 'accountOwner', type: 'string' },
-    ];
-    expect(searchFields(keyOnly, 'account').map((field) => field.key)).toEqual([
-      'accountOwner',
-    ]);
+    const keyOnly: readonly FilterFieldDefinition[] = [{ key: 'accountOwner', type: 'string' }];
+    expect(searchFields(keyOnly, 'account').map((field) => field.key)).toEqual(['accountOwner']);
   });
 
   it('returns no results for an unmatched query', () => {

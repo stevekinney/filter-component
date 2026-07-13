@@ -40,7 +40,5 @@ if (violations.length > 0) {
   }
   process.exitCode = 1;
 } else {
-  console.log(
-    `OK: ${lineCounts.length} implementation files are ${maximumLines} lines or fewer.`,
-  );
+  console.log(`OK: ${lineCounts.length} implementation files are ${maximumLines} lines or fewer.`);
 }

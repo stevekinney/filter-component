@@ -5,12 +5,10 @@ import type { SavedViewsStorage } from './saved-views-storage.ts';
 export const localSavedViewsStorage = {
   getSavedViews() {
     const stored = window.localStorage.getItem(SAVED_VIEWS_STORAGE_KEY);
+
     return stored === null ? [] : JSON.parse(stored);
   },
   saveSavedViews(savedViews) {
-    window.localStorage.setItem(
-      SAVED_VIEWS_STORAGE_KEY,
-      JSON.stringify(savedViews),
-    );
+    window.localStorage.setItem(SAVED_VIEWS_STORAGE_KEY, JSON.stringify(savedViews));
   },
 } satisfies SavedViewsStorage;

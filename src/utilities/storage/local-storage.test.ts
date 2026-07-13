@@ -31,28 +31,22 @@ describe('localSavedViewsStorage', () => {
     localSavedViewsStorage.saveSavedViews([VIEW]);
 
     expect(localSavedViewsStorage.getSavedViews()).toEqual([VIEW]);
-    expect(window.localStorage.getItem(SAVED_VIEWS_STORAGE_KEY)).toBe(
-      JSON.stringify([VIEW]),
-    );
+    expect(window.localStorage.getItem(SAVED_VIEWS_STORAGE_KEY)).toBe(JSON.stringify([VIEW]));
   });
 
   it('surfaces malformed JSON and denied storage access to the controller', () => {
     window.localStorage.setItem(SAVED_VIEWS_STORAGE_KEY, '{malformed');
     expect(() => localSavedViewsStorage.getSavedViews()).toThrow(SyntaxError);
 
-    const getItemSpy = vi
-      .spyOn(Storage.prototype, 'getItem')
-      .mockImplementation(() => {
-        throw new DOMException('denied', 'SecurityError');
-      });
+    const getItemSpy = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new DOMException('denied', 'SecurityError');
+    });
     expect(() => localSavedViewsStorage.getSavedViews()).toThrow('denied');
     getItemSpy.mockRestore();
 
-    const setItemSpy = vi
-      .spyOn(Storage.prototype, 'setItem')
-      .mockImplementation(() => {
-        throw new DOMException('quota', 'QuotaExceededError');
-      });
+    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('quota', 'QuotaExceededError');
+    });
     expect(() => localSavedViewsStorage.saveSavedViews([])).toThrow('quota');
     setItemSpy.mockRestore();
   });

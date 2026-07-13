@@ -18,11 +18,7 @@
     border-color: var(--filter-resolved-color-border-focus);
     background: var(--filter-resolved-color-background-editing);
     box-shadow: 0 0 0 3px
-      color-mix(
-        in oklch,
-        var(--filter-resolved-color-border-focus) 15%,
-        transparent
-      );
+      color-mix(in oklch, var(--filter-resolved-color-border-focus) 15%, transparent);
   }
 
   /* data-invalid, not aria-invalid: ARIA doesn't support aria-invalid on

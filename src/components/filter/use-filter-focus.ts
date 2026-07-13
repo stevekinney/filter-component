@@ -24,10 +24,7 @@ function elementWithDataValue(
   );
 }
 
-function resolveFocusTarget(
-  root: ParentNode,
-  target: FocusTarget,
-): HTMLElement | null {
+function resolveFocusTarget(root: ParentNode, target: FocusTarget): HTMLElement | null {
   switch (target.type) {
     case 'addInput':
       return root.querySelector<HTMLElement>('[data-add-filter-input]');
@@ -37,20 +34,15 @@ function resolveFocusTarget(
       return elementWithDataValue(root, 'data-token', target.id);
     case 'segment': {
       const token = elementWithDataValue(root, 'data-token', target.id);
-      return token
-        ? elementWithDataValue(token, 'data-token-segment', target.segment)
-        : null;
+
+      return token ? elementWithDataValue(token, 'data-token-segment', target.segment) : null;
     }
     case 'joiner':
       return elementWithDataValue(root, 'data-joiner', String(target.index));
     case 'savedViewsTrigger':
       return root.querySelector<HTMLElement>('[data-saved-views-button]');
     case 'savedView':
-      return elementWithDataValue(
-        root,
-        'data-saved-view-item',
-        String(target.index),
-      );
+      return elementWithDataValue(root, 'data-saved-view-item', String(target.index));
     case 'element':
       return target.element.isConnected ? target.element : null;
   }
@@ -62,15 +54,19 @@ export function useFilterFocus(rootRef: RefObject<HTMLFieldSetElement | null>) {
 
   const focus = (target: FocusTarget): boolean => {
     const root = rootRef.current;
+
     if (!root) return false;
     const element = resolveFocusTarget(root, target);
+
     if (!element) return false;
     element.focus();
+
     return true;
   };
 
   useEffect(() => {
     const target = pendingTargetRef.current;
+
     if (!target) return;
     pendingTargetRef.current = null;
     focus(target);

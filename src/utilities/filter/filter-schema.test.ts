@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  filterConditionSchema,
-  filterGroupSchema,
-  parseFilterGroup,
-} from './filter-schema.ts';
+import { filterConditionSchema, filterGroupSchema, parseFilterGroup } from './filter-schema.ts';
 
 const valuedConditions: unknown[] = [
   {
@@ -223,10 +219,7 @@ describe('filterGroupSchema', () => {
   it('accepts recursive groups and parseFilterGroup returns checked data', () => {
     const group = {
       combinator: 'or',
-      conditions: [
-        valuedConditions[0],
-        { combinator: 'and', conditions: [valuedConditions[1]] },
-      ],
+      conditions: [valuedConditions[0], { combinator: 'and', conditions: [valuedConditions[1]] }],
     };
 
     expect(filterGroupSchema.safeParse(group).success).toBe(true);

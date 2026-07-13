@@ -1,11 +1,7 @@
 import { createFilterEntry } from './filter-entry.ts';
 import type { FilterEntry } from './filter-entry.ts';
 import { filterConditionSchema } from './filter-schema.ts';
-import type {
-  FilterCombinator,
-  FilterCondition,
-  FilterGroup,
-} from '@/types/filter.ts';
+import type { FilterCombinator, FilterCondition, FilterGroup } from '@/types/filter.ts';
 
 /**
  * The smart-joiners expression model. The committed filter state is a flat
@@ -26,9 +22,7 @@ export const EMPTY_FILTER_EXPRESSION: FilterExpression = {
   joiners: [],
 };
 
-export function isFilterGroup(
-  member: FilterCondition | FilterGroup,
-): member is FilterGroup {
+export function isFilterGroup(member: FilterCondition | FilterGroup): member is FilterGroup {
   return 'combinator' in member;
 }
 
@@ -39,14 +33,17 @@ export function isFilterGroup(
  */
 function andRuns(expression: FilterExpression): FilterEntry[][] {
   const runs: FilterEntry[][] = [];
+
   expression.conditions.forEach((condition, index) => {
     const lastRun = runs[runs.length - 1];
+
     if (lastRun === undefined || expression.joiners[index - 1] === 'or') {
       runs.push([condition]);
     } else {
       lastRun.push(condition);
     }
   });
+
   return runs;
 }
 
@@ -60,8 +57,10 @@ function andRuns(expression: FilterExpression): FilterEntry[][] {
 export function toFilterGroup(expression: FilterExpression): FilterGroup {
   const publicConditions = expression.conditions.map((entry) => {
     const { id: _id, ...condition } = entry;
+
     return filterConditionSchema.parse(condition);
   });
+
   if (!expression.joiners.includes('or')) {
     return {
       combinator: 'and',
@@ -69,12 +68,15 @@ export function toFilterGroup(expression: FilterExpression): FilterGroup {
     };
   }
   let offset = 0;
+
   return {
     combinator: 'or',
     conditions: andRuns(expression).map((run) => {
       const conditions = publicConditions.slice(offset, offset + run.length);
+
       offset += run.length;
       const only = conditions[0];
+
       return conditions.length === 1 && only !== undefined
         ? only
         : {
@@ -111,14 +113,13 @@ export function fromFilterGroup(
 ): FilterExpression {
   const conditions: FilterEntry[] = [];
   const joiners: FilterCombinator[] = [];
-  const append = (
-    member: FilterCondition | FilterGroup,
-    joiner: FilterCombinator,
-  ) => {
+  const append = (member: FilterCondition | FilterGroup, joiner: FilterCombinator) => {
     if (isFilterGroup(member)) {
       let emittedMember = false;
+
       for (const child of member.conditions) {
         const previousConditionCount = conditions.length;
+
         append(child, emittedMember ? member.combinator : joiner);
         if (conditions.length > previousConditionCount) emittedMember = true;
       }
@@ -127,7 +128,9 @@ export function fromFilterGroup(
     if (conditions.length > 0) joiners.push(joiner);
     conditions.push(createFilterEntry(member, createConditionId()));
   };
+
   for (const member of group.conditions) append(member, group.combinator);
+
   return { conditions, joiners };
 }
 
@@ -138,13 +141,11 @@ export function fromFilterGroup(
  * re-derives; no other joiner changes. Out-of-range indexes return the
  * input unchanged.
  */
-export function removeConditionAt(
-  expression: FilterExpression,
-  index: number,
-): FilterExpression {
+export function removeConditionAt(expression: FilterExpression, index: number): FilterExpression {
   if (index < 0 || index >= expression.conditions.length) return expression;
   const conditions = expression.conditions.toSpliced(index, 1);
   const joiners = expression.joiners.toSpliced(Math.max(0, index - 1), 1);
+
   return { conditions, joiners };
 }
 
@@ -159,12 +160,15 @@ export function filterExpression(
   keep: (condition: FilterEntry) => boolean,
 ): FilterExpression {
   let result = expression;
+
   for (let index = result.conditions.length - 1; index >= 0; index--) {
     const condition = result.conditions[index];
+
     if (condition !== undefined && !keep(condition)) {
       result = removeConditionAt(result, index);
     }
   }
+
   return result;
 }
 

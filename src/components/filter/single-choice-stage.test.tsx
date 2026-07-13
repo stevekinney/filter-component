@@ -128,9 +128,7 @@ describe('SingleChoiceStage', () => {
       'aria-selected',
       'true',
     );
-    expect(
-      screen.queryByRole('option', { name: 'is not empty' }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'is not empty' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('option', { name: 'is empty' }));
     expect(props.onPickBoolean).toHaveBeenCalledWith('isEmpty');
 
@@ -160,9 +158,7 @@ describe('SingleChoiceStage', () => {
   });
 
   it('ignores choices invalidated between render and activation', () => {
-    const booleanOperators: ('equals' | 'isEmpty' | 'isNotEmpty')[] = [
-      'equals',
-    ];
+    const booleanOperators: ('equals' | 'isEmpty' | 'isNotEmpty')[] = ['equals'];
     const mutableBoolean = {
       ...BOOLEAN_FIELD,
       operators: booleanOperators,

@@ -52,9 +52,7 @@ describe('token focus and traversal', () => {
       }),
     ).toHaveFocus();
     await user.keyboard('{ArrowRight}'); // and on to the next token root
-    expect(
-      screen.getByRole('group', { name: 'Deal value greater than 100' }),
-    ).toHaveFocus();
+    expect(screen.getByRole('group', { name: 'Deal value greater than 100' })).toHaveFocus();
   });
 
   it('ArrowDown on a segment opens that segment’s editor', async () => {
@@ -63,9 +61,7 @@ describe('token focus and traversal', () => {
     await user.keyboard('{Backspace}{Enter}'); // last token → field segment
     await user.keyboard('{ArrowRight}'); // operator segment
     await user.keyboard('{ArrowDown}');
-    expect(
-      screen.getByRole('dialog', { name: 'Deal value' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Deal value' })).toBeInTheDocument();
   });
 });
 
@@ -155,9 +151,7 @@ describe('focus restoration', () => {
     await user.click(within(token).getByTitle('Change field'));
     await user.keyboard('deal');
     await user.tab({ shift: true });
-    expect(
-      screen.queryByRole('dialog', { name: 'Deal value' }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Deal value' })).not.toBeInTheDocument();
   });
 
   it('removing a token focuses a sensible neighbor, or the addFilterInput when none remain', async () => {
@@ -196,13 +190,9 @@ describe('focus restoration', () => {
       name: 'Deal value greater than 100',
     });
     await user.click(within(token).getByTitle('Change operator'));
-    expect(
-      screen.getByRole('dialog', { name: 'Deal value' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Deal value' })).toBeInTheDocument();
     await user.click(within(token).getByTitle('Change value'));
-    expect(
-      screen.getByRole('dialog', { name: 'Deal value greater than' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Deal value greater than' })).toBeInTheDocument();
     expect(screen.getAllByRole('dialog')).toHaveLength(1);
   });
 });

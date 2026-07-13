@@ -37,9 +37,7 @@ describe('parseSavedViews', () => {
         name: 'Broken pairing',
         group: {
           combinator: 'and',
-          conditions: [
-            { fieldKey: 'v', type: 'number', operator: 'between', value: 5 },
-          ],
+          conditions: [{ fieldKey: 'v', type: 'number', operator: 'between', value: 5 }],
         },
       },
       { name: 'Number group', group: 42 },
@@ -66,9 +64,7 @@ describe('parseSavedViews', () => {
       name: 'Ghost field',
       group: {
         combinator: 'and',
-        conditions: [
-          { fieldKey: 'retired', type: 'string', operator: 'isEmpty' },
-        ],
+        conditions: [{ fieldKey: 'retired', type: 'string', operator: 'isEmpty' }],
       },
     };
     expect(parseSavedViews([view])).toEqual([view]);
@@ -189,10 +185,7 @@ describe('nested groups', () => {
   it('keys structurally equivalent trees identically after canonicalization', () => {
     const withSingleMemberGroup: FilterGroup = {
       combinator: 'or',
-      conditions: [
-        { combinator: 'and', conditions: [condition('alpha')] },
-        condition('gamma'),
-      ],
+      conditions: [{ combinator: 'and', conditions: [condition('alpha')] }, condition('gamma')],
     };
     const flat: FilterGroup = {
       combinator: 'or',
@@ -225,9 +218,7 @@ describe('savedViewKey', () => {
   });
 
   it('distinguishes combinator and value differences', () => {
-    expect(savedViewKey({ ...GROUP, combinator: 'and' })).not.toBe(
-      savedViewKey(GROUP),
-    );
+    expect(savedViewKey({ ...GROUP, combinator: 'and' })).not.toBe(savedViewKey(GROUP));
     const base = {
       fieldKey: 'name',
       type: 'string',

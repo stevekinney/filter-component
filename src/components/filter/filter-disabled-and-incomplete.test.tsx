@@ -1,12 +1,7 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { Filter } from './filter.tsx';
-import {
-  FIELDS,
-  addStringFilter,
-  queryTokens,
-  setup,
-} from './filter-test-setup.tsx';
+import { FIELDS, addStringFilter, queryTokens, setup } from './filter-test-setup.tsx';
 
 describe('incomplete drafts', () => {
   it('keeps an abandoned mid-composition draft as a resumable incomplete-draft chip', async () => {
@@ -20,14 +15,10 @@ describe('incomplete drafts', () => {
     expect(incompleteDraftChip).toBeInTheDocument();
     expect(onChange).not.toHaveBeenCalled();
 
-    await user.click(
-      within(incompleteDraftChip).getByTitle('Finish this filter'),
-    );
+    await user.click(within(incompleteDraftChip).getByTitle('Finish this filter'));
     expect(screen.getByRole('dialog', { name: 'Name' })).toBeInTheDocument();
     await user.keyboard('{Enter}Maria{Enter}');
-    expect(
-      screen.getByRole('group', { name: 'Name is Maria' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Name is Maria' })).toBeInTheDocument();
     expect(
       screen.queryByRole('group', { name: 'Incomplete filter: Name' }),
     ).not.toBeInTheDocument();
@@ -38,9 +29,7 @@ describe('incomplete drafts', () => {
     await user.click(addFilterInput);
     await user.keyboard('na{Enter}');
     await user.click(document.body);
-    await user.click(
-      screen.getByRole('button', { name: 'Discard incomplete filter' }),
-    );
+    await user.click(screen.getByRole('button', { name: 'Discard incomplete filter' }));
     expect(queryTokens()).toHaveLength(0);
     expect(addFilterInput).toHaveFocus();
   });
@@ -49,10 +38,7 @@ describe('incomplete drafts', () => {
 describe('disabled and initialFilters', () => {
   it('disables the whole component', async () => {
     const { user, addFilterInput, view } = setup({ disabled: true });
-    expect(view.container.querySelector('fieldset')).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    );
+    expect(view.container.querySelector('fieldset')).toHaveAttribute('aria-disabled', 'true');
     expect(addFilterInput).toBeDisabled();
     await user.tab();
     expect(addFilterInput).not.toHaveFocus();
@@ -94,13 +80,9 @@ describe('accessibility plumbing', () => {
     await addStringFilter(user, addFilterInput, 'Nadia');
     const liveRegion = view.container.querySelector('[aria-live="polite"]');
 
-    await user.click(
-      screen.getByRole('button', { name: 'Remove Name is Maria filter' }),
-    );
+    await user.click(screen.getByRole('button', { name: 'Remove Name is Maria filter' }));
     const firstAnnouncement = liveRegion?.textContent;
-    await user.click(
-      screen.getByRole('button', { name: 'Remove Name is Nadia filter' }),
-    );
+    await user.click(screen.getByRole('button', { name: 'Remove Name is Nadia filter' }));
     // The text must mutate (a zero-width suffix) or screen readers would
     // stay silent on the identical repeat.
     expect(liveRegion?.textContent).not.toBe(firstAnnouncement);

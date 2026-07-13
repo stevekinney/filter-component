@@ -7,12 +7,14 @@ export function fieldLabel(field: FilterFieldDefinition): string {
 
 export function formatFilterValue(filter: FilterCondition): string {
   const value = filter.value;
+
   if (value === undefined) return '';
   if (Array.isArray(value)) return value.join(', ');
   if (typeof value === 'object') {
     if ('amount' in value) return `${value.amount} ${value.unit}`;
     return `${value.from} and ${value.to}`;
   }
+
   return String(value);
 }
 
@@ -23,5 +25,6 @@ export function tokenPhrase(
 ): string {
   const label = field ? fieldLabel(field) : filter.fieldKey;
   const value = formatFilterValue(filter);
+
   return `${label} ${OPERATOR_LABELS[filter.operator]}${value ? ` ${value}` : ''}`;
 }

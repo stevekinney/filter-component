@@ -61,11 +61,7 @@
   );
   --filter-resolved-color-background-action-subtle: var(
     --filter-color-background-action-subtle,
-    color-mix(
-      in oklch,
-      var(--filter-resolved-color-background-action) 12%,
-      transparent
-    )
+    color-mix(in oklch, var(--filter-resolved-color-background-action) 12%, transparent)
   );
   --filter-resolved-color-text-action: var(
     --filter-color-text-action,
@@ -93,11 +89,7 @@
   );
   --filter-resolved-color-background-danger-hover: var(
     --filter-color-background-danger-hover,
-    color-mix(
-      in oklch,
-      var(--filter-resolved-color-border-danger) 12%,
-      transparent
-    )
+    color-mix(in oklch, var(--filter-resolved-color-border-danger) 12%, transparent)
   );
   --filter-resolved-color-text-warning: var(
     --filter-color-text-warning,
@@ -113,11 +105,7 @@
   );
   --filter-resolved-color-background-warning-hover: var(
     --filter-color-background-warning-hover,
-    color-mix(
-      in oklch,
-      var(--filter-resolved-color-border-warning) 12%,
-      transparent
-    )
+    color-mix(in oklch, var(--filter-resolved-color-border-warning) 12%, transparent)
   );
   --filter-resolved-color-shadow-drop: var(
     --filter-color-shadow-drop,

@@ -1,8 +1,4 @@
-import type {
-  FilterCondition,
-  FilterGroup,
-  WithinLastUnit,
-} from '@/components/filter/index.ts';
+import type { FilterCondition, FilterGroup, WithinLastUnit } from '@/components/filter/index.ts';
 import type { Deal } from './records.ts';
 
 const UNIT_MILLISECONDS: Record<WithinLastUnit, number> = {
@@ -17,13 +13,11 @@ function isEmptyValue(value: unknown): boolean {
 
 function matchesString(
   recorded: string,
-  filter: Exclude<
-    FilterCondition<'string'>,
-    { operator: 'isEmpty' | 'isNotEmpty' }
-  >,
+  filter: Exclude<FilterCondition<'string'>, { operator: 'isEmpty' | 'isNotEmpty' }>,
 ): boolean {
   const value = filter.value.toLowerCase();
   const candidate = recorded.toLowerCase();
+
   switch (filter.operator) {
     case 'equals':
       return candidate === value;
@@ -42,10 +36,7 @@ function matchesString(
 
 function matchesNumber(
   recorded: number,
-  filter: Exclude<
-    FilterCondition<'number'>,
-    { operator: 'isEmpty' | 'isNotEmpty' }
-  >,
+  filter: Exclude<FilterCondition<'number'>, { operator: 'isEmpty' | 'isNotEmpty' }>,
 ): boolean {
   switch (filter.operator) {
     case 'equals':
@@ -67,10 +58,7 @@ function matchesNumber(
 
 function matchesEnum(
   recorded: string,
-  filter: Exclude<
-    FilterCondition<'enum'>,
-    { operator: 'isEmpty' | 'isNotEmpty' }
-  >,
+  filter: Exclude<FilterCondition<'enum'>, { operator: 'isEmpty' | 'isNotEmpty' }>,
 ): boolean {
   switch (filter.operator) {
     case 'equals':
@@ -90,10 +78,7 @@ function matchesEnum(
  */
 function matchesDate(
   recorded: string,
-  filter: Exclude<
-    FilterCondition<'date'>,
-    { operator: 'isEmpty' | 'isNotEmpty' }
-  >,
+  filter: Exclude<FilterCondition<'date'>, { operator: 'isEmpty' | 'isNotEmpty' }>,
   now: Date,
 ): boolean {
   switch (filter.operator) {
@@ -112,10 +97,9 @@ function matchesDate(
     case 'between':
       return recorded >= filter.value.from && recorded <= filter.value.to;
     case 'withinLast': {
-      const cutoff =
-        now.getTime() -
-        filter.value.amount * UNIT_MILLISECONDS[filter.value.unit];
+      const cutoff = now.getTime() - filter.value.amount * UNIT_MILLISECONDS[filter.value.unit];
       const recordedTime = new Date(recorded).getTime();
+
       return recordedTime >= cutoff && recordedTime <= now.getTime();
     }
   }
@@ -123,6 +107,7 @@ function matchesDate(
 
 function matches(deal: Deal, filter: FilterCondition, now: Date): boolean {
   const recorded = deal[filter.fieldKey as keyof Deal];
+
   if (filter.operator === 'isEmpty') return isEmptyValue(recorded);
   if (filter.operator === 'isNotEmpty') return !isEmptyValue(recorded);
   if (isEmptyValue(recorded)) return false;
@@ -140,11 +125,7 @@ function matches(deal: Deal, filter: FilterCondition, now: Date): boolean {
   }
 }
 
-function matchesMember(
-  deal: Deal,
-  member: FilterCondition | FilterGroup,
-  now: Date,
-): boolean {
+function matchesMember(deal: Deal, member: FilterCondition | FilterGroup, now: Date): boolean {
   if ('combinator' in member) return matchesGroup(deal, member, now);
   return matches(deal, member, now);
 }
@@ -156,11 +137,7 @@ function matchesGroup(deal: Deal, group: FilterGroup, now: Date): boolean {
     : group.conditions.some((member) => matchesMember(deal, member, now));
 }
 
-export function applyFilters(
-  deals: Deal[],
-  group: FilterGroup,
-  now: Date = new Date(),
-): Deal[] {
+export function applyFilters(deals: Deal[], group: FilterGroup, now: Date = new Date()): Deal[] {
   if (group.conditions.length === 0) return deals;
   return deals.filter((deal) => matchesGroup(deal, group, now));
 }

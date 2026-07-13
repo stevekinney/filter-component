@@ -18,6 +18,7 @@ export function FilterJoiner({
   onMoveFocus: (direction: -1 | 1) => void;
 }) {
   const flipped = joiner === 'and' ? 'or' : 'and';
+
   return (
     <button
       type="button"

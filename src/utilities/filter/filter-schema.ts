@@ -13,7 +13,9 @@ const dateString = z
     const month = Number(value.slice(5, 7));
     const day = Number(value.slice(8, 10));
     const date = new Date(0);
+
     date.setUTCFullYear(year, month - 1, day);
+
     return (
       date.getUTCFullYear() === year &&
       date.getUTCMonth() + 1 === month &&
@@ -41,11 +43,7 @@ const enumValues = z
     message: 'Enum selections must be unique',
   });
 
-const valuelessCondition = <
-  T extends 'string' | 'number' | 'boolean' | 'enum' | 'date',
->(
-  type: T,
-) =>
+const valuelessCondition = <T extends 'string' | 'number' | 'boolean' | 'enum' | 'date'>(type: T) =>
   z
     .object({
       fieldKey: nonblankString,
@@ -126,14 +124,7 @@ export const filterConditionSchema: z.ZodType<FilterCondition> = z.union([
     .object({
       fieldKey: nonblankString,
       type: z.literal('date'),
-      operator: z.enum([
-        'on',
-        'notOn',
-        'before',
-        'onOrBefore',
-        'after',
-        'onOrAfter',
-      ]),
+      operator: z.enum(['on', 'notOn', 'before', 'onOrBefore', 'after', 'onOrAfter']),
       value: dateString,
     })
     .strict(),
@@ -172,11 +163,9 @@ export const filterGroupSchema: z.ZodType<FilterGroup> = z.lazy(() =>
 );
 
 /** Parses a public group and throws a concise prop-contract error on failure. */
-export function parseFilterGroup(
-  value: unknown,
-  source = 'filter group',
-): FilterGroup {
+export function parseFilterGroup(value: unknown, source = 'filter group'): FilterGroup {
   const result = filterGroupSchema.safeParse(value);
+
   if (result.success) return result.data;
   throw new TypeError(`Invalid ${source}:\n${z.prettifyError(result.error)}`);
 }

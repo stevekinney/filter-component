@@ -1,19 +1,9 @@
 import clsx from 'clsx';
 import { TriangleAlert, X } from 'lucide-react';
 import type { KeyboardEvent } from 'react';
-import {
-  fieldLabel,
-  formatFilterValue,
-  tokenPhrase,
-} from '@/utilities/filter/formatting.ts';
-import {
-  OPERATOR_LABELS,
-  getValueEditorKind,
-} from '@/utilities/filter/operators.ts';
-import type {
-  FilterValidationIssue,
-  TokenSegment,
-} from '@/utilities/filter/validation.ts';
+import { fieldLabel, formatFilterValue, tokenPhrase } from '@/utilities/filter/formatting.ts';
+import { OPERATOR_LABELS, getValueEditorKind } from '@/utilities/filter/operators.ts';
+import type { FilterValidationIssue, TokenSegment } from '@/utilities/filter/validation.ts';
 import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
 import type { FilterFieldDefinition } from '@/types/filter.ts';
 
@@ -43,11 +33,13 @@ function handleTokenArrowDown(
     tokenElement.querySelector('button')?.focus();
     return;
   }
+
   // Only editor-opening controls respond to ArrowDown. The remove
   // buttons are destructive and keep their two-step Delete safety net —
   // ArrowDown must never trigger them.
   const segment = target.dataset['tokenSegment'];
   const opensAnEditor = segment !== undefined && segment !== 'remove';
+
   if (opensAnEditor) target.click();
 }
 
@@ -58,8 +50,8 @@ function moveWithinToken(
   onMoveFocus: (direction: -1 | 1) => void,
 ) {
   const tokenButtons = Array.from(tokenElement.querySelectorAll('button'));
-  const nextIndex =
-    tokenButtons.indexOf(target as HTMLButtonElement) + direction;
+  const nextIndex = tokenButtons.indexOf(target as HTMLButtonElement) + direction;
+
   if (nextIndex < 0) {
     tokenElement.focus();
   } else if (nextIndex >= tokenButtons.length) {
@@ -79,21 +71,22 @@ function handleTokenTraversal(
   if (event.key === 'Tab') {
     if (!isTokenRootTarget) {
       event.preventDefault();
-      moveWithinToken(
-        tokenElement,
-        target,
-        event.shiftKey ? -1 : 1,
-        onMoveFocus,
-      );
+      moveWithinToken(tokenElement, target, event.shiftKey ? -1 : 1, onMoveFocus);
     }
+
     return true;
   }
 
   if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return false;
   event.preventDefault();
   const direction = event.key === 'ArrowLeft' ? -1 : 1;
-  if (isTokenRootTarget) onMoveFocus(direction);
-  else moveWithinToken(tokenElement, target, direction, onMoveFocus);
+
+  if (isTokenRootTarget) {
+    onMoveFocus(direction);
+  } else {
+    moveWithinToken(tokenElement, target, direction, onMoveFocus);
+  }
+
   return true;
 }
 
@@ -116,12 +109,9 @@ function ValidationWarningButton({
       aria-label={`Fix invalid filter: ${validationIssue.reason}`}
       title={validationIssue.reason}
       onClick={(event) => {
-        const tokenElement =
-          event.currentTarget.closest<HTMLElement>('[data-token]');
-        onOpenSegment(
-          validationIssue.segment,
-          tokenElement ?? event.currentTarget,
-        );
+        const tokenElement = event.currentTarget.closest<HTMLElement>('[data-token]');
+
+        onOpenSegment(validationIssue.segment, tokenElement ?? event.currentTarget);
       }}
     >
       <TriangleAlert aria-hidden="true" size={14} />
@@ -192,13 +182,12 @@ function TokenValueSegment({
   onOpenSegment: SegmentHandler;
   onRemoveEnumValue: (value: string) => void;
 }) {
-  const hasValue =
-    getValueEditorKind(field?.type ?? filter.type, filter.operator) !== 'none';
+  const hasValue = getValueEditorKind(field?.type ?? filter.type, filter.operator) !== 'none';
+
   if (!hasValue) return null;
 
   const enumValues =
-    (filter.operator === 'in' || filter.operator === 'notIn') &&
-    Array.isArray(filter.value)
+    (filter.operator === 'in' || filter.operator === 'notIn') && Array.isArray(filter.value)
       ? filter.value
       : null;
 
@@ -261,15 +250,8 @@ export function FilterToken({
     const tokenElement = event.currentTarget;
     const target = event.target as HTMLElement;
     const isTokenRootTarget = target === tokenElement;
-    if (
-      handleTokenTraversal(
-        event,
-        tokenElement,
-        target,
-        isTokenRootTarget,
-        onMoveFocus,
-      )
-    ) {
+
+    if (handleTokenTraversal(event, tokenElement, target, isTokenRootTarget, onMoveFocus)) {
       return;
     }
 
@@ -279,8 +261,11 @@ export function FilterToken({
         event.preventDefault();
         // Safety step: on a segment, the first press only re-focuses the token
         // root; a second press removes the whole token.
-        if (isTokenRootTarget) onRemove();
-        else tokenElement.focus();
+        if (isTokenRootTarget) {
+          onRemove();
+        } else {
+          tokenElement.focus();
+        }
         return;
       case 'Enter':
       case ' ':

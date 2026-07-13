@@ -77,12 +77,7 @@ describe('MultipleChoiceStage', () => {
   ) {
     const props = popoverProps(state);
     const view = render(
-      <MultipleChoiceStage
-        {...props}
-        state={state}
-        heading="Stage is any of"
-        field={ENUM_FIELD}
-      />,
+      <MultipleChoiceStage {...props} state={state} heading="Stage is any of" field={ENUM_FIELD} />,
     );
     return { ...view, props };
   }

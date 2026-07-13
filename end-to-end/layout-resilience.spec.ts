@@ -28,9 +28,7 @@ async function expectFilterRowDoesNotOverflow(page: Page): Promise<void> {
 }
 
 test.describe('layout resilience', () => {
-  test('the component stylesheet is self-contained inside a Shadow Root', async ({
-    page,
-  }) => {
+  test('the component stylesheet is self-contained inside a Shadow Root', async ({ page }) => {
     await page.goto('/');
     const styles = await page.evaluate(async () => {
       const host = document.createElement('div');
@@ -63,8 +61,7 @@ test.describe('layout resilience', () => {
       shadowRoot.append(form);
       const input = shadowRoot.querySelector<HTMLInputElement>('input');
       const row = shadowRoot.querySelector<HTMLElement>('.filter-row');
-      if (!input || !row)
-        throw new Error('The Shadow Root fixture is incomplete');
+      if (!input || !row) throw new Error('The Shadow Root fixture is incomplete');
       input.focus();
 
       const formStyle = getComputedStyle(form);
@@ -97,28 +94,16 @@ test.describe('layout resilience', () => {
   }) => {
     await openReadyDemo(page);
     await page.locator('.example').evaluate((wrapper) => {
-      wrapper.style.setProperty(
-        '--filter-color-background-primary',
-        'rgb(240 241 242)',
-      );
-      wrapper.style.setProperty(
-        '--filter-color-text-placeholder',
-        'rgb(1 2 3)',
-      );
+      wrapper.style.setProperty('--filter-color-background-primary', 'rgb(240 241 242)');
+      wrapper.style.setProperty('--filter-color-text-placeholder', 'rgb(1 2 3)');
       wrapper.style.setProperty('--filter-color-text-secondary', 'rgb(4 5 6)');
-      wrapper.style.setProperty(
-        '--filter-color-background-action',
-        'rgb(7 8 9)',
-      );
+      wrapper.style.setProperty('--filter-color-background-action', 'rgb(7 8 9)');
       wrapper.style.setProperty('--filter-color-border-focus', 'rgb(10 11 12)');
     });
 
     const input = addFilterInput(page);
     await input.click();
-    await expect(page.locator('.filter-row')).toHaveCSS(
-      'outline-color',
-      'rgb(10, 11, 12)',
-    );
+    await expect(page.locator('.filter-row')).toHaveCSS('outline-color', 'rgb(10, 11, 12)');
     const placeholderColor = await input.evaluate(
       (element) => getComputedStyle(element, '::placeholder').color,
     );
@@ -127,9 +112,10 @@ test.describe('layout resilience', () => {
     await page.keyboard.press('ArrowDown');
     const dialog = page.locator('.filter-popover');
     await expect(dialog).toHaveCSS('background-color', 'rgb(240, 241, 242)');
-    await expect(
-      dialog.locator('.filter-popover-option-hint').first(),
-    ).toHaveCSS('color', 'rgb(4, 5, 6)');
+    await expect(dialog.locator('.filter-popover-option-hint').first()).toHaveCSS(
+      'color',
+      'rgb(4, 5, 6)',
+    );
 
     await pickField(page, 'Stage');
     await pickOption(page, 'is any of');
@@ -139,9 +125,7 @@ test.describe('layout resilience', () => {
     );
   });
 
-  test('shared palette colors flow into the filter defaults', async ({
-    page,
-  }) => {
+  test('shared palette colors flow into the filter defaults', async ({ page }) => {
     await openReadyDemo(page);
     await page.locator('.example').evaluate((wrapper) => {
       wrapper.style.setProperty('--neutral-0', 'rgb(230 231 232)');
@@ -150,14 +134,8 @@ test.describe('layout resilience', () => {
 
     const input = addFilterInput(page);
     await input.click();
-    await expect(page.locator('.filter-row')).toHaveCSS(
-      'background-color',
-      'rgb(230, 231, 232)',
-    );
-    await expect(page.locator('.filter-row')).toHaveCSS(
-      'outline-color',
-      'rgb(20, 21, 22)',
-    );
+    await expect(page.locator('.filter-row')).toHaveCSS('background-color', 'rgb(230, 231, 232)');
+    await expect(page.locator('.filter-row')).toHaveCSS('outline-color', 'rgb(20, 21, 22)');
 
     await page.keyboard.press('ArrowDown');
     await expect(page.locator('.filter-popover')).toHaveCSS(
@@ -166,19 +144,13 @@ test.describe('layout resilience', () => {
     );
   });
 
-  test('a 240px container keeps the maximal action rail inside the row', async ({
-    page,
-  }) => {
+  test('a 240px container keeps the maximal action rail inside the row', async ({ page }) => {
     await openReadyDemo(page);
     await addSingleValueFilter(page, 'Name', 'contains', 'acme');
     await addSingleValueFilter(page, 'Deal value', 'greater than', '10');
     await page.getByRole('button', { name: 'Undo filter change' }).click();
-    await expect(
-      page.getByRole('button', { name: 'Undo filter change' }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole('button', { name: 'Redo filter change' }),
-    ).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Undo filter change' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Redo filter change' })).toBeVisible();
 
     await useNarrowFilterContainer(page);
     await expectFilterRowDoesNotOverflow(page);
@@ -189,9 +161,7 @@ test.describe('layout resilience', () => {
     expect(railBox).not.toBeNull();
     if (!rowBox || !railBox) return;
     expect(railBox.x).toBeGreaterThanOrEqual(rowBox.x);
-    expect(railBox.x + railBox.width).toBeLessThanOrEqual(
-      rowBox.x + rowBox.width,
-    );
+    expect(railBox.x + railBox.width).toBeLessThanOrEqual(rowBox.x + rowBox.width);
   });
 
   test('long token content truncates visually without changing its accessible name', async ({
@@ -203,9 +173,7 @@ test.describe('layout resilience', () => {
     await useNarrowFilterContainer(page);
 
     await expect(filterToken(page, `Name contains ${value}`)).toBeVisible();
-    const valueSegment = filterToken(page, `Name contains ${value}`).getByTitle(
-      'Change value',
-    );
+    const valueSegment = filterToken(page, `Name contains ${value}`).getByTitle('Change value');
     const dimensions = await valueSegment.evaluate((segment) => ({
       clientWidth: segment.clientWidth,
       scrollWidth: segment.scrollWidth,
@@ -217,8 +185,7 @@ test.describe('layout resilience', () => {
   test('a long injected field label cannot push popover controls out of bounds', async ({
     page,
   }) => {
-    const label =
-      'CustomerRelationshipLifecycleQualificationStatusWithoutBreaks';
+    const label = 'CustomerRelationshipLifecycleQualificationStatusWithoutBreaks';
     await page.goto('/?longLabel');
     await pickField(page, label);
     await pickOption(page, 'contains');
@@ -231,9 +198,7 @@ test.describe('layout resilience', () => {
       clientWidth: element.clientWidth,
       scrollWidth: element.scrollWidth,
     }));
-    expect(headingDimensions.scrollWidth).toBeGreaterThan(
-      headingDimensions.clientWidth,
-    );
+    expect(headingDimensions.scrollWidth).toBeGreaterThan(headingDimensions.clientWidth);
 
     const dialogBox = await dialog.boundingBox();
     const cancelBox = await cancel.boundingBox();
@@ -243,14 +208,10 @@ test.describe('layout resilience', () => {
       throw new Error('Expected visible popover geometry');
     }
     expect(cancelBox.x).toBeGreaterThanOrEqual(dialogBox.x);
-    expect(cancelBox.x + cancelBox.width).toBeLessThanOrEqual(
-      dialogBox.x + dialogBox.width,
-    );
+    expect(cancelBox.x + cancelBox.width).toBeLessThanOrEqual(dialogBox.x + dialogBox.width);
   });
 
-  test('many enum selections remain focusable inside a narrow token', async ({
-    page,
-  }) => {
+  test('many enum selections remain focusable inside a narrow token', async ({ page }) => {
     await openReadyDemo(page);
     const stages = [
       'Lead',
@@ -266,10 +227,7 @@ test.describe('layout resilience', () => {
     await applyValue(page);
     await useNarrowFilterContainer(page);
 
-    const stageToken = filterToken(
-      page,
-      `Stage is any of ${stages.join(', ')}`,
-    );
+    const stageToken = filterToken(page, `Stage is any of ${stages.join(', ')}`);
     for (const stage of stages) {
       await expect(
         stageToken.getByRole('button', {
@@ -295,25 +253,15 @@ test.describe('layout resilience', () => {
     await expectFilterRowDoesNotOverflow(page);
   });
 
-  test('the add-filter input indicates keyboard focus on the full row', async ({
-    page,
-  }) => {
+  test('the add-filter input indicates keyboard focus on the full row', async ({ page }) => {
     await openReadyDemo(page);
     await addFilterInput(page).focus();
     await expect(addFilterInput(page)).toBeFocused();
     await expect
-      .poll(() =>
-        page
-          .locator('.filter-row')
-          .evaluate((row) => getComputedStyle(row).outlineStyle),
-      )
+      .poll(() => page.locator('.filter-row').evaluate((row) => getComputedStyle(row).outlineStyle))
       .toBe('solid');
     await expect
-      .poll(() =>
-        addFilterInput(page).evaluate(
-          (input) => getComputedStyle(input).outlineStyle,
-        ),
-      )
+      .poll(() => addFilterInput(page).evaluate((input) => getComputedStyle(input).outlineStyle))
       .toBe('none');
   });
 
@@ -325,24 +273,14 @@ test.describe('layout resilience', () => {
     await savedViewsButton.focus();
     await expect(savedViewsButton).toBeFocused();
     await expect
-      .poll(() =>
-        savedViewsButton.evaluate(
-          (button) => getComputedStyle(button).outlineStyle,
-        ),
-      )
+      .poll(() => savedViewsButton.evaluate((button) => getComputedStyle(button).outlineStyle))
       .toBe('solid');
     await expect
-      .poll(() =>
-        page
-          .locator('.filter-row')
-          .evaluate((row) => getComputedStyle(row).outlineStyle),
-      )
+      .poll(() => page.locator('.filter-row').evaluate((row) => getComputedStyle(row).outlineStyle))
       .toBe('none');
   });
 
-  test('a destructive draft action keeps its focus ring while hovered', async ({
-    page,
-  }) => {
+  test('a destructive draft action keeps its focus ring while hovered', async ({ page }) => {
     await openReadyDemo(page);
     await pickField(page, 'Name');
     await page.getByRole('heading', { name: 'Filter' }).click();
@@ -353,9 +291,7 @@ test.describe('layout resilience', () => {
     await discard.hover();
     await expect(discard).toBeFocused();
     await expect
-      .poll(() =>
-        discard.evaluate((button) => getComputedStyle(button).outlineStyle),
-      )
+      .poll(() => discard.evaluate((button) => getComputedStyle(button).outlineStyle))
       .toBe('solid');
   });
 });

@@ -8,12 +8,11 @@ export type ChromeStorageArea = {
 };
 
 /** Creates saved-view persistence backed by a `chrome.storage` area. */
-export function createChromeSavedViewsStorage(
-  storageArea: ChromeStorageArea,
-): SavedViewsStorage {
+export function createChromeSavedViewsStorage(storageArea: ChromeStorageArea): SavedViewsStorage {
   return {
     async getSavedViews() {
       const stored = await storageArea.get(SAVED_VIEWS_STORAGE_KEY);
+
       return stored[SAVED_VIEWS_STORAGE_KEY] ?? [];
     },
     async saveSavedViews(savedViews) {

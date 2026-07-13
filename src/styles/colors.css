@@ -77,9 +77,5 @@
   --neutral-alpha-500: color-mix(in oklch, var(--neutral-900) 36%, transparent);
   --neutral-alpha-600: color-mix(in oklch, var(--neutral-900) 60%, transparent);
   --neutral-alpha-800: color-mix(in oklch, var(--neutral-900) 87%, transparent);
-  --gradient-brand: linear-gradient(
-    135deg,
-    var(--orange-400) 0%,
-    var(--coral-500) 100%
-  );
+  --gradient-brand: linear-gradient(135deg, var(--orange-400) 0%, var(--coral-500) 100%);
 }

@@ -43,8 +43,12 @@ export function AddFilterCombobox({
 }: AddFilterComboboxProps) {
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const next = event.currentTarget.value;
-    if (open) onQueryChange(next);
-    else onOpenMenu(next);
+
+    if (open) {
+      onQueryChange(next);
+    } else {
+      onOpenMenu(next);
+    }
   };
 
   const handleNavigationKey = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -61,9 +65,13 @@ export function AddFilterCombobox({
   const handleEscapeKey = (event: KeyboardEvent<HTMLInputElement>) => {
     if (!open) return;
     event.preventDefault();
+
     // First press clears a non-empty query; the second closes the menu.
-    if (query !== '') onQueryChange('');
-    else onCloseMenu();
+    if (query !== '') {
+      onQueryChange('');
+    } else {
+      onCloseMenu();
+    }
   };
 
   const handleTabKey = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -121,9 +129,7 @@ export function AddFilterCombobox({
       role="combobox"
       aria-expanded={open}
       aria-controls={`${idPrefix}-fields`}
-      aria-activedescendant={
-        activeField ? `${idPrefix}-field-${activeIndex}` : undefined
-      }
+      aria-activedescendant={activeField ? `${idPrefix}-field-${activeIndex}` : undefined}
       aria-autocomplete="list"
       aria-label="Add filter"
       className="filter-add-input"
@@ -133,8 +139,6 @@ export function AddFilterCombobox({
       onChange={handleChange}
       onKeyDown={handleKeyDown}
       onBlur={() => {
-        // Option mousedown is prevented in the popover, so a real blur means
-        // the user left the input — dismiss the suggestion menu.
         if (open) onCloseMenu();
       }}
     />

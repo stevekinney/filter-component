@@ -1,13 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FocusTarget } from './use-filter-focus.ts';
-import {
-  fromFilterGroup,
-  toFilterGroup,
-} from '@/utilities/filter/expression.ts';
-import {
-  parseSavedViews,
-  savedViewKey,
-} from '@/utilities/filter/saved-views.ts';
+import { fromFilterGroup, toFilterGroup } from '@/utilities/filter/expression.ts';
+import { parseSavedViews, savedViewKey } from '@/utilities/filter/saved-views.ts';
 import type { SavedView } from '@/utilities/filter/saved-views.ts';
 import type { FilterExpression } from '@/utilities/filter/expression.ts';
 import type { FilterHistoryAction } from '@/utilities/filter/history.ts';
@@ -49,24 +43,20 @@ export function useSavedViews({
   const [storage] = useState(() => savedViewsStorage);
   const [initialRead] = useState(() => {
     let stored: ReturnType<SavedViewsStorage['getSavedViews']>;
+
     try {
       stored = storage.getSavedViews();
     } catch {
       return { pending: null, savedViews: [] };
     }
+
     return stored instanceof Promise
       ? { pending: stored, savedViews: [] }
       : { pending: null, savedViews: parseSavedViews(stored) };
   });
-  const [savedViews, setSavedViews] = useState<SavedView[]>(
-    initialRead.savedViews,
-  );
-  const [isStorageReady, setIsStorageReady] = useState(
-    initialRead.pending === null,
-  );
-  const [persistenceNotice, setPersistenceNotice] = useState<string | null>(
-    null,
-  );
+  const [savedViews, setSavedViews] = useState<SavedView[]>(initialRead.savedViews);
+  const [isStorageReady, setIsStorageReady] = useState(initialRead.pending === null);
+  const [persistenceNotice, setPersistenceNotice] = useState<string | null>(null);
   const isMountedRef = useRef(true);
   const pendingWriteRef = useRef<Promise<void> | null>(null);
 
@@ -84,16 +74,13 @@ export function useSavedViews({
         },
       );
     }
+
     return () => {
       isMountedRef.current = false;
     };
   }, [initialRead]);
 
-  const trackWrite = (
-    operation: Promise<void>,
-    onSuccess: () => void,
-    onFailure: () => void,
-  ) => {
+  const trackWrite = (operation: Promise<void>, onSuccess: () => void, onFailure: () => void) => {
     pendingWriteRef.current = operation;
     void operation.then(
       () => {
@@ -111,23 +98,22 @@ export function useSavedViews({
     );
   };
 
-  const persist = (
-    next: SavedView[],
-    onSuccess: () => void,
-    onFailure: () => void,
-  ) => {
+  const persist = (next: SavedView[], onSuccess: () => void, onFailure: () => void) => {
     setSavedViews(next);
     const pendingWrite = pendingWriteRef.current;
+
     if (pendingWrite) {
       const operation = pendingWrite
         .catch(() => undefined)
         .then(() => storage.saveSavedViews(next));
+
       trackWrite(operation, onSuccess, onFailure);
       return;
     }
 
     try {
       const result = storage.saveSavedViews(next);
+
       if (result instanceof Promise) {
         trackWrite(result, onSuccess, onFailure);
       } else {
@@ -150,10 +136,9 @@ export function useSavedViews({
     const view: SavedView = { name, group: currentGroup };
     const exists = savedViews.some((candidate) => candidate.name === name);
     const next = exists
-      ? savedViews.map((candidate) =>
-          candidate.name === name ? view : candidate,
-        )
+      ? savedViews.map((candidate) => (candidate.name === name ? view : candidate))
       : [...savedViews, view];
+
     persist(
       next,
       () => {
@@ -167,6 +152,7 @@ export function useSavedViews({
         announce(`View saved for this session only: storage is unavailable`);
       },
     );
+
     // The save action gives way to the saved row once the group is saved;
     // focus the trigger, which stays mounted now that a view exists.
     scheduleFocus({ type: 'savedViewsTrigger' });
@@ -175,6 +161,7 @@ export function useSavedViews({
   const loadSavedView = (view: SavedView) => {
     resetEditor();
     scheduleFocus({ type: 'savedViewsTrigger' });
+
     // The sole no-op check for loads: the reducer's `replace` always commits,
     // and this id-ignoring key is the only equality that can spot a match
     // (restored conditions get fresh ids).
@@ -192,6 +179,7 @@ export function useSavedViews({
   const removeSavedView = (name: string) => {
     const index = savedViews.findIndex((candidate) => candidate.name === name);
     const remaining = savedViews.filter((candidate) => candidate.name !== name);
+
     persist(
       remaining,
       () => {
@@ -218,9 +206,7 @@ export function useSavedViews({
       // keeps the in-menu save action alive; otherwise it unmounts and focus
       // lands on the add-filter input.
       scheduleFocus(
-        expression.conditions.length > 0
-          ? { type: 'savedViewsTrigger' }
-          : { type: 'addInput' },
+        expression.conditions.length > 0 ? { type: 'savedViewsTrigger' } : { type: 'addInput' },
       );
     }
   };
@@ -228,10 +214,7 @@ export function useSavedViews({
   return {
     savedViews,
     persistenceNotice,
-    canSaveCurrentGroup:
-      isStorageReady &&
-      expression.conditions.length > 0 &&
-      !isCurrentGroupSaved,
+    canSaveCurrentGroup: isStorageReady && expression.conditions.length > 0 && !isCurrentGroupSaved,
     currentGroupKey,
     saveCurrentView,
     loadSavedView,
