@@ -27,7 +27,8 @@ export const joinerButton = (page: Page, joiner: 'and' | 'or'): Locator =>
     } — grouping adjusts automatically.`,
   });
 
-export const resultCount = (page: Page): Locator => page.locator('.demo-count');
+export const resultCount = (page: Page): Locator =>
+  page.locator('.example-count');
 
 export const liveRegion = (page: Page): Locator =>
   page.locator('.filter [aria-live="polite"]');

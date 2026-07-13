@@ -14,7 +14,8 @@ describe('Application (demo parent)', () => {
     // The count is split across a <strong> and a text node, so match on the
     // container's full text content rather than a single node.
     const resultCount = screen.getByText(
-      (_content, element) => element?.classList.contains('demo-count') ?? false,
+      (_content, element) =>
+        element?.classList.contains('example-count') ?? false,
     );
     expect(resultCount).toHaveTextContent(
       `${activeDeals.length} of ${DEALS.length} deals`,

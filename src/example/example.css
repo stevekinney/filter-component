@@ -1,4 +1,4 @@
-.demo {
+.example {
   max-width: 860px;
   margin: 0 auto;
   padding: 48px 32px 96px;
@@ -10,14 +10,14 @@
 }
 
 /* Section-label text shared by the table header and the pane headings. */
-:where(.demo-table th, .example-panes h2) {
+:where(.example-table th, .example-panes h2) {
   font-size: 11px;
   font-weight: 500;
   color: var(--neutral-alpha-600);
 }
 
 /* Compact monospace shared by the payload pane and the event log. */
-:where(.example-panes pre, .demo-log) {
+:where(.example-panes pre, .example-log) {
   font-family: SFMono-Regular, Consolas, Menlo, monospace;
   font-size: 11px;
   line-height: 16px;
@@ -25,7 +25,7 @@
   overflow-y: auto;
 }
 
-.demo-header {
+.example-header {
   h1 {
     margin: 0;
     font-size: 20px;
@@ -39,7 +39,7 @@
   }
 }
 
-.demo-status {
+.example-status {
   min-height: 24px;
   display: flex;
   align-items: center;
@@ -59,7 +59,7 @@
   }
 }
 
-.demo-count {
+.example-count {
   margin-left: auto;
   text-align: right;
   color: var(--neutral-alpha-600);
@@ -71,7 +71,7 @@
 }
 
 /* Shared card surface for the results and the harness. */
-:where(.demo-card, .example) {
+:where(.example-card, .example-harness) {
   border: 1px solid var(--neutral-alpha-200);
   border-radius: 10px;
   overflow: hidden;
@@ -80,15 +80,15 @@
     0 12px 28px -18px rgb(0 0 0 / 22%);
 }
 
-.demo-card {
+.example-card {
   background: var(--neutral-0);
 }
 
-.example {
+.example-harness {
   background: var(--neutral-100);
 }
 
-.demo-table {
+.example-table {
   width: 100%;
   border-collapse: collapse;
 
@@ -108,17 +108,17 @@
   }
 }
 
-.demo-name {
+.example-name {
   font-weight: 500;
   color: var(--neutral-alpha-800);
 }
 
-.demo-muted {
+.example-muted {
   color: var(--neutral-alpha-500);
 }
 
 /* Colored pipeline-stage badges — the demo's splash of Streak-like color. */
-.demo-stage {
+.example-stage {
   display: inline-flex;
   align-items: center;
   padding: 2px 10px;
@@ -163,20 +163,20 @@
   }
 }
 
-.demo-bool {
+.example-bool {
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
 
-.demo-bool-dot {
+.example-bool-dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
   background: var(--neutral-alpha-400);
 }
 
-.demo-bool[data-active='true'] .demo-bool-dot {
+.example-bool[data-active='true'] .example-bool-dot {
   background: var(--teal-500);
 }
 
@@ -207,7 +207,7 @@
   }
 }
 
-.demo-log {
+.example-log {
   margin: 0;
   padding: 0;
   list-style: none;

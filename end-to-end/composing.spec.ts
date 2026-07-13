@@ -26,7 +26,7 @@ test.describe('composing new filters', () => {
     await addSingleValueFilter(page, 'Name', 'contains', 'corp');
     await expect(filterToken(page, 'Name contains corp')).toBeVisible();
     await expect(resultCount(page)).toHaveText('1 of 12 deals');
-    await expect(page.locator('.demo-table tbody tr')).toHaveText([
+    await expect(page.locator('.example-table tbody tr')).toHaveText([
       /Acme Corp renewal/,
     ]);
     await expect(onChangePayloadPane(page)).toContainText(
@@ -73,7 +73,7 @@ test.describe('composing new filters', () => {
     await pickField(page, 'Deal value');
     await pickOption(page, 'is empty');
     await expect(resultCount(page)).toHaveText('1 of 12 deals');
-    await expect(page.locator('.demo-table tbody tr')).toHaveText([
+    await expect(page.locator('.example-table tbody tr')).toHaveText([
       /Momentum Labs intro/,
     ]);
   });

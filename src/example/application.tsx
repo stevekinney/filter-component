@@ -68,7 +68,7 @@ function exampleFilterFields(): readonly FilterFieldDefinition[] {
 function ResultCount({ filteredDeals }: { filteredDeals: Deal[] | null }) {
   if (!filteredDeals) return null;
   return (
-    <span className="demo-count">
+    <span className="example-count">
       <strong>{filteredDeals.length}</strong> of <strong>{DEALS.length}</strong>{' '}
       deals
     </span>
@@ -86,19 +86,19 @@ const STAGE_TONES = {
 } satisfies Record<NonNullable<Deal['stage']>, string>;
 
 function StageBadge({ stage }: { stage: Deal['stage'] }) {
-  if (!stage) return <span className="demo-muted">—</span>;
+  if (!stage) return <span className="example-muted">—</span>;
   return (
-    <span className="demo-stage" data-tone={STAGE_TONES[stage]}>
+    <span className="example-stage" data-tone={STAGE_TONES[stage]}>
       {stage}
     </span>
   );
 }
 
 function ActiveCell({ active }: { active: boolean | null }) {
-  if (active === null) return <span className="demo-muted">—</span>;
+  if (active === null) return <span className="example-muted">—</span>;
   return (
-    <span className="demo-bool" data-active={active}>
-      <span aria-hidden="true" className="demo-bool-dot" />
+    <span className="example-bool" data-active={active}>
+      <span aria-hidden="true" className="example-bool-dot" />
       {String(active)}
     </span>
   );
@@ -108,8 +108,8 @@ function ActiveCell({ active }: { active: boolean | null }) {
 function DealsTable({ filteredDeals }: { filteredDeals: Deal[] | null }) {
   if (!filteredDeals) return null;
   return (
-    <div className="demo-card">
-      <table className="demo-table">
+    <div className="example-card">
+      <table className="example-table">
         <thead>
           <tr>
             <th>Name</th>
@@ -123,10 +123,10 @@ function DealsTable({ filteredDeals }: { filteredDeals: Deal[] | null }) {
         <tbody>
           {filteredDeals.map((deal) => (
             <tr key={deal.id}>
-              <td className="demo-name">{deal.name}</td>
+              <td className="example-name">{deal.name}</td>
               <td>
                 {deal.dealValue === null ? (
-                  <span className="demo-muted">—</span>
+                  <span className="example-muted">—</span>
                 ) : (
                   `$${deal.dealValue.toLocaleString()}`
                 )}
@@ -137,9 +137,11 @@ function DealsTable({ filteredDeals }: { filteredDeals: Deal[] | null }) {
               <td>
                 <StageBadge stage={deal.stage} />
               </td>
-              <td>{deal.closeDate ?? <span className="demo-muted">—</span>}</td>
               <td>
-                {deal.lastEmailed ?? <span className="demo-muted">—</span>}
+                {deal.closeDate ?? <span className="example-muted">—</span>}
+              </td>
+              <td>
+                {deal.lastEmailed ?? <span className="example-muted">—</span>}
               </td>
             </tr>
           ))}
@@ -207,8 +209,8 @@ function Application() {
   });
 
   return (
-    <main className="demo">
-      <header className="demo-header">
+    <main className="example">
+      <header className="example-header">
         <h1>Filter</h1>
       </header>
 
@@ -219,7 +221,7 @@ function Application() {
         onChange={handleFiltersChange}
       />
 
-      <div className="demo-status">
+      <div className="example-status">
         <label>
           <input
             type="checkbox"
@@ -233,7 +235,7 @@ function Application() {
 
       <DealsTable filteredDeals={filteredDeals} />
 
-      <section aria-label="Example harness" className="example">
+      <section aria-label="Example harness" className="example-harness">
         <div className="example-panes">
           <div>
             <h2>Current state</h2>
@@ -241,7 +243,7 @@ function Application() {
           </div>
           <div>
             <h2>Event log</h2>
-            <ul className="demo-log">
+            <ul className="example-log">
               {eventLog.map((entry) => (
                 <li key={entry.id} className={`is-${entry.tone}`}>
                   {entry.text}

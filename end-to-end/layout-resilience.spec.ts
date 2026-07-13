@@ -13,7 +13,7 @@ import {
 async function useNarrowFilterContainer(page: Page): Promise<void> {
   await page.addStyleTag({
     content: `
-      .demo { max-width: none; padding-inline: 0; }
+      .example { max-width: none; padding-inline: 0; }
       form.filter { inline-size: 240px; }
     `,
   });
@@ -96,7 +96,7 @@ test.describe('layout resilience', () => {
     page,
   }) => {
     await openReadyDemo(page);
-    await page.locator('.demo').evaluate((wrapper) => {
+    await page.locator('.example').evaluate((wrapper) => {
       wrapper.style.setProperty(
         '--filter-color-background-primary',
         'rgb(240 241 242)',
@@ -143,7 +143,7 @@ test.describe('layout resilience', () => {
     page,
   }) => {
     await openReadyDemo(page);
-    await page.locator('.demo').evaluate((wrapper) => {
+    await page.locator('.example').evaluate((wrapper) => {
       wrapper.style.setProperty('--neutral-0', 'rgb(230 231 232)');
       wrapper.style.setProperty('--blue-500', 'rgb(20 21 22)');
     });
