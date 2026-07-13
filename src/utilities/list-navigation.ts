@@ -1,5 +1,5 @@
 export function clampIndex(index: number, length: number): number {
-  return Math.min(index, Math.max(0, length - 1));
+  return Math.min(Math.max(0, index), Math.max(0, length - 1));
 }
 
 /** Steps with wraparound; callers must pass a positive `length`. */

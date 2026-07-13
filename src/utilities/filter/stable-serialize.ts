@@ -6,7 +6,15 @@ export function stableSerialize(value: unknown): string {
   if (typeof value === 'object' && value !== null) {
     const entries = Object.entries(value)
       .filter(([, entryValue]) => entryValue !== undefined)
-      .sort(([a], [b]) => a.localeCompare(b))
+      .sort(([a], [b]) => {
+        if (a < b) {
+          return -1;
+        }
+        if (a > b) {
+          return 1;
+        }
+        return 0;
+      })
       .map(([key, entryValue]) => `${JSON.stringify(key)}:${stableSerialize(entryValue)}`);
 
     return `{${entries.join(',')}}`;

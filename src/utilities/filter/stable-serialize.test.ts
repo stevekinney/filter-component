@@ -12,6 +12,10 @@ describe('stableSerialize', () => {
     ).toBe('{"a":true,"z":[{"a":1,"b":2}]}');
   });
 
+  it('sorts keys by code unit rather than locale', () => {
+    expect(stableSerialize({ ä: 1, z: 2 })).toBe('{"z":2,"ä":1}');
+  });
+
   it('serializes null, scalar, and undefined values', () => {
     expect(stableSerialize(null)).toBe('null');
     expect(stableSerialize('value')).toBe('"value"');
