@@ -57,11 +57,13 @@ const validateNumberDraft: DraftValidator = (_field, _operator, draft) => {
 
 const validateNumberRangeDraft: DraftValidator = (_field, _operator, draft) => {
   if (draft.kind !== 'range') return invalid('Enter both numbers');
+
   const from = parseNumber(draft.fromInput);
   const to = parseNumber(draft.toInput);
 
   if (from === null || to === null) return invalid('Enter both numbers');
   if (from > to) return invalid('First value must not exceed the second');
+
   return valid({ from, to });
 };
 
@@ -69,16 +71,14 @@ const validateBooleanDraft: DraftValidator = (_field, _operator, draft) => {
   if (draft.kind !== 'scalar' || (draft.input !== 'true' && draft.input !== 'false')) {
     return invalid('Choose a value');
   }
+
   return valid(draft.input === 'true');
 };
 
 const validateSingleEnumDraft: DraftValidator = (field, _operator, draft) => {
-  if (draft.kind !== 'scalar' || draft.input === '') {
-    return invalid('Choose a value');
-  }
-  if (!(field.options ?? []).includes(draft.input)) {
-    return invalid('Choose a listed option');
-  }
+  if (draft.kind !== 'scalar' || draft.input === '') return invalid('Choose a value');
+  if (!(field.options ?? []).includes(draft.input)) return invalid('Choose a listed option');
+
   return valid(draft.input);
 };
 
@@ -86,11 +86,13 @@ const validateMultipleEnumDraft: DraftValidator = (field, _operator, draft) => {
   if (draft.kind !== 'multiSelection' || draft.selectedOptions.length === 0) {
     return invalid('Choose at least one option');
   }
+
   const options = field.options ?? [];
 
   if (draft.selectedOptions.some((option) => !options.includes(option))) {
     return invalid('Choose listed options');
   }
+
   return valid([...draft.selectedOptions]);
 };
 
@@ -98,6 +100,7 @@ const validateDateDraft: DraftValidator = (field, operator, draft) => {
   if (draft.kind !== 'scalar' || draft.input === '') {
     return invalid('Choose a date');
   }
+
   const candidate = filterConditionSchema.safeParse({
     fieldKey: field.key,
     type: 'date',
@@ -112,6 +115,7 @@ const validateDateRangeDraft: DraftValidator = (field, operator, draft) => {
   if (draft.kind !== 'range' || draft.fromInput === '' || draft.toInput === '') {
     return invalid('Choose both dates');
   }
+
   const value = { from: draft.fromInput, to: draft.toInput };
   const candidate = filterConditionSchema.safeParse({
     fieldKey: field.key,
@@ -121,6 +125,7 @@ const validateDateRangeDraft: DraftValidator = (field, operator, draft) => {
   });
 
   if (candidate.success) return valid(value);
+
   return draft.fromInput > draft.toInput
     ? invalid('Start must not be after end')
     : invalid('Choose valid dates');
@@ -184,12 +189,14 @@ export function createFilterCondition(
   if (!operatorsForField(field).includes(operator)) {
     throw new TypeError(`Operator "${operator}" is not allowed for field "${field.key}"`);
   }
+
   const candidate = {
     fieldKey: field.key,
     type: field.type,
     operator,
     ...(value !== undefined ? { value } : {}),
   };
+
   const result = filterConditionSchema.safeParse(candidate);
 
   if (result.success) return result.data;
@@ -244,6 +251,7 @@ export function getFilterValidationIssue(
   if (!field) {
     return { segment: 'field', reason: 'This field is no longer available' };
   }
+
   const label = field.label ?? field.key;
 
   if (field.type !== filter.type) {
@@ -252,6 +260,7 @@ export function getFilterValidationIssue(
       reason: `${label} is now a ${field.type} field`,
     };
   }
+
   if (!operatorsForField(field).includes(filter.operator)) {
     return {
       segment: 'operator',
@@ -261,6 +270,7 @@ export function getFilterValidationIssue(
   const enumValueIssue = getEnumValueIssue(field, filter);
 
   if (enumValueIssue) return enumValueIssue;
+
   const { id: _id, ...condition } = filter;
   const intrinsic = filterConditionSchema.safeParse(condition);
 
@@ -295,15 +305,11 @@ function intrinsicRangeReason(value: FilterEntry['value']): string {
 }
 
 function intrinsicValueReason(filter: FilterEntry): string {
-  if (filter.operator === 'in' || filter.operator === 'notIn') {
+  if (filter.operator === 'in' || filter.operator === 'notIn')
     return 'Choose at least one valid option';
-  }
-  if (filter.operator === 'between') {
-    return intrinsicRangeReason(filter.value);
-  }
-  if (filter.operator === 'withinLast') {
+  if (filter.operator === 'between') return intrinsicRangeReason(filter.value);
+  if (filter.operator === 'withinLast')
     return 'Duration needs a positive whole number of days, weeks, or months';
-  }
   if (filter.type === 'number') return 'Enter a finite number';
   if (filter.type === 'date') return 'Choose a valid date';
   if (filter.type === 'boolean') return 'Choose true or false';

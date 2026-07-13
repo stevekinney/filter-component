@@ -19,6 +19,19 @@
   },
   "overrides": [
     {
+      "files": ["src/**/*.{ts,tsx}"],
+      "excludeFiles": [
+        "src/**/*.test.ts",
+        "src/**/*.test.tsx",
+        "src/**/*.d.ts",
+        "src/**/test-setup.ts",
+        "src/**/filter-test-setup.tsx"
+      ],
+      "rules": {
+        "max-lines": ["error", { "max": 500 }]
+      }
+    },
+    {
       // The filter uses APG composite widgets: focus remains on combobox/listbox
       // containers through aria-activedescendant, while token groups handle
       // keyboard input on divs. These rules assume individually focusable native

@@ -1301,27 +1301,26 @@ This project uses [Bun](https://bun.sh/) as its package manager and command runn
 
 ### Commands
 
-| Command                             | What it proves                                                                              |
-| ----------------------------------- | ------------------------------------------------------------------------------------------- |
-| `bun run dev`                       | Starts the Vite development server.                                                         |
-| `bun run build`                     | Runs project-reference TypeScript checks and a production Vite build.                       |
-| `bun run preview`                   | Serves the production build locally.                                                        |
-| `bun run format`                    | Writes [Prettier](https://prettier.io/) formatting.                                         |
-| `bun run format:check`              | Checks formatting without writing.                                                          |
-| `bun run lint`                      | Runs type-aware [Oxlint](https://oxc.rs/docs/guide/usage/linter.html) and denies warnings.  |
-| `bun run lint:fix`                  | Applies safe Oxlint fixes and still denies remaining warnings.                              |
-| `bun run lint:css`                  | Runs [Stylelint](https://stylelint.io/) over `src/**/*.css`.                                |
-| `bun run lint:css:fix`              | Applies Stylelint fixes.                                                                    |
-| `bun run typecheck`                 | Runs all TypeScript project references with no emit.                                        |
-| `bun run check:file-sizes`          | Requires every non-test `src/**/*.ts(x)` implementation file to stay at or below 500 lines. |
-| `bun run check:react-compiler`      | Strict compiler build; any compiler error or bailout fails.                                 |
-| `bun run test`                      | Runs ordinary Vitest tests without compiler-specific cases.                                 |
-| `bun run test:watch`                | Runs Vitest in watch mode.                                                                  |
-| `bun run test:compiler`             | Runs only compiled rendering-boundary tests.                                                |
-| `bun run test:coverage`             | Runs ordinary tests with the configured V8 report.                                          |
-| `bun run test:e2e`                  | Runs the complete Chromium Playwright suite.                                                |
-| `bun run test:e2e:ui`               | Opens Playwright's interactive UI.                                                          |
-| `bun run test:e2e:update-snapshots` | Replaces visual baselines with current rendering.                                           |
+| Command                             | What it proves                                                                                                                           |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `bun run dev`                       | Starts the Vite development server.                                                                                                      |
+| `bun run build`                     | Runs project-reference TypeScript checks and a production Vite build.                                                                    |
+| `bun run preview`                   | Serves the production build locally.                                                                                                     |
+| `bun run format`                    | Writes [Prettier](https://prettier.io/) formatting.                                                                                      |
+| `bun run format:check`              | Checks formatting without writing.                                                                                                       |
+| `bun run lint`                      | Runs type-aware [Oxlint](https://oxc.rs/docs/guide/usage/linter.html), including the 500-line implementation limit, and denies warnings. |
+| `bun run lint:fix`                  | Applies safe Oxlint fixes and still denies remaining warnings.                                                                           |
+| `bun run lint:css`                  | Runs [Stylelint](https://stylelint.io/) over `src/**/*.css`.                                                                             |
+| `bun run lint:css:fix`              | Applies Stylelint fixes.                                                                                                                 |
+| `bun run typecheck`                 | Runs all TypeScript project references with no emit.                                                                                     |
+| `bun run check:react-compiler`      | Strict compiler build; any compiler error or bailout fails.                                                                              |
+| `bun run test`                      | Runs ordinary Vitest tests without compiler-specific cases.                                                                              |
+| `bun run test:watch`                | Runs Vitest in watch mode.                                                                                                               |
+| `bun run test:compiler`             | Runs only compiled rendering-boundary tests.                                                                                             |
+| `bun run test:coverage`             | Runs ordinary tests with the configured V8 report.                                                                                       |
+| `bun run test:e2e`                  | Runs the complete Chromium Playwright suite.                                                                                             |
+| `bun run test:e2e:ui`               | Opens Playwright's interactive UI.                                                                                                       |
+| `bun run test:e2e:update-snapshots` | Replaces visual baselines with current rendering.                                                                                        |
 
 ### `bun run validate`
 
@@ -1332,7 +1331,6 @@ format:check
 → lint
 → lint:css
 → typecheck
-→ check:file-sizes
 → check:react-compiler
 → test:compiler
 → test
@@ -1370,6 +1368,7 @@ Oxlint runs type-aware with import, accessibility, React, TypeScript, compiler, 
 - React Compiler bailout reporting
 - No floating promises
 - No nested ternaries
+- Implementation files at or below 500 lines
 - Top-level type import style
 
 The filter component has narrowly scoped accessibility-rule exceptions for its ARIA composite widgets. Browser tests prove those interaction patterns; the exceptions are not a blanket accessibility opt-out.
@@ -1378,16 +1377,15 @@ Prettier uses semicolons, single quotes, two spaces, and no tabs. Stylelint uses
 
 ### File-size guard
 
-`scripts/check-file-sizes.ts` scans implementation TypeScript and TSX under `src`, excludes tests and test infrastructure, and fails any file over 500 lines. Documentation is not part of that limit.
+Oxlint's `max-lines` rule checks implementation TypeScript and TSX under `src`, excludes tests and test infrastructure, and fails any file over 500 lines. Documentation is not part of that limit.
 
 ### Pre-commit hook
 
 [Lefthook](https://lefthook.dev/) runs a piped pre-commit sequence, skipping merge and rebase commits:
 
 - Prettier writes staged supported files and restages fixes.
-- Oxlint fixes staged JavaScript/TypeScript and restages fixes.
+- Oxlint fixes staged JavaScript/TypeScript, enforces the implementation file-size limit, and restages fixes.
 - Stylelint fixes staged CSS and restages fixes.
-- File sizes run for the project.
 - Ordinary Vitest runs.
 - Full Playwright runs.
 
@@ -1494,25 +1492,25 @@ This is the file-by-file tour. Start at the narrowest owner of the behavior you 
 
 ### Tooling and continuous integration
 
-| File                                                                  | Responsibility                                                                   |
-| --------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| [`package.json`](../package.json)                                     | Runtime/dev dependencies and command graph                                       |
-| [`bun.lock`](../bun.lock)                                             | Reproducible Bun dependency resolution                                           |
-| [`vite.config.ts`](../vite.config.ts)                                 | React/Vite, compiler modes, alias, and Chrome target                             |
-| [`vitest.config.ts`](../vitest.config.ts)                             | jsdom, test partitions, setup, and coverage scope                                |
-| [`playwright.config.ts`](../playwright.config.ts)                     | Chromium project, fresh server, traces, and strict visual comparison             |
-| [`tsconfig.base.json`](../tsconfig.base.json)                         | Strict shared TypeScript guardrails                                              |
-| [`tsconfig.app.json`](../tsconfig.app.json)                           | DOM/JSX application project and alias                                            |
-| [`tsconfig.node.json`](../tsconfig.node.json)                         | Vite configuration Node project                                                  |
-| [`tsconfig.end-to-end.json`](../tsconfig.end-to-end.json)             | Playwright and end-to-end project                                                |
-| [`tsconfig.json`](../tsconfig.json)                                   | Project references                                                               |
-| [`scripts/check-file-sizes.ts`](../scripts/check-file-sizes.ts)       | 500-line implementation guard                                                    |
-| [`.oxlintrc.json`](../.oxlintrc.json)                                 | Type-aware lint, compiler rule, complexity, accessibility exceptions, and naming |
-| [`.stylelintrc.json`](../.stylelintrc.json)                           | Standard CSS lint configuration                                                  |
-| [`.prettierrc.json`](../.prettierrc.json)                             | Semicolons, single quotes, and two-space formatting                              |
-| [`.editorconfig`](../.editorconfig)                                   | Encoding, line endings, indentation, and whitespace                              |
-| [`lefthook.yml`](../lefthook.yml)                                     | Auto-fixing and test pre-commit pipeline                                         |
-| [`.github/workflows/validate.yml`](../.github/workflows/validate.yml) | macOS full validation and failure traces                                         |
+| File                                                                            | Responsibility                                                                                    |
+| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| [`package.json`](../package.json)                                               | Runtime/dev dependencies and command graph                                                        |
+| [`bun.lock`](../bun.lock)                                                       | Reproducible Bun dependency resolution                                                            |
+| [`vite.config.ts`](../vite.config.ts)                                           | React/Vite, compiler modes, alias, and Chrome target                                              |
+| [`vitest.config.ts`](../vitest.config.ts)                                       | jsdom, test partitions, setup, and coverage scope                                                 |
+| [`playwright.config.ts`](../playwright.config.ts)                               | Chromium project, fresh server, traces, and strict visual comparison                              |
+| [`tsconfig.base.json`](../tsconfig.base.json)                                   | Strict shared TypeScript guardrails                                                               |
+| [`tsconfig.app.json`](../tsconfig.app.json)                                     | DOM/JSX application project and alias                                                             |
+| [`tsconfig.node.json`](../tsconfig.node.json)                                   | Vite configuration Node project                                                                   |
+| [`tsconfig.end-to-end.json`](../tsconfig.end-to-end.json)                       | Playwright and end-to-end project                                                                 |
+| [`tsconfig.json`](../tsconfig.json)                                             | Project references                                                                                |
+| [`scripts/check-conditional-braces.ts`](../scripts/check-conditional-braces.ts) | If/else-chain brace guard with focused regression tests                                           |
+| [`.oxlintrc.json`](../.oxlintrc.json)                                           | Type-aware lint, compiler rule, complexity, file-size limit, accessibility exceptions, and naming |
+| [`.stylelintrc.json`](../.stylelintrc.json)                                     | Standard CSS lint configuration                                                                   |
+| [`.prettierrc.json`](../.prettierrc.json)                                       | Semicolons, single quotes, and two-space formatting                                               |
+| [`.editorconfig`](../.editorconfig)                                             | Encoding, line endings, indentation, and whitespace                                               |
+| [`lefthook.yml`](../lefthook.yml)                                               | Auto-fixing and test pre-commit pipeline                                                          |
+| [`.github/workflows/validate.yml`](../.github/workflows/validate.yml)           | macOS full validation and failure traces                                                          |
 
 ## Where changes belong
 

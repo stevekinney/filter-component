@@ -8,7 +8,6 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "check:conditional-braces": "bun run scripts/check-conditional-braces.ts",
-    "check:file-sizes": "bun run scripts/check-file-sizes.ts",
     "check:react-compiler": "vite build --mode compiler-check",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -23,7 +22,7 @@
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "typecheck": "tsc -b",
-    "validate": "bun run format:check && bun run lint && bun run lint:css && bun run typecheck && bun run check:file-sizes && bun run check:react-compiler && bun run test:compiler && bun run test && bun run test:e2e && bun run build",
+    "validate": "bun run format:check && bun run lint && bun run lint:css && bun run typecheck && bun run check:react-compiler && bun run test:compiler && bun run test && bun run test:e2e && bun run build",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:update-snapshots": "playwright test --update-snapshots"

@@ -73,6 +73,7 @@ export function createValueDraftFromCommittedValue(
       selectedOptions: Array.isArray(value) ? value.map(String) : [],
     };
   }
+
   if (emptyDraft.kind === 'duration') {
     return isDuration(value)
       ? {
@@ -82,6 +83,7 @@ export function createValueDraftFromCommittedValue(
         }
       : emptyDraft;
   }
+
   if (emptyDraft.kind === 'range') {
     return isRange(value)
       ? {
@@ -91,7 +93,9 @@ export function createValueDraftFromCommittedValue(
         }
       : emptyDraft;
   }
+
   if (typeof value === 'object') return emptyDraft;
+
   return { ...emptyDraft, input: String(value) };
 }
 
