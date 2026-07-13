@@ -6,15 +6,7 @@ import type { SavedView } from '@/utilities/filter/saved-views.ts';
 import type { FilterFieldDefinition } from '@/types/filter.ts';
 
 /** A round icon button in the filter row; renders nothing while unavailable. */
-function RowActionButton({
-  visible,
-  disabled,
-  destructive = false,
-  label,
-  title,
-  onClick,
-  children,
-}: {
+function RowActionButton(properties: {
   visible: boolean;
   disabled: boolean;
   destructive?: boolean;
@@ -23,6 +15,17 @@ function RowActionButton({
   onClick: () => void;
   children: ReactNode;
 }) {
+  const {
+    visible,
+    disabled,
+    destructive: destructiveOption,
+    label,
+    title,
+    onClick,
+    children,
+  } = properties;
+  const destructive = destructiveOption ?? false;
+
   if (!visible) return null;
   return (
     <button

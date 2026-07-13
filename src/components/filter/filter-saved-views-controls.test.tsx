@@ -1,6 +1,36 @@
 import type { ComponentProps } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+
+const savedViewDerivationProbes = vi.hoisted(() => ({
+  findField: vi.fn(),
+  savedViewKey: vi.fn(),
+}));
+
+vi.mock('@/utilities/filter/operators.ts', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@/utilities/filter/operators.ts')>();
+  return {
+    ...actual,
+    findField: (...arguments_: Parameters<typeof actual.findField>) => {
+      savedViewDerivationProbes.findField();
+      return actual.findField(...arguments_);
+    },
+  };
+});
+
+vi.mock('@/utilities/filter/saved-views.ts', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@/utilities/filter/saved-views.ts')>();
+  return {
+    ...actual,
+    savedViewKey: (...arguments_: Parameters<typeof actual.savedViewKey>) => {
+      savedViewDerivationProbes.savedViewKey();
+      return actual.savedViewKey(...arguments_);
+    },
+  };
+});
+
 import { SavedViewsControls } from './filter-saved-views.tsx';
 import { savedViewKey } from '@/utilities/filter/saved-views.ts';
 import type { SavedView } from '@/utilities/filter/saved-views.ts';
@@ -123,6 +153,31 @@ describe('SavedViewsControls lifecycle', () => {
     fireEvent.change(input, { target: { value: '  Mine  ' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     expect(props.onSaveView).toHaveBeenCalledWith('Mine');
+  });
+
+  it('does not recompute unchanged saved-view rows while typing a name', () => {
+    const props = savedViewsProps({
+      views: [ALPHA_VIEW, ALL_VIEW],
+      currentGroupKey: 'not-active',
+    });
+    render(<SavedViewsControls {...props} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Saved views' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Save current filters…' }),
+    );
+
+    savedViewDerivationProbes.findField.mockClear();
+    savedViewDerivationProbes.savedViewKey.mockClear();
+
+    const input = screen.getByRole('textbox', { name: 'View name' });
+    fireEvent.change(input, { target: { value: 'M' } });
+    fireEvent.change(input, { target: { value: 'Mine' } });
+
+    expect(input).toHaveValue('Mine');
+    expect(screen.getByText('1 filter · Name')).toBeVisible();
+    expect(screen.getByText('2 filters · All · Name')).toBeVisible();
+    expect(savedViewDerivationProbes.findField).not.toHaveBeenCalled();
+    expect(savedViewDerivationProbes.savedViewKey).not.toHaveBeenCalled();
   });
 
   it('handles list key events when the list itself is the target', () => {

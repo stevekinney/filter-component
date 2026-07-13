@@ -1,7 +1,7 @@
 import { Check, Square, SquareCheck, X } from 'lucide-react';
+import { memo } from 'react';
 import type { KeyboardEvent } from 'react';
 import { fieldOptionId } from '@/utilities/filter/dom-selectors.ts';
-import { searchFields } from '@/utilities/filter/field-search.ts';
 import { fieldLabel } from '@/utilities/filter/formatting.ts';
 import {
   booleanChoicesForField,
@@ -96,9 +96,43 @@ function FieldSearchInput({
   );
 }
 
+type FieldOptionRowProps = {
+  field: FilterFieldDefinition;
+  index: number;
+  idPrefix: string;
+  active: boolean;
+  onChangeActiveIndex: (index: number) => void;
+  onSelectField: (key: string) => void;
+};
+
+/** Only the previous and next active rows need to update during navigation. */
+const FieldOptionRow = memo(function FieldOptionRow({
+  field,
+  index,
+  idPrefix,
+  active,
+  onChangeActiveIndex,
+  onSelectField,
+}: FieldOptionRowProps) {
+  return (
+    <div
+      id={fieldOptionId(idPrefix, index)}
+      role="option"
+      aria-selected={active}
+      data-active={active ? '' : undefined}
+      className="filter-popover-option"
+      onClick={() => onSelectField(field.key)}
+      onMouseEnter={() => onChangeActiveIndex(index)}
+    >
+      <span className="filter-popover-option-label">{fieldLabel(field)}</span>
+      <span className="filter-popover-option-hint">{field.type}</span>
+    </div>
+  );
+});
+
 export function FieldSelectionStage({
   state,
-  fields,
+  fieldResults,
   idPrefix,
   onChangeQuery,
   onChangeActiveIndex,
@@ -106,16 +140,15 @@ export function FieldSelectionStage({
 }: FilterPopoverProps & {
   state: ActiveFilterEditorState & { stage: 'field' };
 }) {
-  const results = searchFields(fields, state.query);
-  const activeIndex = clampIndex(state.activeIndex, results.length);
+  const activeIndex = clampIndex(state.activeIndex, fieldResults.length);
 
-  const activeResult = results[activeIndex];
+  const activeResult = fieldResults[activeIndex];
 
   const handleNavigationKey = (event: KeyboardEvent<HTMLInputElement>) => {
     event.preventDefault();
-    if (results.length === 0) return;
+    if (fieldResults.length === 0) return;
     const delta = event.key === 'ArrowDown' ? 1 : -1;
-    onChangeActiveIndex(stepIndex(activeIndex, delta, results.length));
+    onChangeActiveIndex(stepIndex(activeIndex, delta, fieldResults.length));
   };
 
   const handleTabKey = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -158,24 +191,18 @@ export function FieldSelectionStage({
         className="filter-popover-list"
         onMouseDown={(event) => event.preventDefault()}
       >
-        {results.map((field, index) => (
-          <div
+        {fieldResults.map((field, index) => (
+          <FieldOptionRow
             key={field.key}
-            id={fieldOptionId(idPrefix, index)}
-            role="option"
-            aria-selected={index === activeIndex}
-            data-active={index === activeIndex ? '' : undefined}
-            className="filter-popover-option"
-            onClick={() => onSelectField(field.key)}
-            onMouseEnter={() => onChangeActiveIndex(index)}
-          >
-            <span className="filter-popover-option-label">
-              {fieldLabel(field)}
-            </span>
-            <span className="filter-popover-option-hint">{field.type}</span>
-          </div>
+            field={field}
+            index={index}
+            idPrefix={idPrefix}
+            active={index === activeIndex}
+            onChangeActiveIndex={onChangeActiveIndex}
+            onSelectField={onSelectField}
+          />
         ))}
-        {results.length === 0 && (
+        {fieldResults.length === 0 && (
           <div className="filter-popover-empty">No matching fields</div>
         )}
       </div>

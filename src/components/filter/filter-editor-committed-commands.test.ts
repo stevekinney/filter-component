@@ -71,6 +71,7 @@ describe('createFilterEditorCommittedCommands', () => {
       getFieldRegistry: () => currentFieldRegistry,
       getCurrentHistory: () => history,
       applyFilterHistoryAction,
+      createConditionId: () => 'created',
       resetEditor,
       scheduleFocus,
       announce,

@@ -51,6 +51,7 @@ function popoverProps(state: FilterEditorState): FilterPopoverProps {
   return {
     state,
     fields: [STRING_FIELD, ENUM_FIELD],
+    fieldResults: [STRING_FIELD, ENUM_FIELD],
     editingFilter: STRING_ENTRY,
     idPrefix: 'popover',
     resolveAnchor: () => document.body,

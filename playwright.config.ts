@@ -5,6 +5,16 @@ import { defineConfig, devices } from '@playwright/test';
 // report that NO_COLOR was ignored.
 delete process.env['NO_COLOR'];
 
+const testServerPort = Number(process.env['PLAYWRIGHT_TEST_PORT'] ?? '4173');
+if (
+  !Number.isInteger(testServerPort) ||
+  testServerPort < 1 ||
+  testServerPort > 65_535
+) {
+  throw new Error('PLAYWRIGHT_TEST_PORT must be an integer from 1 to 65535.');
+}
+const testServerUrl = `http://localhost:${testServerPort}`;
+
 export default defineConfig({
   testDir: './end-to-end',
   fullyParallel: true,
@@ -12,7 +22,7 @@ export default defineConfig({
   retries: 0,
   reporter: process.env['CI'] ? 'github' : 'list',
   use: {
-    baseURL: 'http://localhost:4173',
+    baseURL: testServerUrl,
     trace: 'retain-on-failure',
   },
   expect: {
@@ -36,8 +46,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'bunx vite --port 4173 --strictPort',
-    url: 'http://localhost:4173',
-    reuseExistingServer: !process.env['CI'],
+    command: `bunx vite --port ${testServerPort} --strictPort`,
+    url: testServerUrl,
+    // Reusing a server can silently exercise a different checkout.
+    reuseExistingServer: false,
   },
 });

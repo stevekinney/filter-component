@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   EMPTY_FILTER_EXPRESSION,
   filterExpression,
@@ -44,28 +44,29 @@ export function useFilterHistory(
   initialFilters: FilterGroup | undefined,
   createConditionId: () => string,
 ): UseFilterHistoryResult {
-  const initialHistoryRef = useRef<FilterHistory | null>(null);
-  if (initialHistoryRef.current === null) {
+  const [history, setHistory] = useState<FilterHistory>(() => {
     const present = initialFilters
       ? fromFilterGroup(
           parseFilterGroup(initialFilters, 'initialFilters'),
           createConditionId,
         )
       : EMPTY_FILTER_EXPRESSION;
-    initialHistoryRef.current = { past: [], present, future: [] };
-  }
-
-  const [history, setHistory] = useState(initialHistoryRef.current);
+    return { past: [], present, future: [] };
+  });
   const historyRef = useRef(history);
   const abortControllerRef = useRef<AbortController | null>(null);
   const onChangeRef = useRef(onChange);
   const fieldsRef = useRef(fieldRegistry.fields);
-  onChangeRef.current = onChange;
-  fieldsRef.current = fieldRegistry.fields;
 
-  const lastNotifiedGroupKeyRef = useRef(
+  useLayoutEffect(() => {
+    onChangeRef.current = onChange;
+    fieldsRef.current = fieldRegistry.fields;
+  }, [fieldRegistry, onChange]);
+
+  const [initialNotifiedGroupKey] = useState(() =>
     stableSerialize(deriveValidGroup(history.present, fieldRegistry.fields)),
   );
+  const lastNotifiedGroupKeyRef = useRef(initialNotifiedGroupKey);
 
   const notifyFiltersChange = (validGroup: FilterGroup) => {
     lastNotifiedGroupKeyRef.current = stableSerialize(validGroup);

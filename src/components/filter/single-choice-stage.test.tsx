@@ -74,6 +74,7 @@ function popoverProps(
   return {
     state,
     fields: [STRING_FIELD, BOOLEAN_FIELD, ENUM_FIELD],
+    fieldResults: [STRING_FIELD, BOOLEAN_FIELD, ENUM_FIELD],
     editingFilter: STRING_ENTRY,
     idPrefix: 'popover',
     resolveAnchor: () => document.body,

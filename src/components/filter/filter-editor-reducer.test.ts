@@ -332,6 +332,112 @@ describe('filterEditorControllerReducer', () => {
     ).toBe(idle);
   });
 
+  it('preserves identity for redundant semantic actions', () => {
+    const existingIncomplete = {
+      stage: 'operator' as const,
+      fieldKey: 'active',
+      fieldType: 'boolean' as const,
+    };
+    const idleWithDraft: FilterEditorControllerState = {
+      editor: IDLE_FILTER_EDITOR_STATE,
+      incompleteDraft: existingIncomplete,
+    };
+    expect(
+      filterEditorControllerReducer(idleWithDraft, {
+        type: 'idle',
+        preserveCurrent: true,
+      }),
+    ).toBe(idleWithDraft);
+    expect(
+      filterEditorControllerReducer(idle, { type: 'discardIncomplete' }),
+    ).toBe(idle);
+    expect(
+      filterEditorControllerReducer(idleWithDraft, {
+        type: 'replaceIncomplete',
+        draft: existingIncomplete,
+      }),
+    ).toBe(idleWithDraft);
+
+    const fieldEditor = {
+      stage: 'field',
+      filterId: null,
+      query: 'name',
+      activeIndex: 0,
+    } satisfies Extract<FilterEditorState, { stage: 'field' }>;
+    const fieldState = {
+      ...idle,
+      editor: fieldEditor,
+    };
+    expect(
+      filterEditorControllerReducer(fieldState, {
+        type: 'changeQuery',
+        query: 'name',
+      }),
+    ).toBe(fieldState);
+    const movedFieldState = {
+      ...fieldState,
+      editor: { ...fieldEditor, activeIndex: 2 },
+    };
+    expect(
+      filterEditorControllerReducer(movedFieldState, {
+        type: 'changeQuery',
+        query: 'name',
+      }).editor,
+    ).toMatchObject({ query: 'name', activeIndex: 0 });
+    expect(
+      filterEditorControllerReducer(fieldState, {
+        type: 'changeActiveIndex',
+        index: 0,
+      }),
+    ).toBe(fieldState);
+
+    const valueEditor = {
+      stage: 'value',
+      filterId: null,
+      fieldKey: 'name',
+      fieldType: 'string',
+      operator: 'equals',
+      draft: scalarDraft,
+      error: null,
+      activeIndex: 0,
+    } satisfies Extract<FilterEditorState, { stage: 'value' }>;
+    const valueState = {
+      ...idle,
+      editor: valueEditor,
+    };
+    expect(
+      filterEditorControllerReducer(valueState, {
+        type: 'changeDraft',
+        draft: scalarDraft,
+      }),
+    ).toBe(valueState);
+
+    const invalidValueState = {
+      ...valueState,
+      editor: { ...valueEditor, error: 'Required' },
+    };
+    expect(
+      filterEditorControllerReducer(invalidValueState, {
+        type: 'validationError',
+        draft: scalarDraft,
+        error: 'Required',
+      }),
+    ).toBe(invalidValueState);
+    expect(
+      filterEditorControllerReducer(invalidValueState, {
+        type: 'changeDraft',
+        draft: scalarDraft,
+      }).editor,
+    ).toMatchObject({ draft: scalarDraft, error: null });
+    expect(
+      filterEditorControllerReducer(invalidValueState, {
+        type: 'validationError',
+        draft: scalarDraft,
+        error: 'Still required',
+      }).editor,
+    ).toMatchObject({ draft: scalarDraft, error: 'Still required' });
+  });
+
   it('replaces and discards resumable drafts explicitly', () => {
     const draft = {
       stage: 'operator' as const,

@@ -30,7 +30,8 @@ const STRING_ENTRY: FilterEntry = {
 describe('FilterTokenList composition branches', () => {
   function renderList(expression: FilterExpression) {
     const callbacks = {
-      editingSegmentFor: vi.fn(() => null),
+      editingFilterId: null,
+      editingSegment: null,
       onOpenSegment: vi.fn(),
       onRemove: vi.fn(),
       onRemoveEnumValue: vi.fn(),

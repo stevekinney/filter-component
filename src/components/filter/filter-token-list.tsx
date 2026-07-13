@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { describeAndRuns } from '@/utilities/filter/expression.ts';
 import { findField } from '@/utilities/filter/operators.ts';
 import { getFilterValidationIssue } from '@/utilities/filter/validation.ts';
@@ -12,8 +13,8 @@ type FilterTokenListProps = {
   expression: FilterExpression;
   fields: readonly FilterFieldDefinition[];
   disabled: boolean;
-  /** Segment whose editor popover is open for the given token, if any. */
-  editingSegmentFor: (id: string) => TokenSegment | null;
+  editingFilterId: string | null;
+  editingSegment: TokenSegment | null;
   onOpenSegment: (
     filter: FilterEntry,
     segment: TokenSegment,
@@ -25,6 +26,73 @@ type FilterTokenListProps = {
   onMoveFocusFromToken: (index: number, direction: -1 | 1) => void;
   onMoveFocusFromJoiner: (id: string) => void;
 };
+
+type FilterTokenListItemProps = Omit<
+  FilterTokenListProps,
+  'expression' | 'editingFilterId'
+> & {
+  filter: FilterEntry;
+  index: number;
+  leadingJoiner: FilterExpression['joiners'][number] | undefined;
+  previousFilterId: string | null;
+  opensRun: boolean;
+  closesRun: boolean;
+  inAndRun: boolean;
+};
+
+/** A keyed memo boundary keeps structurally shared conditions out of updates. */
+const FilterTokenListItem = memo(function FilterTokenListItem({
+  filter,
+  index,
+  leadingJoiner,
+  previousFilterId,
+  opensRun,
+  closesRun,
+  inAndRun,
+  fields,
+  disabled,
+  editingSegment,
+  onOpenSegment,
+  onRemove,
+  onRemoveEnumValue,
+  onFlipJoiner,
+  onMoveFocusFromToken,
+  onMoveFocusFromJoiner,
+}: FilterTokenListItemProps) {
+  return (
+    <div role="listitem" className="filter-token-item">
+      {leadingJoiner !== undefined && previousFilterId !== null && (
+        <FilterJoiner
+          index={index - 1}
+          joiner={leadingJoiner}
+          disabled={disabled}
+          onFlip={() => onFlipJoiner(index - 1)}
+          onMoveFocus={(direction) =>
+            onMoveFocusFromJoiner(
+              direction === 1 ? filter.id : previousFilterId,
+            )
+          }
+        />
+      )}
+      {opensRun && <FilterBracket glyph="(" />}
+      <FilterToken
+        filter={filter}
+        field={findField(fields, filter.fieldKey)}
+        validationIssue={getFilterValidationIssue(filter, fields)}
+        editingSegment={editingSegment}
+        inAndRun={inAndRun}
+        disabled={disabled}
+        onOpenSegment={(segment, anchorElement) =>
+          onOpenSegment(filter, segment, anchorElement)
+        }
+        onRemove={() => onRemove(filter.id)}
+        onRemoveEnumValue={(value) => onRemoveEnumValue(filter.id, value)}
+        onMoveFocus={(direction) => onMoveFocusFromToken(index, direction)}
+      />
+      {closesRun && <FilterBracket glyph=")" />}
+    </div>
+  );
+});
 
 /**
  * The committed chips with the smart-joiners furniture between them: each
@@ -38,7 +106,8 @@ export function FilterTokenList({
   expression,
   fields,
   disabled,
-  editingSegmentFor,
+  editingFilterId,
+  editingSegment,
   onOpenSegment,
   onRemove,
   onRemoveEnumValue,
@@ -59,39 +128,27 @@ export function FilterTokenList({
         const previousFilter = conditions[index - 1];
         const marker = runMarkers[index];
         return (
-          <div key={filter.id} role="listitem" className="filter-token-item">
-            {leadingJoiner !== undefined && previousFilter !== undefined && (
-              <FilterJoiner
-                index={index - 1}
-                joiner={leadingJoiner}
-                disabled={disabled}
-                onFlip={() => onFlipJoiner(index - 1)}
-                onMoveFocus={(direction) =>
-                  onMoveFocusFromJoiner(
-                    direction === 1 ? filter.id : previousFilter.id,
-                  )
-                }
-              />
-            )}
-            {marker?.opensRun && <FilterBracket glyph="(" />}
-            <FilterToken
-              filter={filter}
-              field={findField(fields, filter.fieldKey)}
-              validationIssue={getFilterValidationIssue(filter, fields)}
-              editingSegment={editingSegmentFor(filter.id)}
-              inAndRun={marker?.inRun ?? false}
-              disabled={disabled}
-              onOpenSegment={(segment, anchorElement) =>
-                onOpenSegment(filter, segment, anchorElement)
-              }
-              onRemove={() => onRemove(filter.id)}
-              onRemoveEnumValue={(value) => onRemoveEnumValue(filter.id, value)}
-              onMoveFocus={(direction) =>
-                onMoveFocusFromToken(index, direction)
-              }
-            />
-            {marker?.closesRun && <FilterBracket glyph=")" />}
-          </div>
+          <FilterTokenListItem
+            key={filter.id}
+            filter={filter}
+            index={index}
+            leadingJoiner={leadingJoiner}
+            previousFilterId={previousFilter?.id ?? null}
+            opensRun={marker?.opensRun ?? false}
+            closesRun={marker?.closesRun ?? false}
+            inAndRun={marker?.inRun ?? false}
+            fields={fields}
+            disabled={disabled}
+            editingSegment={
+              editingFilterId === filter.id ? editingSegment : null
+            }
+            onOpenSegment={onOpenSegment}
+            onRemove={onRemove}
+            onRemoveEnumValue={onRemoveEnumValue}
+            onFlipJoiner={onFlipJoiner}
+            onMoveFocusFromToken={onMoveFocusFromToken}
+            onMoveFocusFromJoiner={onMoveFocusFromJoiner}
+          />
         );
       })}
     </div>

@@ -78,6 +78,7 @@ function popoverProps(
   return {
     state,
     fields: FIELDS,
+    fieldResults: FIELDS,
     editingFilter: STRING_ENTRY,
     idPrefix: 'popover',
     resolveAnchor: () => document.body,

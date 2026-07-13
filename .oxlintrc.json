@@ -5,6 +5,7 @@
     "typeAware": true
   },
   "rules": {
+    "react/react-compiler": ["error", { "reportAllBailouts": true }],
     "react/rules-of-hooks": "error",
     "react/only-export-components": ["warn", { "allowConstantExport": true }],
     "typescript/await-thenable": "error",

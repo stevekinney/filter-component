@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { useId, useRef, useState } from 'react';
+import { memo, useId, useMemo, useRef, useState } from 'react';
 import {
   activeEditorSegment,
   findEditingFilter,
@@ -20,9 +20,12 @@ import { useSavedViews } from './use-saved-views.ts';
 import { clampIndex, stepIndex } from '@/utilities/list-navigation.ts';
 import type { TokenSegment } from '@/utilities/filter/validation.ts';
 import { createFilterFieldRegistry } from '@/utilities/filter/field-registry.ts';
+import { stableSerialize } from '@/utilities/filter/stable-serialize.ts';
 import { useFilterFocus } from './use-filter-focus.ts';
 import { localSavedViewsStorage } from '@/utilities/storage/local-storage.ts';
 import type { FilterFieldDefinition, FilterProps } from '@/types/filter.ts';
+
+const NO_FIELD_RESULTS: readonly FilterFieldDefinition[] = [];
 
 /**
  * Dependency-injected filter-token builder. The parent supplies the `fields`
@@ -34,20 +37,45 @@ import type { FilterFieldDefinition, FilterProps } from '@/types/filter.ts';
  * and never assumes a data source — applying the filters is entirely the
  * parent's business.
  */
-export function Filter({
-  fields,
-  onChange,
-  disabled = false,
-  initialFilters,
-  savedViewsStorage = localSavedViewsStorage,
-  className,
-  ...formProps
-}: FilterProps) {
+export function Filter(properties: FilterProps) {
+  'use no memo';
+
+  // Field definitions are deliberately content-sensitive: consumers may
+  // mutate a nested options array and rerender with the same `fields` object.
+  // Keep that small content-version check outside the compiled state owner so
+  // editor updates never repeat the serialization work.
+  const fieldDefinitionSignature = stableSerialize(properties.fields);
+  return (
+    <CompiledFilter
+      {...properties}
+      fieldDefinitionSignature={fieldDefinitionSignature}
+    />
+  );
+}
+
+const CompiledFilter = memo(function CompiledFilter(
+  properties: FilterProps & { fieldDefinitionSignature: string },
+) {
+  const {
+    fields,
+    fieldDefinitionSignature,
+    onChange,
+    disabled: disabledProperty,
+    initialFilters,
+    savedViewsStorage: savedViewsStorageProperty,
+    className,
+    ...formProps
+  } = properties;
+  const disabled = disabledProperty ?? false;
+  const savedViewsStorage = savedViewsStorageProperty ?? localSavedViewsStorage;
   const idPrefix = useId();
   const filterIdCounterRef = useRef(0);
   const createConditionId = () =>
     `${idPrefix}-filter-${++filterIdCounterRef.current}`;
-  const fieldRegistry = createFilterFieldRegistry(fields);
+  const fieldRegistry = useMemo(
+    () => createFilterFieldRegistry(fields, fieldDefinitionSignature),
+    [fields, fieldDefinitionSignature],
+  );
   const validatedFields = fieldRegistry.fields;
   const { history, getCurrentHistory, applyFilterHistoryAction } =
     useFilterHistory(
@@ -145,11 +173,20 @@ export function Filter({
     savedViewsStorage,
   });
 
+  const isChoosingFilterField = editorState.stage === 'field';
   const isChoosingNewFilterField =
-    editorState.stage === 'field' && editorState.filterId === null;
+    isChoosingFilterField && editorState.filterId === null;
+  const fieldQuery = isChoosingFilterField ? editorState.query : null;
+  const fieldResults = useMemo(
+    () =>
+      fieldQuery === null
+        ? NO_FIELD_RESULTS
+        : searchFields(validatedFields, fieldQuery),
+    [fieldQuery, validatedFields],
+  );
   const matchingFields = isChoosingNewFilterField
-    ? searchFields(validatedFields, editorState.query)
-    : [];
+    ? fieldResults
+    : NO_FIELD_RESULTS;
   const activeFieldIndex = isChoosingNewFilterField
     ? clampIndex(editorState.activeIndex, matchingFields.length)
     : 0;
@@ -182,10 +219,12 @@ export function Filter({
   const moveFocusFromJoiner = (id: string) => focus({ type: 'token', id });
 
   const editingFilter = findEditingFilter(editorState, filters);
-  const getEditingSegment = (id: string): TokenSegment | null =>
-    editorState.stage !== 'idle' && editorState.filterId === id
-      ? activeEditorSegment(editorState)
-      : null;
+  const editingFilterId =
+    editorState.stage === 'idle' ? null : editorState.filterId;
+  const editingSegment: TokenSegment | null =
+    editingFilterId === null || editorState.stage === 'idle'
+      ? null
+      : activeEditorSegment(editorState);
 
   const activeDraftField =
     editorState.stage !== 'idle' && editorState.stage !== 'field'
@@ -212,7 +251,8 @@ export function Filter({
             expression={history.present}
             fields={validatedFields}
             disabled={disabled}
-            editingSegmentFor={getEditingSegment}
+            editingFilterId={editingFilterId}
+            editingSegment={editingSegment}
             onOpenSegment={openTokenSegment}
             onRemove={removeFilter}
             onRemoveEnumValue={removeEnumValue}
@@ -293,6 +333,7 @@ export function Filter({
         <FilterPopover
           state={editorState}
           fields={validatedFields}
+          fieldResults={fieldResults}
           editingFilter={editingFilter}
           idPrefix={idPrefix}
           resolveAnchor={resolvePopoverAnchor}
@@ -318,4 +359,4 @@ export function Filter({
       </span>
     </form>
   );
-}
+});

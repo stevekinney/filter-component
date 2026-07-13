@@ -2,21 +2,34 @@ import { fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { useNativePopover } from './use-native-popover.ts';
 
-function NativePopoverHarness({
-  anchor,
-  autofocusOnOpen,
-  includeAutofocus = true,
-  onBrowserDismiss,
-  onEscape,
-}: {
+type NativePopoverHarnessProps = {
   anchor: HTMLElement | null;
   autofocusOnOpen?: boolean;
   includeAutofocus?: boolean;
   onBrowserDismiss: () => void;
   onEscape: () => void;
-}) {
+  resolveAnchor?: (currentAnchor: HTMLElement | null) => HTMLElement | null;
+};
+
+function returnCurrentAnchor(currentAnchor: HTMLElement | null) {
+  return currentAnchor;
+}
+
+function NativePopoverHarness(properties: NativePopoverHarnessProps) {
+  const {
+    anchor,
+    autofocusOnOpen,
+    includeAutofocus: includeAutofocusOption,
+    onBrowserDismiss,
+    onEscape,
+    resolveAnchor: resolveAnchorOption,
+  } = properties;
+  const includeAutofocus = includeAutofocusOption ?? true;
+  const resolveAnchor = resolveAnchorOption ?? returnCurrentAnchor;
+
   const { popoverRef, handleBeforeToggle, handleKeyDown } = useNativePopover({
-    resolveAnchor: () => anchor,
+    anchorKey: anchor,
+    resolveAnchor: () => resolveAnchor(anchor),
     onBrowserDismiss,
     onEscape,
     ...(autofocusOnOpen === undefined ? {} : { autofocusOnOpen }),
@@ -61,18 +74,25 @@ describe('useNativePopover lifecycle', () => {
     const secondAnchor = document.createElement('button');
     document.body.append(firstAnchor, secondAnchor);
     const onBrowserDismiss = vi.fn();
+    const resolveAnchor = vi.fn(
+      (currentAnchor: HTMLElement | null) => currentAnchor,
+    );
     const props = {
       autofocusOnOpen: true,
       includeAutofocus: true,
       onBrowserDismiss,
       onEscape: vi.fn(),
+      resolveAnchor,
     };
     const view = render(
       <NativePopoverHarness {...props} anchor={firstAnchor} />,
     );
     expect(screen.getByRole('button', { name: 'First' })).toHaveFocus();
+    expect(resolveAnchor).toHaveBeenCalledOnce();
     view.rerender(<NativePopoverHarness {...props} anchor={firstAnchor} />);
+    expect(resolveAnchor).toHaveBeenCalledOnce();
     view.rerender(<NativePopoverHarness {...props} anchor={secondAnchor} />);
+    expect(resolveAnchor).toHaveBeenCalledTimes(2);
     expect(onBrowserDismiss).not.toHaveBeenCalled();
     view.rerender(
       <NativePopoverHarness

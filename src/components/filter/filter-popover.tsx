@@ -26,6 +26,8 @@ export type ActiveFilterEditorState = Exclude<
 export type FilterPopoverProps = {
   state: FilterEditorState;
   fields: readonly FilterFieldDefinition[];
+  /** Field choices already filtered for the active field-stage query. */
+  fieldResults: readonly FilterFieldDefinition[];
   /** The condition being edited, for check-marking its current selection. */
   editingFilter: FilterEntry | null;
   idPrefix: string;
@@ -67,6 +69,10 @@ export function FilterPopover(props: FilterPopoverProps) {
 function OpenFilterPopover(props: OpenFilterPopoverProps) {
   const { state, resolveAnchor, onBrowserDismiss, onCancel } = props;
   const { popoverRef, handleBeforeToggle, handleKeyDown } = useNativePopover({
+    anchorKey:
+      state.filterId === null && state.stage !== 'field'
+        ? 'new-draft-preview'
+        : 'invoker',
     resolveAnchor,
     onBrowserDismiss,
     onEscape: onCancel,

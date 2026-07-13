@@ -2,17 +2,23 @@ import type { FocusTarget } from './use-filter-focus.ts';
 import type { FilterFieldRegistry } from '@/utilities/filter/field-registry.ts';
 import { createFilterEntry } from '@/utilities/filter/filter-entry.ts';
 import { filterConditionSchema } from '@/utilities/filter/filter-schema.ts';
-import { fieldLabel } from '@/utilities/filter/formatting.ts';
-import { getFilterValidationIssue } from '@/utilities/filter/validation.ts';
+import { fieldLabel, tokenPhrase } from '@/utilities/filter/formatting.ts';
+import { operatorsForField } from '@/utilities/filter/operators.ts';
+import {
+  createFilterCondition,
+  getFilterValidationIssue,
+} from '@/utilities/filter/validation.ts';
 import type {
   FilterHistory,
   FilterHistoryAction,
 } from '@/utilities/filter/history.ts';
+import type { FilterCondition, FilterOperator } from '@/types/filter.ts';
 
 type FilterEditorCommittedCommandsOptions = {
   getFieldRegistry: () => FilterFieldRegistry;
   getCurrentHistory: () => FilterHistory;
   applyFilterHistoryAction: (action: FilterHistoryAction) => boolean;
+  createConditionId: () => string;
   resetEditor: () => void;
   scheduleFocus: (target: FocusTarget) => void;
   announce: (message: string) => void;
@@ -23,10 +29,44 @@ export function createFilterEditorCommittedCommands({
   getFieldRegistry,
   getCurrentHistory,
   applyFilterHistoryAction,
+  createConditionId,
   resetEditor,
   scheduleFocus,
   announce,
 }: FilterEditorCommittedCommandsOptions) {
+  const commitFilter = (
+    fieldKey: string,
+    operator: FilterOperator,
+    value: FilterCondition['value'],
+    filterId: string | null,
+  ) => {
+    const fieldRegistry = getFieldRegistry();
+    const field = fieldRegistry.byKey.get(fieldKey);
+    if (!field || !operatorsForField(field).includes(operator)) return;
+    const condition = createFilterCondition(field, operator, value);
+    const validationEntry = createFilterEntry(
+      condition,
+      filterId ?? 'pending-filter',
+    );
+    if (getFilterValidationIssue(validationEntry, fieldRegistry.fields)) return;
+
+    resetEditor();
+    if (filterId === null) {
+      const filter = createFilterEntry(condition, createConditionId());
+      scheduleFocus({ type: 'addInput' });
+      if (applyFilterHistoryAction({ type: 'add', filter })) {
+        announce(`Filter added: ${tokenPhrase(filter, field)}`);
+      }
+      return;
+    }
+
+    const filter = createFilterEntry(condition, filterId);
+    scheduleFocus({ type: 'token', id: filterId });
+    if (applyFilterHistoryAction({ type: 'update', id: filterId, filter })) {
+      announce(`Filter updated: ${tokenPhrase(filter, field)}`);
+    }
+  };
+
   const removeFilter = (id: string) => {
     const history = getCurrentHistory();
     const filters = history.present.conditions;
@@ -123,5 +163,13 @@ export function createFilterEditorCommittedCommands({
     }
   };
 
-  return { removeFilter, removeEnumValue, clearAll, undo, redo, flipJoiner };
+  return {
+    commitFilter,
+    removeFilter,
+    removeEnumValue,
+    clearAll,
+    undo,
+    redo,
+    flipJoiner,
+  };
 }

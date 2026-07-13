@@ -58,16 +58,17 @@ export function useSavedViews({
   scheduleFocus,
   savedViewsStorage,
 }: UseSavedViewsOptions): UseSavedViewsResult {
-  const storageRef = useRef(savedViewsStorage);
+  const [storage] = useState(() => savedViewsStorage);
   const [initialRead] = useState(() => {
+    let stored: ReturnType<SavedViewsStorage['getSavedViews']>;
     try {
-      const stored = storageRef.current.getSavedViews();
-      return stored instanceof Promise
-        ? { pending: stored, savedViews: [] }
-        : { pending: null, savedViews: parseSavedViews(stored) };
+      stored = storage.getSavedViews();
     } catch {
       return { pending: null, savedViews: [] };
     }
+    return stored instanceof Promise
+      ? { pending: stored, savedViews: [] }
+      : { pending: null, savedViews: parseSavedViews(stored) };
   });
   const [savedViews, setSavedViews] = useState<SavedView[]>(
     initialRead.savedViews,
@@ -132,13 +133,13 @@ export function useSavedViews({
     if (pendingWrite) {
       const operation = pendingWrite
         .catch(() => undefined)
-        .then(() => storageRef.current.saveSavedViews(next));
+        .then(() => storage.saveSavedViews(next));
       trackWrite(operation, onSuccess, onFailure);
       return;
     }
 
     try {
-      const result = storageRef.current.saveSavedViews(next);
+      const result = storage.saveSavedViews(next);
       if (result instanceof Promise) {
         trackWrite(result, onSuccess, onFailure);
       } else {

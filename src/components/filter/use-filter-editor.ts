@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import {
   activeEditorSegment,
@@ -9,7 +9,10 @@ import {
   filterEditorControllerReducer,
   incompleteFromEditor,
 } from './filter-editor-reducer.ts';
-import type { FilterEditorControllerAction } from './filter-editor-reducer.ts';
+import type {
+  FilterEditorControllerAction,
+  FilterEditorControllerState,
+} from './filter-editor-reducer.ts';
 import { createFilterEditorCommittedCommands } from './filter-editor-committed-commands.ts';
 import {
   booleanActiveIndex,
@@ -24,7 +27,6 @@ import { INCOMPLETE_DRAFT_SELECTOR } from '@/utilities/filter/dom-selectors.ts';
 import type { FilterFieldRegistry } from '@/utilities/filter/field-registry.ts';
 import { createFilterEntry } from '@/utilities/filter/filter-entry.ts';
 import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
-import { tokenPhrase } from '@/utilities/filter/formatting.ts';
 import type {
   FilterHistory,
   FilterHistoryAction,
@@ -78,25 +80,30 @@ export function useFilterEditor({
   scheduleFocus,
   announce,
 }: UseFilterEditorOptions) {
-  const [controllerState, dispatch] = useReducer(
-    filterEditorControllerReducer,
-    {
+  const [controllerState, setControllerState] =
+    useState<FilterEditorControllerState>(() => ({
       editor: IDLE_FILTER_EDITOR_STATE,
       incompleteDraft: null,
-    },
-  );
+    }));
   const stateRef = useRef(controllerState);
   const registryRef = useRef(fieldRegistry);
   const scheduleFocusRef = useRef(scheduleFocus);
   const announceRef = useRef(announce);
-  stateRef.current = controllerState;
-  registryRef.current = fieldRegistry;
-  scheduleFocusRef.current = scheduleFocus;
-  announceRef.current = announce;
+
+  useLayoutEffect(() => {
+    stateRef.current = controllerState;
+    registryRef.current = fieldRegistry;
+    scheduleFocusRef.current = scheduleFocus;
+    announceRef.current = announce;
+  }, [announce, controllerState, fieldRegistry, scheduleFocus]);
 
   const send = (action: FilterEditorControllerAction) => {
-    stateRef.current = filterEditorControllerReducer(stateRef.current, action);
-    dispatch(action);
+    const previousState = stateRef.current;
+    const nextState = filterEditorControllerReducer(previousState, action);
+    if (nextState === previousState) return;
+
+    stateRef.current = nextState;
+    setControllerState(nextState);
   };
 
   const preserveCurrent = (): boolean =>
@@ -104,41 +111,25 @@ export function useFilterEditor({
 
   const resetEditor = () => send({ type: 'idle', preserveCurrent: false });
 
+  // Construct this group only when a command runs. Passing callbacks that
+  // close over the synchronous controller ref during render prevents the
+  // React Compiler from optimizing this hook.
+  const getCommittedCommands = () =>
+    createFilterEditorCommittedCommands({
+      getFieldRegistry: () => registryRef.current,
+      getCurrentHistory,
+      applyFilterHistoryAction,
+      createConditionId,
+      resetEditor,
+      scheduleFocus,
+      announce,
+    });
   const commitFilter = (
     fieldKey: string,
     operator: FilterOperator,
     value: FilterCondition['value'],
     filterId: string | null,
-  ) => {
-    const field = registryRef.current.byKey.get(fieldKey);
-    if (!field || !operatorsForField(field).includes(operator)) return;
-    const condition = createFilterCondition(field, operator, value);
-    const validationEntry = createFilterEntry(
-      condition,
-      filterId ?? 'pending-filter',
-    );
-    if (
-      getFilterValidationIssue(validationEntry, registryRef.current.fields) !==
-      null
-    ) {
-      return;
-    }
-    send({ type: 'idle', preserveCurrent: false });
-    if (filterId === null) {
-      const id = createConditionId();
-      const filter = createFilterEntry(condition, id);
-      scheduleFocus({ type: 'addInput' });
-      if (applyFilterHistoryAction({ type: 'add', filter })) {
-        announce(`Filter added: ${tokenPhrase(filter, field)}`);
-      }
-      return;
-    }
-    const filter = createFilterEntry(condition, filterId);
-    scheduleFocus({ type: 'token', id: filterId });
-    if (applyFilterHistoryAction({ type: 'update', id: filterId, filter })) {
-      announce(`Filter updated: ${tokenPhrase(filter, field)}`);
-    }
-  };
+  ) => getCommittedCommands().commitFilter(fieldKey, operator, value, filterId);
 
   const cancel = () => {
     const editor = stateRef.current.editor;
@@ -416,14 +407,14 @@ export function useFilterEditor({
     scheduleFocus({ type: 'addInput' });
   };
 
-  const committedCommands = createFilterEditorCommittedCommands({
-    getFieldRegistry: () => registryRef.current,
-    getCurrentHistory,
-    applyFilterHistoryAction,
-    resetEditor,
-    scheduleFocus,
-    announce,
-  });
+  const removeFilter = (id: string) => getCommittedCommands().removeFilter(id);
+  const removeEnumValue = (id: string, value: string) =>
+    getCommittedCommands().removeEnumValue(id, value);
+  const clearAll = () => getCommittedCommands().clearAll();
+  const undo = () => getCommittedCommands().undo();
+  const redo = () => getCommittedCommands().redo();
+  const flipJoiner = (index: number) =>
+    getCommittedCommands().flipJoiner(index);
 
   useEffect(() => {
     const current = stateRef.current;
@@ -487,6 +478,11 @@ export function useFilterEditor({
     commitDraft,
     resumeIncompleteDraft,
     discardIncompleteDraft,
-    ...committedCommands,
+    removeFilter,
+    removeEnumValue,
+    clearAll,
+    undo,
+    redo,
+    flipJoiner,
   };
 }

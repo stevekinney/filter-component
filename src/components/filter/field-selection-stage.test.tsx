@@ -1,10 +1,25 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
-import { FieldSelectionStage } from './filter-popover-stages.tsx';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { FilterEditorState } from './filter-editor-state.ts';
 import type { FilterPopoverProps } from './filter-popover.tsx';
 import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
 import type { FilterFieldDefinition } from '@/types/filter.ts';
+
+const fieldOptionRenderProbe = vi.hoisted(() => vi.fn());
+
+vi.mock('@/utilities/filter/formatting.ts', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@/utilities/filter/formatting.ts')>();
+  return {
+    ...actual,
+    fieldLabel: (...arguments_: Parameters<typeof actual.fieldLabel>) => {
+      fieldOptionRenderProbe(arguments_[0].key);
+      return actual.fieldLabel(...arguments_);
+    },
+  };
+});
+
+import { FieldSelectionStage } from './filter-popover-stages.tsx';
 
 const FIELDS = [
   { key: 'name', label: 'Name', type: 'string' },
@@ -34,10 +49,14 @@ function fieldState(
   };
 }
 
-function popoverProps(state: FilterEditorState): FilterPopoverProps {
+function popoverProps(
+  state: FilterEditorState,
+  fieldResults: readonly FilterFieldDefinition[] = FIELDS,
+): FilterPopoverProps {
   return {
     state,
     fields: FIELDS,
+    fieldResults,
     editingFilter: STRING_ENTRY,
     idPrefix: 'popover',
     resolveAnchor: () => document.body,
@@ -55,6 +74,8 @@ function popoverProps(state: FilterEditorState): FilterPopoverProps {
 }
 
 describe('FieldSelectionStage', () => {
+  beforeEach(() => fieldOptionRenderProbe.mockClear());
+
   it('renders the creation list without a search box and delegates pointer events', () => {
     const props = popoverProps(fieldState({ filterId: null }));
     render(
@@ -77,8 +98,12 @@ describe('FieldSelectionStage', () => {
     expect(props.onSelectField).toHaveBeenCalledWith('amount');
   });
 
-  it('searches, clamps the active result, and handles every search key path', () => {
-    const props = popoverProps(fieldState({ query: 'a', activeIndex: 99 }));
+  it('uses shared results, clamps the active result, and handles every search key path', () => {
+    const sharedResults = [FIELDS[1], FIELDS[2]];
+    const props = popoverProps(
+      fieldState({ query: 'a', activeIndex: 99 }),
+      sharedResults,
+    );
     const view = render(
       <FieldSelectionStage
         {...props}
@@ -100,6 +125,7 @@ describe('FieldSelectionStage', () => {
 
     const noResults = popoverProps(
       fieldState({ query: 'not present', activeIndex: 1 }),
+      [],
     );
     view.rerender(
       <FieldSelectionStage
@@ -125,5 +151,38 @@ describe('FieldSelectionStage', () => {
       key: 'Tab',
     });
     expect(emptyQuery.onSelectField).not.toHaveBeenCalled();
+  });
+
+  it('rerenders only rows whose active state changes', () => {
+    const fieldResults = FIELDS.slice(0, 3);
+    const initialState = fieldState({ activeIndex: 0 });
+    const props = popoverProps(initialState, fieldResults);
+    const view = render(
+      <FieldSelectionStage {...props} state={initialState} />,
+    );
+
+    expect(fieldOptionRenderProbe.mock.calls.map(([key]) => key)).toEqual([
+      'name',
+      'amount',
+      'active',
+    ]);
+
+    fieldOptionRenderProbe.mockClear();
+    view.rerender(
+      <FieldSelectionStage {...props} state={fieldState({ activeIndex: 1 })} />,
+    );
+    expect(fieldOptionRenderProbe.mock.calls.map(([key]) => key)).toEqual([
+      'name',
+      'amount',
+    ]);
+
+    fieldOptionRenderProbe.mockClear();
+    view.rerender(
+      <FieldSelectionStage {...props} state={fieldState({ activeIndex: 2 })} />,
+    );
+    expect(fieldOptionRenderProbe.mock.calls.map(([key]) => key)).toEqual([
+      'amount',
+      'active',
+    ]);
   });
 });

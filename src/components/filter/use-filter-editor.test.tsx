@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { enumActiveIndex } from './filter-editor-reconciliation.ts';
+import * as filterEditorReducerModule from './filter-editor-reducer.ts';
 import { useFilterEditor } from './use-filter-editor.ts';
 import type { FocusTarget } from './use-filter-focus.ts';
 import { createFilterEntry } from '@/utilities/filter/filter-entry.ts';
@@ -121,6 +122,29 @@ describe('enumActiveIndex', () => {
 });
 
 describe('useFilterEditor stage commands', () => {
+  it('reduces each same-event command exactly once against the latest state', () => {
+    const reducerSpy = vi.spyOn(
+      filterEditorReducerModule,
+      'filterEditorControllerReducer',
+    );
+    const hook = setupEditor();
+    reducerSpy.mockClear();
+
+    act(() => {
+      hook.result.current.openNewFieldPicker('');
+      hook.result.current.selectField('name');
+      hook.result.current.changeActiveIndex(2);
+    });
+
+    expect(reducerSpy).toHaveBeenCalledTimes(3);
+    expect(hook.result.current.editorState).toMatchObject({
+      stage: 'operator',
+      fieldKey: 'name',
+      activeIndex: 2,
+    });
+    reducerSpy.mockRestore();
+  });
+
   it('ignores commands that do not belong to the current stage', () => {
     const hook = setupEditor();
     act(() => {
