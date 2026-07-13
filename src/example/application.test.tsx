@@ -13,9 +13,13 @@ describe('Application (demo parent)', () => {
     const activeDeals = DEALS.filter((deal) => deal.active === true);
     // The count is split across a <strong> and a text node, so match on the
     // container's full text content rather than a single node.
-    expect(screen.getByText(/of \d+ deals/)).toHaveTextContent(
+    const resultCount = screen.getByText(
+      (_content, element) => element?.classList.contains('demo-count') ?? false,
+    );
+    expect(resultCount).toHaveTextContent(
       `${activeDeals.length} of ${DEALS.length} deals`,
     );
+    expect(resultCount.querySelectorAll('strong')).toHaveLength(2);
     expect(screen.getByText('Acme Corp renewal')).toBeInTheDocument();
     expect(screen.queryByText('Globex onboarding')).not.toBeInTheDocument();
   });

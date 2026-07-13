@@ -12,7 +12,7 @@ import {
 } from '@/example/records.ts';
 import type { Deal } from '@/example/records.ts';
 import '@/components/filter/filter-component.css';
-import '@/example/demo.css';
+import '@/example/example.css';
 
 type LogEntry = {
   id: number;
@@ -69,7 +69,8 @@ function ResultCount({ filteredDeals }: { filteredDeals: Deal[] | null }) {
   if (!filteredDeals) return null;
   return (
     <span className="demo-count">
-      <strong>{filteredDeals.length}</strong> of {DEALS.length} deals
+      <strong>{filteredDeals.length}</strong> of <strong>{DEALS.length}</strong>{' '}
+      deals
     </span>
   );
 }
@@ -218,24 +219,22 @@ function Application() {
         onChange={handleFiltersChange}
       />
 
-      <output className="demo-status">
+      <div className="demo-status">
+        <label>
+          <input
+            type="checkbox"
+            checked={disabled}
+            onChange={(event) => setDisabled(event.target.checked)}
+          />
+          Disabled
+        </label>
         <ResultCount filteredDeals={filteredDeals} />
-      </output>
+      </div>
 
       <DealsTable filteredDeals={filteredDeals} />
 
-      <section aria-label="Example harness" className="demo-harness">
-        <div className="demo-harness-bar">
-          <label>
-            <input
-              type="checkbox"
-              checked={disabled}
-              onChange={(event) => setDisabled(event.target.checked)}
-            />
-            Disabled
-          </label>
-        </div>
-        <div className="demo-harness-panes">
+      <section aria-label="Example harness" className="example">
+        <div className="example-panes">
           <div>
             <h2>Current state</h2>
             <pre>{JSON.stringify(currentFilters, null, 2)}</pre>

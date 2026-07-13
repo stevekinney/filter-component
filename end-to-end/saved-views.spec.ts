@@ -144,8 +144,19 @@ test.describe('saved views', () => {
       exact: true,
     });
     await expect(activeDeals).toBeFocused();
+    const activeDealsRow = activeDeals.locator('..');
+    await expect
+      .poll(() =>
+        activeDealsRow.evaluate((row) => getComputedStyle(row).outlineStyle),
+      )
+      .toBe('solid');
+    await expect
+      .poll(() =>
+        activeDeals.evaluate((button) => getComputedStyle(button).outlineStyle),
+      )
+      .toBe('none');
 
-    // Arrows wrap; Home/End jump; ArrowRight/ArrowLeft reach the × button.
+    // Arrows wrap; Home/End jump; ArrowRight/ArrowLeft reach the trash button.
     await page.keyboard.press('ArrowDown');
     await expect(corpDeals).toBeFocused();
     await page.keyboard.press('ArrowDown');
@@ -155,9 +166,26 @@ test.describe('saved views', () => {
     await page.keyboard.press('Home');
     await expect(activeDeals).toBeFocused();
     await page.keyboard.press('ArrowRight');
-    await expect(
-      popover(page).getByRole('button', { name: 'Remove view: Active deals' }),
-    ).toBeFocused();
+    const removeActiveDeals = popover(page).getByRole('button', {
+      name: 'Remove view: Active deals',
+    });
+    await expect(removeActiveDeals).toBeFocused();
+    await expect
+      .poll(() =>
+        removeActiveDeals.evaluate((button) => {
+          const style = getComputedStyle(button);
+          return {
+            borderRadius: style.borderRadius,
+            outlineStyle: style.outlineStyle,
+          };
+        }),
+      )
+      .toEqual({ borderRadius: '50%', outlineStyle: 'solid' });
+    await expect
+      .poll(() =>
+        activeDealsRow.evaluate((row) => getComputedStyle(row).outlineStyle),
+      )
+      .toBe('none');
     await page.keyboard.press('ArrowLeft');
     await expect(activeDeals).toBeFocused();
 

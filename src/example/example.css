@@ -10,14 +10,14 @@
 }
 
 /* Section-label text shared by the table header and the pane headings. */
-:where(.demo-table th, .demo-harness-panes h2) {
+:where(.demo-table th, .example-panes h2) {
   font-size: 11px;
   font-weight: 500;
   color: var(--neutral-alpha-600);
 }
 
 /* Compact monospace shared by the payload pane and the event log. */
-:where(.demo-harness-panes pre, .demo-log) {
+:where(.example-panes pre, .demo-log) {
   font-family: SFMono-Regular, Consolas, Menlo, monospace;
   font-size: 11px;
   line-height: 16px;
@@ -27,24 +27,10 @@
 
 .demo-header {
   h1 {
-    display: flex;
-    align-items: center;
-    gap: 10px;
     margin: 0;
     font-size: 20px;
     line-height: 28px;
     font-weight: 700;
-  }
-
-  /* A small gradient mark to give the sterile header a brand anchor. */
-  h1::before {
-    content: '';
-    width: 22px;
-    height: 22px;
-    border-radius: 7px;
-    background: var(--gradient-brand);
-    box-shadow: 0 2px 6px -1px
-      color-mix(in oklch, var(--coral-500) 45%, transparent);
   }
 
   p {
@@ -57,9 +43,25 @@
   min-height: 24px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--neutral-alpha-600);
+    cursor: pointer;
+  }
+
+  input[type='checkbox'] {
+    accent-color: var(--blue-500);
+  }
 }
 
 .demo-count {
+  margin-left: auto;
+  text-align: right;
   color: var(--neutral-alpha-600);
 
   strong {
@@ -69,7 +71,7 @@
 }
 
 /* Shared card surface for the results and the harness. */
-:where(.demo-card, .demo-harness) {
+:where(.demo-card, .example) {
   border: 1px solid var(--neutral-alpha-200);
   border-radius: 10px;
   overflow: hidden;
@@ -80,6 +82,10 @@
 
 .demo-card {
   background: var(--neutral-0);
+}
+
+.example {
+  background: var(--neutral-100);
 }
 
 .demo-table {
@@ -174,42 +180,7 @@
   background: var(--teal-500);
 }
 
-.demo-harness-bar {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--neutral-alpha-300);
-  background: var(--neutral-100);
-
-  label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    color: var(--neutral-alpha-600);
-    cursor: pointer;
-  }
-
-  select {
-    padding: 2px 4px;
-    border: 1px solid var(--neutral-alpha-300);
-    border-radius: 4px;
-    background: var(--neutral-0);
-  }
-
-  input[type='checkbox'] {
-    accent-color: var(--blue-500);
-  }
-}
-
-.demo-harness-title {
-  flex: 1;
-  font-weight: 500;
-}
-
-.demo-harness-panes {
+.example-panes {
   display: grid;
   grid-template-columns: 1fr 1fr;
 

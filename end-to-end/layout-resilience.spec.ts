@@ -72,7 +72,8 @@ test.describe('layout resilience', () => {
       const inputStyle = getComputedStyle(input);
       return {
         borderStyle: rowStyle.borderBlockStartStyle,
-        focusStyle: inputStyle.outlineStyle,
+        inputFocusStyle: inputStyle.outlineStyle,
+        rowFocusStyle: rowStyle.outlineStyle,
         surface: rowStyle.backgroundColor,
         text: formStyle.color,
         textToken: formStyle.getPropertyValue('--filter-text').trim(),
@@ -81,7 +82,8 @@ test.describe('layout resilience', () => {
     });
 
     expect(styles.borderStyle).toBe('solid');
-    expect(styles.focusStyle).toBe('solid');
+    expect(styles.inputFocusStyle).toBe('none');
+    expect(styles.rowFocusStyle).toBe('solid');
     expect(styles.surface).not.toBe('rgba(0, 0, 0, 0)');
     expect(styles.text).not.toBe('rgba(0, 0, 0, 0)');
     expect(styles.textToken).not.toContain('var(');
@@ -217,7 +219,7 @@ test.describe('layout resilience', () => {
     await expectFilterRowDoesNotOverflow(page);
   });
 
-  test('the add-filter input has a visible keyboard focus indicator', async ({
+  test('the add-filter input indicates keyboard focus on the full row', async ({
     page,
   }) => {
     await openReadyDemo(page);
@@ -225,11 +227,41 @@ test.describe('layout resilience', () => {
     await expect(addFilterInput(page)).toBeFocused();
     await expect
       .poll(() =>
+        page
+          .locator('.filter-row')
+          .evaluate((row) => getComputedStyle(row).outlineStyle),
+      )
+      .toBe('solid');
+    await expect
+      .poll(() =>
         addFilterInput(page).evaluate(
           (input) => getComputedStyle(input).outlineStyle,
         ),
       )
+      .toBe('none');
+  });
+
+  test('an action button keeps its compact focus ring without activating the row', async ({
+    page,
+  }) => {
+    await openReadyDemo(page);
+    const savedViewsButton = page.getByRole('button', { name: 'Saved views' });
+    await savedViewsButton.focus();
+    await expect(savedViewsButton).toBeFocused();
+    await expect
+      .poll(() =>
+        savedViewsButton.evaluate(
+          (button) => getComputedStyle(button).outlineStyle,
+        ),
+      )
       .toBe('solid');
+    await expect
+      .poll(() =>
+        page
+          .locator('.filter-row')
+          .evaluate((row) => getComputedStyle(row).outlineStyle),
+      )
+      .toBe('none');
   });
 
   test('a destructive draft action keeps its focus ring while hovered', async ({

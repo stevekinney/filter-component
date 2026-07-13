@@ -182,9 +182,7 @@ test.describe('incomplete drafts', () => {
     await page.getByRole('heading', { name: 'Filter' }).click();
     // Results still reflect only the committed seed filter.
     await expect(resultCount(page)).toHaveText('8 of 12 deals');
-    await expect(page.locator('.demo-harness-panes pre')).not.toContainText(
-      'zzz',
-    );
+    await expect(page.locator('.example-panes pre')).not.toContainText('zzz');
   });
 
   test('starting a new composition replaces the incomplete draft when abandoned again', async ({

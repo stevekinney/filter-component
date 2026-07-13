@@ -1,4 +1,4 @@
-import { Bookmark, Check, Plus, X } from 'lucide-react';
+import { Bookmark, Check, Plus, Trash2, X } from 'lucide-react';
 import { useEffect, useId, useReducer, useRef } from 'react';
 import type { KeyboardEvent, ReactNode, RefObject } from 'react';
 import {
@@ -474,7 +474,7 @@ export function SavedViewsControls({
                       title="Remove this view"
                       onClick={() => removeView(view)}
                     >
-                      <X aria-hidden="true" size={13} />
+                      <Trash2 aria-hidden="true" size={14} />
                     </button>
                   </li>
                 );

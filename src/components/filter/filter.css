@@ -158,6 +158,13 @@
   border: 1px solid var(--filter-border);
   border-radius: var(--filter-radius-container);
   background: var(--filter-surface);
+
+  /* Text entry belongs to the filter row as a whole. Keep its focus state on
+     the container; compact action buttons retain their own circular rings. */
+  &:has(.filter-add-input:focus-visible) {
+    outline: var(--filter-focus-ring);
+    outline-offset: 1px;
+  }
 }
 
 /* The composer-and-actions block: the add-filter input and the rail as a
@@ -187,12 +194,6 @@
 
   &::placeholder {
     color: var(--filter-text-placeholder);
-  }
-
-  &:focus-visible {
-    outline: var(--filter-focus-ring);
-    outline-offset: 1px;
-    background: var(--filter-surface);
   }
 }
 

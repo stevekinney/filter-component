@@ -46,6 +46,11 @@
   display: flex;
   align-items: stretch;
 
+  &:has(.filter-saved-views-load:focus-visible) {
+    outline: var(--filter-focus-ring);
+    outline-offset: -2px;
+  }
+
   /* The active view (its group matches the current one) is tinted; the check
      in the load button carries the same state without relying on color. */
   &.is-active {
@@ -66,6 +71,10 @@
 
   &:hover {
     background: var(--filter-surface-hover);
+  }
+
+  &:focus-visible {
+    outline: none;
   }
 }
 
@@ -100,8 +109,15 @@
 
 .filter-saved-views-remove {
   display: flex;
+  flex: none;
   align-items: center;
-  padding: 0 10px;
+  justify-content: center;
+  align-self: center;
+  width: 28px;
+  height: 28px;
+  margin-inline: 4px;
+  padding: 0;
+  border-radius: 50%;
   color: var(--filter-text-muted);
 
   &:hover {

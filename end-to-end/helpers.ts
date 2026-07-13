@@ -34,7 +34,7 @@ export const liveRegion = (page: Page): Locator =>
 
 /** The onChange payload pane rendered by the demo parent. */
 export const onChangePayloadPane = (page: Page): Locator =>
-  page.locator('.demo-harness-panes pre');
+  page.locator('.example-panes pre');
 
 /**
  * Load the demo and wait for the seeded "Active is true" filter to apply
