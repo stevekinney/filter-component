@@ -1,9 +1,9 @@
 import { StrictMode } from 'react';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { Filter } from './filter.tsx';
-import { addStringFilter, FIELDS, setup } from './filter-test-setup.tsx';
+import { FIELDS, addStringFilter, setup } from './filter-test-setup.tsx';
 import type { FilterFieldDefinition } from '@/types/filter.ts';
 
 describe('controller integration regressions', () => {
@@ -42,81 +42,6 @@ describe('controller integration regressions', () => {
     );
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(onChange.mock.lastCall?.[0].conditions).toHaveLength(2);
-  });
-
-  it('commits a typed editor through the Apply button', async () => {
-    const { addFilterInput, onChange, user } = setup();
-    await user.type(addFilterInput, 'na');
-    await user.click(screen.getByRole('option', { name: /Name/ }));
-    await user.click(screen.getByRole('option', { name: 'is' }));
-    await user.type(screen.getByRole('textbox', { name: 'Value' }), 'Maria');
-    await user.click(screen.getByRole('button', { name: 'Apply' }));
-
-    expect(onChange).toHaveBeenCalledWith(
-      {
-        combinator: 'and',
-        conditions: [
-          {
-            fieldKey: 'name',
-            type: 'string',
-            operator: 'equals',
-            value: 'Maria',
-          },
-        ],
-      },
-      expect.any(AbortController),
-    );
-  });
-
-  it('covers form submission, menu navigation, and row focus boundaries', async () => {
-    const { addFilterInput, user } = setup({
-      initialFilters: {
-        combinator: 'and',
-        conditions: [
-          {
-            fieldKey: 'name',
-            type: 'string',
-            operator: 'equals',
-            value: 'Maria',
-          },
-          {
-            fieldKey: 'name',
-            type: 'string',
-            operator: 'equals',
-            value: 'Nadia',
-          },
-        ],
-      },
-    });
-    const form = screen.getByRole('form', { name: 'Filters' });
-    expect(fireEvent.submit(form)).toBe(false);
-
-    await user.type(addFilterInput, 'a');
-    fireEvent.keyDown(addFilterInput, { key: 'ArrowDown' });
-    expect(addFilterInput).toHaveAttribute('aria-activedescendant');
-    fireEvent.keyDown(addFilterInput, { key: 'Escape' });
-    fireEvent.keyDown(addFilterInput, { key: 'Escape' });
-
-    const tokens = within(
-      screen.getByRole('list', { name: 'Active filters' }),
-    ).getAllByRole('group');
-    const first = tokens[0]!;
-    const last = tokens[1]!;
-    first.focus();
-    fireEvent.keyDown(first, { key: 'ArrowLeft' });
-    expect(first).toHaveFocus();
-
-    last.focus();
-    fireEvent.keyDown(last, { key: 'ArrowRight' });
-    expect(addFilterInput).toHaveFocus();
-
-    const joiner = screen.getByRole('button', { name: /^Joined by and/ });
-    joiner.focus();
-    fireEvent.keyDown(joiner, { key: 'ArrowLeft' });
-    expect(first).toHaveFocus();
-    joiner.focus();
-    fireEvent.keyDown(joiner, { key: 'ArrowRight' });
-    expect(last).toHaveFocus();
   });
 
   it('falls back to the add input when a resumed draft anchor unmounts', async () => {

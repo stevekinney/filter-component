@@ -49,13 +49,13 @@ export type FilterOperator = FilterOperatorsByFieldType[FilterFieldType];
 
 export type WithinLastUnit = 'days' | 'weeks' | 'months';
 
-/** Structured duration for the `withinLast` operator. */
+/** Amount and unit used by the date `withinLast` operator. */
 export type WithinLastValue = {
   amount: number;
   unit: WithinLastUnit;
 };
 
-/** Inclusive range for `between` operators. */
+/** Inclusive endpoints for number and date `between` operators. */
 export type RangeValue<Scalar> = {
   from: Scalar;
   to: Scalar;
@@ -135,23 +135,15 @@ export type FilterFieldDefinition<T extends FilterFieldType = FilterFieldType> =
         : { readonly options?: never })
     : never;
 
-/** A readonly flat collection of committed filter conditions. */
 export type FilterList = readonly FilterCondition[];
 
-/** How multiple conditions combine: every condition or any condition. */
 export type FilterCombinator = 'and' | 'or';
 
 /**
- * What the component reports through `onChange`. Emitted payloads are always
- * in disjunctive-normal form: either a flat all-`and` root, or an `or` root
- * whose children are bare conditions and `and`-groups of at least two
- * conditions — no `or` groups inside, no single-member groups, no depth
- * beyond two. The type is recursive so foreign trees (persisted payloads,
- * `initialFilters` input) can be accepted and normalized on the way in;
- * on the way out, groups never contain groups. Input trees that are not
- * DNF-equivalent (an `or` group joined into an `and` context) linearize by
- * reading order rather than by distribution — pass back emitted payloads to
- * guarantee exact restoration (see `fromFilterGroup`).
+ * Public filter expression. Emitted groups are canonical: either one flat
+ * `and` group or an `or` group containing conditions and multi-condition `and`
+ * groups. Recursive inputs are accepted; non-DNF trees flatten in reading
+ * order rather than being distributed.
  */
 export type FilterGroup = {
   combinator: FilterCombinator;
@@ -159,13 +151,9 @@ export type FilterGroup = {
 };
 
 /**
- * Props for the public `Filter` component. Extends the native form interface;
- * `onSubmit` is reserved (native submit is prevented) and `onChange` reports
- * the full valid-only filter group after every committed change.
- *
- * Each `onChange` call receives a fresh `AbortController`; the previous
- * call's controller is aborted first. Pass `abortController.signal` to any
- * async work (such as a `fetch`) so a newer change cancels it.
+ * Props for `Filter`. Native submit is prevented. Each committed change reports
+ * the complete valid group with a fresh `AbortController` after aborting the
+ * previous controller.
  */
 export type FilterProps = Omit<
   ComponentPropsWithRef<'form'>,
@@ -174,8 +162,8 @@ export type FilterProps = Omit<
   fields: readonly FilterFieldDefinition[];
   onChange?: (filters: FilterGroup, abortController: AbortController) => void;
   disabled?: boolean;
-  /** Silent, non-undoable seed read only when the component mounts. */
+  /** Initial value read once on mount; it is neither emitted nor added to history. */
   initialFilters?: FilterGroup;
-  /** Saved-view persistence read once on mount; defaults to local storage. */
+  /** Persistence adapter read once on mount; defaults to local storage. */
   savedViewsStorage?: SavedViewsStorage;
 };

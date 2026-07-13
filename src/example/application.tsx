@@ -6,8 +6,8 @@ import type {
 } from '@/components/filter/index.ts';
 import { applyFilters } from '@/example/apply-filters.ts';
 import {
-  DEAL_FILTER_FIELDS,
   DEALS,
+  DEAL_FILTER_FIELDS,
   INITIAL_FILTERS,
 } from '@/example/records.ts';
 import type { Deal } from '@/example/records.ts';
@@ -20,12 +20,7 @@ type LogEntry = {
   tone: 'neutral' | 'success';
 };
 
-/**
- * Test hooks: `?invalid` seeds a condition referencing a missing field,
- * `?narrowBoolean` limits Active to equality, and `?longLabel` injects an
- * unbroken field label. They let browser suites exercise injected-schema
- * behavior without adding demo-only controls.
- */
+/** URL flags used by browser tests to inject invalid, narrowed, and long-label schemas. */
 function initialFilterGroup(): FilterGroup {
   const hasInvalidFlag =
     typeof window !== 'undefined' &&
@@ -64,7 +59,6 @@ function exampleFilterFields(): readonly FilterFieldDefinition[] {
   });
 }
 
-/** "N of M deals" once results have arrived. */
 function ResultCount({ filteredDeals }: { filteredDeals: Deal[] | null }) {
   if (!filteredDeals) return null;
   return (
@@ -75,7 +69,6 @@ function ResultCount({ filteredDeals }: { filteredDeals: Deal[] | null }) {
   );
 }
 
-/** Pipeline-stage → color tone, echoing a colored CRM pipeline. */
 const STAGE_TONES = {
   Lead: 'lead',
   Contacted: 'contacted',
@@ -104,7 +97,6 @@ function ActiveCell({ active }: { active: boolean | null }) {
   );
 }
 
-/** The filtered results table; nothing renders until the first apply lands. */
 function DealsTable({ filteredDeals }: { filteredDeals: Deal[] | null }) {
   if (!filteredDeals) return null;
   return (
@@ -152,12 +144,8 @@ function DealsTable({ filteredDeals }: { filteredDeals: Deal[] | null }) {
 }
 
 /**
- * The demo parent. It injects `fields` and `onChange` into the filter
- * component and owns everything the component deliberately doesn't: applying
- * a filter group to an in-memory array and rendering the results. Applying
- * is synchronous here; a real parent's async apply, its loading and stale
- * handling, and its use of the `onChange` AbortController are demonstrated in
- * `src/example/parent-contract.test.tsx`.
+ * Demo parent that applies emitted groups to in-memory records; `Filter`
+ * remains data-source agnostic.
  */
 function Application() {
   const [disabled, setDisabled] = useState(false);

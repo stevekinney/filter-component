@@ -3,7 +3,7 @@ import type {
   FilterGroup,
 } from '@/components/filter/index.ts';
 
-/** Widened shape checked while the literal fixture remains the source of truth. */
+/** Widened record contract checked against the literal fixture below. */
 type DealRecordShape = {
   id: number;
   name: string;
@@ -125,18 +125,16 @@ const DEAL_RECORDS = [
   },
 ] as const satisfies readonly DealRecordShape[];
 
-/** Pipeline stages come from the records, so fixture data cannot outrun typing. */
-export type PipelineStage = NonNullable<(typeof DEAL_RECORDS)[number]['stage']>;
+type PipelineStage = NonNullable<(typeof DEAL_RECORDS)[number]['stage']>;
 
-/** A CRM-ish deal record for the in-memory demo parent. */
 export type Deal = Omit<DealRecordShape, 'stage'> & {
   stage: PipelineStage | null;
 };
 
-/** Mutable demo input copied from the checked literal source above. */
+/** Mutable copy of the checked readonly fixture. */
 export const DEALS: Deal[] = [...DEAL_RECORDS];
 
-export const STAGES = [
+const STAGES = [
   'Lead',
   'Contacted',
   'Demo scheduled',
@@ -160,7 +158,6 @@ export const DEAL_FILTER_FIELDS = [
   { key: 'lastEmailed', label: 'Last emailed', type: 'date' },
 ] as const satisfies readonly FilterFieldDefinition[];
 
-/** Filters supplied through the component's `initialFilters` prop on mount. */
 export const INITIAL_FILTERS: FilterGroup = {
   combinator: 'and',
   conditions: [

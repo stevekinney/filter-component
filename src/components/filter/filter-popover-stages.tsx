@@ -1,13 +1,11 @@
 import { Check, Square, SquareCheck, X } from 'lucide-react';
 import { memo } from 'react';
 import type { KeyboardEvent } from 'react';
-import { fieldOptionId } from '@/utilities/filter/dom-selectors.ts';
 import { fieldLabel } from '@/utilities/filter/formatting.ts';
 import {
-  booleanChoicesForField,
   OPERATOR_LABELS,
+  booleanChoicesForField,
   operatorsForField,
-  usesBooleanChoiceStage,
 } from '@/utilities/filter/operators.ts';
 import { clampIndex, stepIndex } from '@/utilities/list-navigation.ts';
 import { PopoverValidationError } from './filter-popover-error.tsx';
@@ -18,12 +16,11 @@ import type {
 import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
 import type { FilterFieldDefinition } from '@/types/filter.ts';
 
-/** Single-select rows for the operator stage (or the collapsed boolean list). */
 function buildOperatorOrBooleanChoices(
   field: FilterFieldDefinition,
   editingFilter: FilterEntry | null,
 ): { value: string; label: string; selected: boolean }[] {
-  if (usesBooleanChoiceStage(field)) {
+  if (field.type === 'boolean') {
     const selected =
       editingFilter?.operator === 'equals'
         ? String(editingFilter.value)
@@ -42,7 +39,6 @@ function buildOperatorOrBooleanChoices(
   }));
 }
 
-/** Check mark shown beside the currently committed selection. */
 function SelectedChoiceCheck({ selected }: { selected: boolean }) {
   if (!selected) return null;
   return (
@@ -50,7 +46,6 @@ function SelectedChoiceCheck({ selected }: { selected: boolean }) {
   );
 }
 
-/** Checked or unchecked box icon for multi-select rows. */
 function ChoiceCheckbox({ checked }: { checked: boolean }) {
   const Icon = checked ? SquareCheck : Square;
   return (
@@ -58,7 +53,6 @@ function ChoiceCheckbox({ checked }: { checked: boolean }) {
   );
 }
 
-/** The field-search input shown while editing an existing token's field. */
 function FieldSearchInput({
   state,
   idPrefix,
@@ -83,7 +77,7 @@ function FieldSearchInput({
         aria-expanded="true"
         aria-controls={`${idPrefix}-fields`}
         aria-activedescendant={
-          activeResult ? fieldOptionId(idPrefix, activeIndex) : undefined
+          activeResult ? `${idPrefix}-field-${activeIndex}` : undefined
         }
         aria-autocomplete="list"
         aria-label="Search fields"
@@ -105,7 +99,7 @@ type FieldOptionRowProps = {
   onSelectField: (key: string) => void;
 };
 
-/** Only the previous and next active rows need to update during navigation. */
+/** Memoized so navigation rerenders only rows whose active state changes. */
 const FieldOptionRow = memo(function FieldOptionRow({
   field,
   index,
@@ -116,7 +110,7 @@ const FieldOptionRow = memo(function FieldOptionRow({
 }: FieldOptionRowProps) {
   return (
     <div
-      id={fieldOptionId(idPrefix, index)}
+      id={`${idPrefix}-field-${index}`}
       role="option"
       aria-selected={active}
       data-active={active ? '' : undefined}
@@ -237,7 +231,7 @@ export function SingleChoiceStage(
   const activeIndex = clampIndex(state.activeIndex, options.length);
 
   const selectChoice = (value: string) => {
-    if (state.stage === 'operator' && usesBooleanChoiceStage(field)) {
+    if (state.stage === 'operator' && field.type === 'boolean') {
       const choice = booleanChoicesForField(field).find(
         (candidate) => candidate.value === value,
       );

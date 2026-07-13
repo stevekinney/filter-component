@@ -4,7 +4,7 @@ import {
   activeEditorSegment,
   findEditingFilter,
 } from './filter-editor-state.ts';
-import { DRAFT_PREVIEW_SELECTOR } from '@/utilities/filter/dom-selectors.ts';
+import type { FilterEditorState } from './filter-editor-state.ts';
 import { searchFields } from '@/utilities/filter/field-search.ts';
 import {
   FilterDraftPreview,
@@ -18,6 +18,7 @@ import { useFilterHistory } from './use-filter-history.ts';
 import { useFilterEditor } from './use-filter-editor.ts';
 import { useSavedViews } from './use-saved-views.ts';
 import { clampIndex, stepIndex } from '@/utilities/list-navigation.ts';
+import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
 import type { TokenSegment } from '@/utilities/filter/validation.ts';
 import { createFilterFieldRegistry } from '@/utilities/filter/field-registry.ts';
 import { stableSerialize } from '@/utilities/filter/stable-serialize.ts';
@@ -27,15 +28,77 @@ import type { FilterFieldDefinition, FilterProps } from '@/types/filter.ts';
 
 const NO_FIELD_RESULTS: readonly FilterFieldDefinition[] = [];
 
+function useFilterFieldSelection(
+  editorState: FilterEditorState,
+  fields: readonly FilterFieldDefinition[],
+) {
+  const isChoosingFilterField = editorState.stage === 'field';
+  const isChoosingNewFilterField =
+    isChoosingFilterField && editorState.filterId === null;
+  const fieldQuery = isChoosingFilterField ? editorState.query : null;
+  const fieldResults = useMemo(
+    () =>
+      fieldQuery === null ? NO_FIELD_RESULTS : searchFields(fields, fieldQuery),
+    [fieldQuery, fields],
+  );
+  const matchingFields = isChoosingNewFilterField
+    ? fieldResults
+    : NO_FIELD_RESULTS;
+  const activeFieldIndex = isChoosingNewFilterField
+    ? clampIndex(editorState.activeIndex, matchingFields.length)
+    : 0;
+  let inputQuery = '';
+  if (isChoosingNewFilterField && editorState.stage === 'field') {
+    inputQuery = editorState.query;
+  }
+
+  return {
+    activeFieldIndex,
+    canFocusTokens:
+      editorState.stage === 'idle' || editorState.filterId === null,
+    fieldResults,
+    inputQuery,
+    isChoosingNewFilterField,
+    matchingFields,
+  };
+}
+
+function getEditorPresentation(
+  editorState: FilterEditorState,
+  filters: readonly FilterEntry[],
+  findFilterField: (key: string) => FilterFieldDefinition | undefined,
+): {
+  activeDraftField: FilterFieldDefinition | undefined;
+  editingFilter: FilterEntry | null;
+  editingFilterId: string | null;
+  editingSegment: TokenSegment | null;
+} {
+  const editingFilter = findEditingFilter(editorState, filters);
+  if (editorState.stage === 'idle') {
+    return {
+      activeDraftField: undefined,
+      editingFilter,
+      editingFilterId: null,
+      editingSegment: null,
+    };
+  }
+
+  return {
+    activeDraftField:
+      editorState.stage === 'field'
+        ? undefined
+        : findFilterField(editorState.fieldKey),
+    editingFilter,
+    editingFilterId: editorState.filterId,
+    editingSegment:
+      editorState.filterId === null ? null : activeEditorSegment(editorState),
+  };
+}
+
 /**
- * Dependency-injected filter-token builder. The parent supplies the `fields`
- * and receives the full valid-only filter group — canonical two-level
- * disjunctive-normal form, derived from the joiner words between the chips —
- * through `onChange` after every committed change (add, edit, remove, clear,
- * joiner flip, undo, redo), along with an `AbortController` that is aborted
- * by the next change. The component never fetches, never touches URL state,
- * and never assumes a data source — applying the filters is entirely the
- * parent's business.
+ * Dependency-injected filter editor. Committed changes emit a canonical group
+ * and abort the previous change controller; applying the group remains the
+ * parent's responsibility.
  */
 export function Filter(properties: FilterProps) {
   'use no memo';
@@ -63,11 +126,13 @@ const CompiledFilter = memo(function CompiledFilter(
     disabled: disabledProperty,
     initialFilters,
     savedViewsStorage: savedViewsStorageProperty,
+    'aria-label': ariaLabelProperty,
     className,
     ...formProps
   } = properties;
   const disabled = disabledProperty ?? false;
   const savedViewsStorage = savedViewsStorageProperty ?? localSavedViewsStorage;
+  const ariaLabel = ariaLabelProperty ?? 'Filters';
   const idPrefix = useId();
   const filterIdCounterRef = useRef(0);
   const createConditionId = () =>
@@ -129,7 +194,6 @@ const CompiledFilter = memo(function CompiledFilter(
     flipJoiner,
   } = useFilterEditor({
     fieldRegistry,
-    filterFieldsetRef,
     popoverAnchorRef,
     getCurrentHistory,
     applyFilterHistoryAction,
@@ -147,7 +211,7 @@ const CompiledFilter = memo(function CompiledFilter(
   // unmounts on resume).
   const resolvePopoverAnchor = (): HTMLElement | null => {
     const draftPreview = filterFieldsetRef.current?.querySelector<HTMLElement>(
-      DRAFT_PREVIEW_SELECTOR,
+      '[data-draft-preview]',
     );
     if (draftPreview) return draftPreview;
     const captured = popoverAnchorRef.current;
@@ -173,23 +237,14 @@ const CompiledFilter = memo(function CompiledFilter(
     savedViewsStorage,
   });
 
-  const isChoosingFilterField = editorState.stage === 'field';
-  const isChoosingNewFilterField =
-    isChoosingFilterField && editorState.filterId === null;
-  const fieldQuery = isChoosingFilterField ? editorState.query : null;
-  const fieldResults = useMemo(
-    () =>
-      fieldQuery === null
-        ? NO_FIELD_RESULTS
-        : searchFields(validatedFields, fieldQuery),
-    [fieldQuery, validatedFields],
-  );
-  const matchingFields = isChoosingNewFilterField
-    ? fieldResults
-    : NO_FIELD_RESULTS;
-  const activeFieldIndex = isChoosingNewFilterField
-    ? clampIndex(editorState.activeIndex, matchingFields.length)
-    : 0;
+  const {
+    activeFieldIndex,
+    canFocusTokens,
+    fieldResults,
+    inputQuery,
+    isChoosingNewFilterField,
+    matchingFields,
+  } = useFilterFieldSelection(editorState, validatedFields);
 
   const openNewFilterFieldPicker = (query: string) => {
     popoverAnchorRef.current = addFilterInputRef.current;
@@ -218,24 +273,18 @@ const CompiledFilter = memo(function CompiledFilter(
 
   const moveFocusFromJoiner = (id: string) => focus({ type: 'token', id });
 
-  const editingFilter = findEditingFilter(editorState, filters);
-  const editingFilterId =
-    editorState.stage === 'idle' ? null : editorState.filterId;
-  const editingSegment: TokenSegment | null =
-    editingFilterId === null || editorState.stage === 'idle'
-      ? null
-      : activeEditorSegment(editorState);
-
-  const activeDraftField =
-    editorState.stage !== 'idle' && editorState.stage !== 'field'
-      ? findFilterField(editorState.fieldKey)
-      : undefined;
+  const { activeDraftField, editingFilter, editingFilterId, editingSegment } =
+    getEditorPresentation(editorState, filters, findFilterField);
+  const incompleteDraftField = incompleteDraft
+    ? findFilterField(incompleteDraft.fieldKey)
+    : undefined;
+  const lastFilterId = filters.at(-1)?.id ?? null;
 
   return (
     <form
       {...formProps}
       className={clsx('filter', className)}
-      aria-label={formProps['aria-label'] ?? 'Filters'}
+      aria-label={ariaLabel}
       onSubmit={(event) => event.preventDefault()}
     >
       {/* A natively disabled fieldset makes every control inside inert;
@@ -268,37 +317,25 @@ const CompiledFilter = memo(function CompiledFilter(
 
           <IncompleteDraftChip
             incompleteDraft={incompleteDraft}
-            field={
-              incompleteDraft
-                ? findFilterField(incompleteDraft.fieldKey)
-                : undefined
-            }
+            field={incompleteDraftField}
             visible={editorState.stage === 'idle'}
             disabled={disabled}
             onResume={resumeIncompleteDraft}
             onDiscard={discardIncompleteDraft}
           />
 
-          {/* Input and rail travel together as one flex item so they wrap to
-              the last line as a unit — the input grows to fill it and the rail
-              stays pinned to the bottom-right in every layout. */}
+          {/* Keep the input and action rail together when the token row wraps. */}
           <div className="filter-composer">
             <AddFilterCombobox
               inputRef={addFilterInputRef}
               idPrefix={idPrefix}
               disabled={disabled}
-              lastFilterId={filters.at(-1)?.id ?? null}
+              lastFilterId={lastFilterId}
               open={isChoosingNewFilterField}
-              query={
-                isChoosingNewFilterField && editorState.stage === 'field'
-                  ? editorState.query
-                  : ''
-              }
+              query={inputQuery}
               results={matchingFields}
               activeIndex={activeFieldIndex}
-              canFocusTokens={
-                editorState.stage === 'idle' || editorState.filterId === null
-              }
+              canFocusTokens={canFocusTokens}
               onOpenMenu={openNewFilterFieldPicker}
               onQueryChange={changeQuery}
               onNavigate={(delta) =>

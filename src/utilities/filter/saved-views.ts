@@ -6,27 +6,7 @@ import type { FilterGroup } from '@/types/filter.ts';
 
 export const SAVED_VIEWS_STORAGE_KEY = 'filter.saved-views';
 
-const EMPTY_SAVED_GROUP: FilterGroup = {
-  combinator: 'and',
-  conditions: [],
-};
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-/** Restores only the root defaults accepted by the documented v1 reader. */
-function withLegacyRootDefaults(value: unknown): unknown {
-  if (!isRecord(value)) return value;
-  return {
-    ...value,
-    combinator: value['combinator'] === undefined ? 'and' : value['combinator'],
-    conditions: value['conditions'] === undefined ? [] : value['conditions'],
-  };
-}
-
-const savedFilterGroupSchema = z
-  .preprocess(withLegacyRootDefaults, filterGroupSchema)
+const savedFilterGroupSchema = filterGroupSchema
   .refine(
     (group) =>
       group.conditions.every(
@@ -50,8 +30,8 @@ const savedFilterGroupSchema = z
 
 const savedViewSchema = z
   .object({
-    name: z.string().trim().min(1).default('Untitled view'),
-    group: savedFilterGroupSchema.default(EMPTY_SAVED_GROUP),
+    name: z.string().trim().min(1),
+    group: savedFilterGroupSchema,
   })
   .strict();
 

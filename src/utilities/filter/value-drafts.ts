@@ -23,16 +23,12 @@ export type DurationValueDraft = {
   unit: WithinLastUnit;
 };
 
-export type MultiSelectionValueDraft = {
+type MultiSelectionValueDraft = {
   kind: 'multiSelection';
   selectedOptions: string[];
 };
 
-/**
- * Transient value state. The discriminator keeps impossible combinations out
- * of the editor: a range cannot accidentally carry enum selections, and a
- * duration always has a valid unit shape before validation begins.
- */
+/** Discriminated transient state that keeps incompatible editor value shapes separate. */
 export type ValueDraft =
   | ScalarValueDraft
   | RangeValueDraft
@@ -70,7 +66,6 @@ function isDuration(value: CommittedValue): value is WithinLastValue {
   return typeof value === 'object' && 'amount' in value;
 }
 
-/** Rebuilds the draft a committed value was edited from. */
 export function createValueDraftFromCommittedValue(
   value: CommittedValue,
   kind: ValueEditorKind,
@@ -105,49 +100,41 @@ export function createValueDraftFromCommittedValue(
 }
 
 /**
- * Carries a committed value across a compatible operator-shape change.
- * Incompatible shapes fall back to a fresh draft for the next editor.
+ * Carries a committed value across compatible editor-shape changes; otherwise
+ * returns a fresh draft.
  */
 export function convertCommittedValueToDraft(
   value: CommittedValue,
-  previousEditorKind: ValueEditorKind,
   nextEditorKind: ValueEditorKind,
 ): ValueDraft {
   const emptyDraft = createEmptyValueDraft(nextEditorKind);
-  if (
-    emptyDraft.kind === 'multiSelection' &&
-    previousEditorKind === 'enumSingle' &&
-    typeof value === 'string'
-  ) {
-    return { ...emptyDraft, selectedOptions: [value] };
+  switch (nextEditorKind) {
+    case 'enumMulti':
+      return typeof value === 'string'
+        ? { kind: 'multiSelection', selectedOptions: [value] }
+        : emptyDraft;
+    case 'enumSingle': {
+      if (!Array.isArray(value)) return emptyDraft;
+      const firstValue = value[0];
+      return {
+        kind: 'scalar',
+        input: firstValue === undefined ? '' : String(firstValue),
+      };
+    }
+    case 'numberRange':
+    case 'dateRange':
+      return typeof value === 'number' || typeof value === 'string'
+        ? { kind: 'range', fromInput: String(value), toInput: '' }
+        : emptyDraft;
+    case 'number':
+    case 'date':
+      return isRange(value)
+        ? { kind: 'scalar', input: String(value.from) }
+        : emptyDraft;
+    case 'none':
+    case 'text':
+    case 'boolean':
+    case 'duration':
+      return emptyDraft;
   }
-  if (
-    emptyDraft.kind === 'scalar' &&
-    nextEditorKind === 'enumSingle' &&
-    previousEditorKind === 'enumMulti' &&
-    Array.isArray(value)
-  ) {
-    return {
-      ...emptyDraft,
-      input: value[0] === undefined ? '' : String(value[0]),
-    };
-  }
-  if (
-    emptyDraft.kind === 'scalar' &&
-    (nextEditorKind === 'number' || nextEditorKind === 'date') &&
-    (previousEditorKind === 'numberRange' ||
-      previousEditorKind === 'dateRange') &&
-    isRange(value)
-  ) {
-    return { ...emptyDraft, input: String(value.from) };
-  }
-  if (
-    emptyDraft.kind === 'range' &&
-    (nextEditorKind === 'numberRange' || nextEditorKind === 'dateRange') &&
-    (previousEditorKind === 'number' || previousEditorKind === 'date') &&
-    (typeof value === 'number' || typeof value === 'string')
-  ) {
-    return { ...emptyDraft, fromInput: String(value) };
-  }
-  return emptyDraft;
 }

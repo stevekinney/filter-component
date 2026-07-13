@@ -11,13 +11,6 @@ import {
   resultCount,
 } from './helpers.ts';
 
-/**
- * Saved views end to end: one bookmarks trigger opens a views menu whose
- * in-menu save action banks the current group to localStorage under a name;
- * each row loads a view (an undoable, onChange-reported committed change) or
- * removes it, and the collection survives a reload.
- */
-
 const savedViewsButton = (page: Page) =>
   page.getByRole('button', { name: 'Saved views' });
 
@@ -72,7 +65,6 @@ test.describe('saved views', () => {
       .click();
     await expect(liveRegion(page)).toHaveText('View loaded: Active deals');
 
-    // The loaded view replaces the whole group, and the parent re-applies.
     await expect(filterTokenList(page).getByRole('listitem')).toHaveCount(1);
     await expect(filterToken(page, 'Active is true')).toBeVisible();
     await expect(resultCount(page)).toHaveText('8 of 12 deals');
@@ -241,7 +233,6 @@ test.describe('saved views', () => {
     );
     await page.reload();
     await expect(resultCount(page)).toHaveText('8 of 12 deals');
-    // No views load, but the savable seeded group keeps the trigger present.
     await expect(savedViewsButton(page)).toBeVisible();
     await savedViewsButton(page).click();
     await expect(saveAction(page)).toBeVisible();

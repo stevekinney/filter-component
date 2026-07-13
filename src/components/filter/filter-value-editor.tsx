@@ -24,7 +24,6 @@ type FilterValueEditorProps = {
   onCancel: () => void;
 };
 
-/** Single text/number/date input for scalar editor kinds. */
 function ScalarValueInput({
   kind,
   draft,
@@ -55,7 +54,6 @@ function ScalarValueInput({
   );
 }
 
-/** From/To inputs for range editor kinds. */
 function RangeValueInputs({
   kind,
   draft,
@@ -100,7 +98,6 @@ function RangeValueInputs({
   );
 }
 
-/** Amount + unit inputs for the `withinLast` duration editor. */
 function DurationValueInputs({
   draft,
   describedBy,
@@ -198,7 +195,6 @@ function ValueControls({
   }
 }
 
-/** Typed value editor for scalar, range, and duration drafts. */
 export function FilterValueEditor({
   state,
   heading,

@@ -1,6 +1,5 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { enumActiveIndex } from './filter-editor-reconciliation.ts';
 import * as filterEditorReducerModule from './filter-editor-reducer.ts';
 import { useFilterEditor } from './use-filter-editor.ts';
 import type { FocusTarget } from './use-filter-focus.ts';
@@ -68,8 +67,9 @@ function setupEditor(
   const scheduleFocus = vi.fn<(target: FocusTarget) => void>();
   const announce = vi.fn<(message: string) => void>();
   const fieldset = document.createElement('fieldset');
+  const resumeButton = document.createElement('button');
+  fieldset.append(resumeButton);
   document.body.append(fieldset);
-  const fieldsetRef = { current: fieldset };
   const popoverAnchorRef = { current: null as HTMLElement | null };
   const initialRegistry = createFilterFieldRegistry(fields);
   const hook = renderHook(
@@ -82,7 +82,6 @@ function setupEditor(
     }) =>
       useFilterEditor({
         fieldRegistry,
-        filterFieldsetRef: fieldsetRef,
         popoverAnchorRef,
         getCurrentHistory: () => history,
         applyFilterHistoryAction,
@@ -99,7 +98,7 @@ function setupEditor(
     announce,
     applyFilterHistoryAction,
     fieldset,
-    fieldsetRef,
+    resumeButton,
     popoverAnchorRef,
     initialRegistry,
     getHistory: () => history,
@@ -108,18 +107,6 @@ function setupEditor(
     },
   };
 }
-
-describe('enumActiveIndex', () => {
-  it('uses zero when an enum-single field temporarily has no options', () => {
-    expect(
-      enumActiveIndex(
-        undefined,
-        { kind: 'scalar', input: 'Removed' },
-        'enumSingle',
-      ),
-    ).toBe(0);
-  });
-});
 
 describe('useFilterEditor stage commands', () => {
   it('reduces each same-event command exactly once against the latest state', () => {
@@ -153,7 +140,7 @@ describe('useFilterEditor stage commands', () => {
       hook.result.current.selectOperator('equals');
       hook.result.current.selectBooleanChoice('true');
       hook.result.current.commitDraft();
-      hook.result.current.resumeIncompleteDraft();
+      hook.result.current.resumeIncompleteDraft(hook.resumeButton);
     });
     expect(hook.result.current.editorState).toEqual({ stage: 'idle' });
     expect(hook.scheduleFocus).not.toHaveBeenCalled();
@@ -595,14 +582,13 @@ describe('useFilterEditor token and incomplete-draft flows', () => {
   it('resumes operator and value drafts and can discard them', () => {
     const hook = setupEditor();
     const incompleteElement = document.createElement('button');
-    incompleteElement.dataset['incompleteDraft'] = '1';
     hook.fieldset.append(incompleteElement);
 
     act(() => {
       hook.result.current.openNewFieldPicker('');
       hook.result.current.selectField('name');
       hook.result.current.browserDismiss();
-      hook.result.current.resumeIncompleteDraft();
+      hook.result.current.resumeIncompleteDraft(incompleteElement);
     });
     expect(hook.result.current.editorState).toMatchObject({
       stage: 'operator',
@@ -613,7 +599,7 @@ describe('useFilterEditor token and incomplete-draft flows', () => {
       hook.result.current.selectOperator('equals');
       hook.result.current.changeDraft({ kind: 'scalar', input: 'Maria' });
       hook.result.current.browserDismiss();
-      hook.result.current.resumeIncompleteDraft();
+      hook.result.current.resumeIncompleteDraft(incompleteElement);
     });
     expect(hook.result.current.editorState).toMatchObject({
       stage: 'value',
@@ -641,7 +627,7 @@ describe('useFilterEditor token and incomplete-draft flows', () => {
       { key: 'flex', type: 'number' },
     ]);
     hook.rerender({ fieldRegistry: changedRegistry, disabled: false });
-    act(() => hook.result.current.resumeIncompleteDraft());
+    act(() => hook.result.current.resumeIncompleteDraft(hook.resumeButton));
     expect(hook.result.current.editorState).toMatchObject({
       stage: 'field',
       filterId: null,
@@ -675,7 +661,7 @@ describe('useFilterEditor token and incomplete-draft flows', () => {
       ]),
       disabled: false,
     });
-    act(() => hook.result.current.resumeIncompleteDraft());
+    act(() => hook.result.current.resumeIncompleteDraft(hook.resumeButton));
     expect(hook.result.current.editorState).toMatchObject({
       stage: 'operator',
       fieldKey: 'stage',
@@ -690,7 +676,7 @@ describe('useFilterEditor token and incomplete-draft flows', () => {
       hook.result.current.browserDismiss();
     });
     hook.initialRegistry.byKey = new Map();
-    act(() => hook.result.current.resumeIncompleteDraft());
+    act(() => hook.result.current.resumeIncompleteDraft(hook.resumeButton));
     expect(hook.result.current.editorState).toEqual({ stage: 'idle' });
     expect(hook.result.current.incompleteDraft).toBeNull();
   });

@@ -28,8 +28,8 @@
   min-width: min(220px, calc(100vi - 16px));
   max-width: min(320px, calc(100vi - 16px));
 
-  /* Half a short viewport always fits on one side of the invoking control;
-     the list below becomes the scrolling region when content is taller. */
+  /* Half a short viewport always fits on one side of the anchor; taller lists
+     scroll inside the popover. */
   max-height: min(320px, calc(50vb - 8px));
   padding: 4px 0;
   background: var(--filter-resolved-color-background-primary);
@@ -49,7 +49,6 @@
   }
 }
 
-/* Field search input shown while editing a token's field segment. */
 .filter-popover-search {
   padding: 4px 8px;
 

@@ -95,43 +95,43 @@ describe('createValueDraftFromCommittedValue', () => {
 
 describe('convertCommittedValueToDraft', () => {
   it('carries a single enum value into a multi selection (pre-checked)', () => {
-    expect(
-      convertCommittedValueToDraft('Lead', 'enumSingle', 'enumMulti'),
-    ).toEqual({ kind: 'multiSelection', selectedOptions: ['Lead'] });
+    expect(convertCommittedValueToDraft('Lead', 'enumMulti')).toEqual({
+      kind: 'multiSelection',
+      selectedOptions: ['Lead'],
+    });
   });
 
   it('carries the first multi value back to a single selection', () => {
     expect(
-      convertCommittedValueToDraft(
-        ['Lead', 'Contacted'],
-        'enumMulti',
-        'enumSingle',
-      ),
+      convertCommittedValueToDraft(['Lead', 'Contacted'], 'enumSingle'),
     ).toEqual({ kind: 'scalar', input: 'Lead' });
-    expect(convertCommittedValueToDraft([], 'enumMulti', 'enumSingle')).toEqual(
-      { kind: 'scalar', input: '' },
-    );
+    expect(convertCommittedValueToDraft([], 'enumSingle')).toEqual({
+      kind: 'scalar',
+      input: '',
+    });
   });
 
   it('carries a number into a range start and a range back to its start', () => {
-    expect(convertCommittedValueToDraft(100, 'number', 'numberRange')).toEqual({
+    expect(convertCommittedValueToDraft(100, 'numberRange')).toEqual({
       kind: 'range',
       fromInput: '100',
       toInput: '',
     });
-    expect(
-      convertCommittedValueToDraft({ from: 3, to: 9 }, 'numberRange', 'number'),
-    ).toEqual({ kind: 'scalar', input: '3' });
+    expect(convertCommittedValueToDraft({ from: 3, to: 9 }, 'number')).toEqual({
+      kind: 'scalar',
+      input: '3',
+    });
   });
 
   it('carries dates across scalar ↔ range changes', () => {
-    expect(
-      convertCommittedValueToDraft('2026-07-01', 'date', 'dateRange'),
-    ).toEqual({ kind: 'range', fromInput: '2026-07-01', toInput: '' });
+    expect(convertCommittedValueToDraft('2026-07-01', 'dateRange')).toEqual({
+      kind: 'range',
+      fromInput: '2026-07-01',
+      toInput: '',
+    });
     expect(
       convertCommittedValueToDraft(
         { from: '2026-07-01', to: '2026-08-01' },
-        'dateRange',
         'date',
       ),
     ).toEqual({ kind: 'scalar', input: '2026-07-01' });
@@ -139,11 +139,7 @@ describe('convertCommittedValueToDraft', () => {
 
   it('falls back to an empty draft for incompatible shapes', () => {
     expect(
-      convertCommittedValueToDraft(
-        { amount: 7, unit: 'days' },
-        'duration',
-        'date',
-      ),
+      convertCommittedValueToDraft({ amount: 7, unit: 'days' }, 'date'),
     ).toEqual({ kind: 'scalar', input: '' });
   });
 });

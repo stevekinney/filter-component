@@ -1,14 +1,5 @@
 import { useEffect, useRef } from 'react';
 import type { RefObject } from 'react';
-import {
-  ADD_FILTER_INPUT_SELECTOR,
-  AUTOFOCUS_SELECTOR,
-  JOINER_ATTRIBUTE,
-  SAVED_VIEW_ITEM_ATTRIBUTE,
-  SAVED_VIEWS_BUTTON_SELECTOR,
-  TOKEN_ATTRIBUTE,
-  TOKEN_SEGMENT_ATTRIBUTE,
-} from '@/utilities/filter/dom-selectors.ts';
 import type { TokenSegment } from '@/utilities/filter/validation.ts';
 
 export type FocusTarget =
@@ -39,25 +30,25 @@ function resolveFocusTarget(
 ): HTMLElement | null {
   switch (target.type) {
     case 'addInput':
-      return root.querySelector<HTMLElement>(ADD_FILTER_INPUT_SELECTOR);
+      return root.querySelector<HTMLElement>('[data-add-filter-input]');
     case 'autofocus':
-      return root.querySelector<HTMLElement>(AUTOFOCUS_SELECTOR);
+      return root.querySelector<HTMLElement>('[data-autofocus]');
     case 'token':
-      return elementWithDataValue(root, TOKEN_ATTRIBUTE, target.id);
+      return elementWithDataValue(root, 'data-token', target.id);
     case 'segment': {
-      const token = elementWithDataValue(root, TOKEN_ATTRIBUTE, target.id);
+      const token = elementWithDataValue(root, 'data-token', target.id);
       return token
-        ? elementWithDataValue(token, TOKEN_SEGMENT_ATTRIBUTE, target.segment)
+        ? elementWithDataValue(token, 'data-token-segment', target.segment)
         : null;
     }
     case 'joiner':
-      return elementWithDataValue(root, JOINER_ATTRIBUTE, String(target.index));
+      return elementWithDataValue(root, 'data-joiner', String(target.index));
     case 'savedViewsTrigger':
-      return root.querySelector<HTMLElement>(SAVED_VIEWS_BUTTON_SELECTOR);
+      return root.querySelector<HTMLElement>('[data-saved-views-button]');
     case 'savedView':
       return elementWithDataValue(
         root,
-        SAVED_VIEW_ITEM_ATTRIBUTE,
+        'data-saved-view-item',
         String(target.index),
       );
     case 'element':
@@ -65,7 +56,7 @@ function resolveFocusTarget(
   }
 }
 
-/** Defers semantic focus requests until the render that creates their target. */
+/** Resolves semantic focus targets after React commits the DOM that creates them. */
 export function useFilterFocus(rootRef: RefObject<HTMLFieldSetElement | null>) {
   const pendingTargetRef = useRef<FocusTarget | null>(null);
 

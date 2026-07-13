@@ -1,10 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import {
-  activeEditorSegment,
   IDLE_FILTER_EDITOR_STATE,
+  activeEditorSegment,
 } from './filter-editor-state.ts';
-import type { FilterEditorState } from './filter-editor-state.ts';
 import {
   filterEditorControllerReducer,
   incompleteFromEditor,
@@ -15,17 +14,15 @@ import type {
 } from './filter-editor-reducer.ts';
 import { createFilterEditorCommittedCommands } from './filter-editor-committed-commands.ts';
 import {
-  booleanActiveIndex,
+  editorForTokenSegment,
   enumActiveIndex,
   fieldActiveIndex,
   reconcileFilterEditor,
   reconcileIncompleteDraft,
-  reconcileValueDraftForField,
+  resolveOperatorSelection,
 } from './filter-editor-reconciliation.ts';
 import type { FocusTarget } from './use-filter-focus.ts';
-import { INCOMPLETE_DRAFT_SELECTOR } from '@/utilities/filter/dom-selectors.ts';
 import type { FilterFieldRegistry } from '@/utilities/filter/field-registry.ts';
-import { createFilterEntry } from '@/utilities/filter/filter-entry.ts';
 import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
 import type {
   FilterHistory,
@@ -35,20 +32,10 @@ import {
   getValueEditorKind,
   isValuelessOperator,
   operatorsForField,
-  usesBooleanChoiceStage,
 } from '@/utilities/filter/operators.ts';
 import type { BooleanChoice } from '@/utilities/filter/operators.ts';
-import {
-  createFilterCondition,
-  getFilterValidationIssue,
-  validateDraft,
-} from '@/utilities/filter/validation.ts';
+import { validateDraft } from '@/utilities/filter/validation.ts';
 import type { TokenSegment } from '@/utilities/filter/validation.ts';
-import {
-  convertCommittedValueToDraft,
-  createEmptyValueDraft,
-  createValueDraftFromCommittedValue,
-} from '@/utilities/filter/value-drafts.ts';
 import type { ValueDraft } from '@/utilities/filter/value-drafts.ts';
 import type {
   FilterCondition,
@@ -58,7 +45,6 @@ import type {
 
 type UseFilterEditorOptions = {
   fieldRegistry: FilterFieldRegistry;
-  filterFieldsetRef: RefObject<HTMLFieldSetElement | null>;
   popoverAnchorRef: RefObject<HTMLElement | null>;
   getCurrentHistory: () => FilterHistory;
   applyFilterHistoryAction: (action: FilterHistoryAction) => boolean;
@@ -68,10 +54,8 @@ type UseFilterEditorOptions = {
   announce: (message: string) => void;
 };
 
-/** Owns every transient editor transition and its committed row commands. */
 export function useFilterEditor({
   fieldRegistry,
-  filterFieldsetRef,
   popoverAnchorRef,
   getCurrentHistory,
   applyFilterHistoryAction,
@@ -231,36 +215,20 @@ export function useFilterEditor({
       commitFilter(field.key, operator, undefined, editor.filterId);
       return;
     }
-    const kind = getValueEditorKind(field.type, operator);
-    let draft = createEmptyValueDraft(kind);
-    if (editor.filterId !== null) {
-      const token = getCurrentHistory().present.conditions.find(
-        (candidate) => candidate.id === editor.filterId,
-      );
-      if (
-        token?.fieldKey === field.key &&
-        token.type === field.type &&
-        token.value !== undefined
-      ) {
-        const previousKind = getValueEditorKind(field.type, token.operator);
-        if (previousKind === kind) {
-          const candidate = createFilterEntry(
-            createFilterCondition(field, operator, token.value),
-            token.id,
-          );
-          if (
-            getFilterValidationIssue(candidate, registryRef.current.fields) ===
-            null
-          ) {
-            commitFilter(field.key, operator, token.value, editor.filterId);
-            return;
-          }
-        }
-        draft = convertCommittedValueToDraft(token.value, previousKind, kind);
-        draft = reconcileValueDraftForField(draft, field);
-      }
+    const token = getCurrentHistory().present.conditions.find(
+      (candidate) => candidate.id === editor.filterId,
+    );
+    const resolution = resolveOperatorSelection(
+      field,
+      operator,
+      token,
+      registryRef.current.fields,
+    );
+    if (resolution.type === 'commit') {
+      commitFilter(field.key, operator, resolution.value, editor.filterId);
+      return;
     }
-    openValueStage(editor.filterId, field, operator, draft);
+    openValueStage(editor.filterId, field, operator, resolution.draft);
   };
 
   const selectBooleanChoice = (choice: BooleanChoice) => {
@@ -305,64 +273,20 @@ export function useFilterEditor({
   ) => {
     const preserved = preserveCurrent();
     popoverAnchorRef.current = invoker;
-    const field = registryRef.current.byKey.get(token.fieldKey);
-    let editor: Exclude<FilterEditorState, { stage: 'idle' }>;
-    if (segment === 'field' || !field || field.type !== token.type) {
-      editor = {
-        stage: 'field',
-        filterId: token.id,
-        query: '',
-        activeIndex: fieldActiveIndex(registryRef.current, token.fieldKey),
-      };
-    } else if (
-      !operatorsForField(field).includes(token.operator) ||
-      segment === 'operator' ||
-      usesBooleanChoiceStage(field)
-    ) {
-      editor = {
-        stage: 'operator',
-        filterId: token.id,
-        fieldKey: field.key,
-        fieldType: field.type,
-        activeIndex: usesBooleanChoiceStage(field)
-          ? booleanActiveIndex(field, token.operator, token.value)
-          : Math.max(0, operatorsForField(field).indexOf(token.operator)),
-        sourceSegment: segment === 'value' ? 'value' : 'operator',
-      };
-    } else {
-      const kind = getValueEditorKind(field.type, token.operator);
-      if (kind === 'none') return;
-      const draft =
-        token.value === undefined
-          ? createEmptyValueDraft(kind)
-          : createValueDraftFromCommittedValue(token.value, kind);
-      const reconciledDraft = reconcileValueDraftForField(draft, field);
-      editor = {
-        stage: 'value',
-        filterId: token.id,
-        fieldKey: field.key,
-        fieldType: field.type,
-        operator: token.operator,
-        draft: reconciledDraft,
-        error: null,
-        activeIndex: enumActiveIndex(field.options, reconciledDraft, kind),
-      };
-    }
+    const editor = editorForTokenSegment(token, segment, registryRef.current);
+    if (!editor) return;
     send({ type: 'open', editor, preserveCurrent: true });
     if (preserved) announce('Filter incomplete — kept for later');
     scheduleFocus({ type: 'autofocus' });
   };
 
-  const resumeIncompleteDraft = () => {
+  const resumeIncompleteDraft = (anchor: HTMLElement) => {
     const incomplete = stateRef.current.incompleteDraft;
     if (!incomplete) return;
     const field = registryRef.current.byKey.get(incomplete.fieldKey);
     send({ type: 'discardIncomplete' });
     if (!field) return;
-    popoverAnchorRef.current =
-      filterFieldsetRef.current?.querySelector<HTMLElement>(
-        INCOMPLETE_DRAFT_SELECTOR,
-      ) ?? null;
+    popoverAnchorRef.current = anchor;
     if (field.type !== incomplete.fieldType) {
       send({
         type: 'open',

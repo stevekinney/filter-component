@@ -2,20 +2,13 @@ import clsx from 'clsx';
 import { TriangleAlert, X } from 'lucide-react';
 import type { KeyboardEvent } from 'react';
 import {
-  segmentAttribute,
-  TOKEN_SEGMENT_ATTRIBUTE,
-  TOKEN_SEGMENT_SELECTOR,
-  TOKEN_SELECTOR,
-} from '@/utilities/filter/dom-selectors.ts';
-import {
   fieldLabel,
   formatFilterValue,
-  isStringArray,
   tokenPhrase,
 } from '@/utilities/filter/formatting.ts';
 import {
-  getValueEditorKind,
   OPERATOR_LABELS,
+  getValueEditorKind,
 } from '@/utilities/filter/operators.ts';
 import type {
   FilterValidationIssue,
@@ -30,19 +23,80 @@ type FilterTokenProps = {
   filter: FilterEntry;
   field: FilterFieldDefinition | undefined;
   validationIssue: FilterValidationIssue | null;
-  /** Segment whose editor popover is currently open, for the active highlight. */
   editingSegment: TokenSegment | null;
-  /** Inside a bracketed and-run — adds run context to the accessible name. */
   inAndRun: boolean;
   disabled: boolean;
   onOpenSegment: SegmentHandler;
   onRemove: () => void;
   onRemoveEnumValue: (value: string) => void;
-  /** Move token-root focus to a neighbor; the parent resolves the target. */
   onMoveFocus: (direction: -1 | 1) => void;
 };
 
-/** The warning affordance on an invalid token; opens the broken segment. */
+function handleTokenArrowDown(
+  event: KeyboardEvent<HTMLDivElement>,
+  tokenElement: HTMLDivElement,
+  target: HTMLElement,
+  isTokenRootTarget: boolean,
+) {
+  event.preventDefault();
+  if (isTokenRootTarget) {
+    tokenElement.querySelector('button')?.focus();
+    return;
+  }
+  // Only editor-opening controls respond to ArrowDown. The remove
+  // buttons are destructive and keep their two-step Delete safety net —
+  // ArrowDown must never trigger them.
+  const segment = target.dataset['tokenSegment'];
+  const opensAnEditor = segment !== undefined && segment !== 'remove';
+  if (opensAnEditor) target.click();
+}
+
+function moveWithinToken(
+  tokenElement: HTMLDivElement,
+  target: HTMLElement,
+  direction: -1 | 1,
+  onMoveFocus: (direction: -1 | 1) => void,
+) {
+  const tokenButtons = Array.from(tokenElement.querySelectorAll('button'));
+  const nextIndex =
+    tokenButtons.indexOf(target as HTMLButtonElement) + direction;
+  if (nextIndex < 0) {
+    tokenElement.focus();
+  } else if (nextIndex >= tokenButtons.length) {
+    onMoveFocus(1);
+  } else {
+    tokenButtons[nextIndex]?.focus();
+  }
+}
+
+function handleTokenTraversal(
+  event: KeyboardEvent<HTMLDivElement>,
+  tokenElement: HTMLDivElement,
+  target: HTMLElement,
+  isTokenRootTarget: boolean,
+  onMoveFocus: (direction: -1 | 1) => void,
+): boolean {
+  if (event.key === 'Tab') {
+    if (!isTokenRootTarget) {
+      event.preventDefault();
+      moveWithinToken(
+        tokenElement,
+        target,
+        event.shiftKey ? -1 : 1,
+        onMoveFocus,
+      );
+    }
+    return true;
+  }
+
+  if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return false;
+  event.preventDefault();
+  const direction = event.key === 'ArrowLeft' ? -1 : 1;
+  if (isTokenRootTarget) onMoveFocus(direction);
+  else moveWithinToken(tokenElement, target, direction, onMoveFocus);
+  return true;
+}
+
 function ValidationWarningButton({
   validationIssue,
   disabled,
@@ -63,7 +117,7 @@ function ValidationWarningButton({
       title={validationIssue.reason}
       onClick={(event) => {
         const tokenElement =
-          event.currentTarget.closest<HTMLElement>(TOKEN_SELECTOR);
+          event.currentTarget.closest<HTMLElement>('[data-token]');
         onOpenSegment(
           validationIssue.segment,
           tokenElement ?? event.currentTarget,
@@ -75,7 +129,6 @@ function ValidationWarningButton({
   );
 }
 
-/** Enum multi-values as pills, each with its own remove control. */
 function EnumValuePills({
   values,
   fieldLabelText,
@@ -100,9 +153,7 @@ function EnumValuePills({
             tabIndex={-1}
             disabled={disabled}
             className="filter-token-pill-label"
-            data-token-segment={
-              index === 0 ? segmentAttribute('value') : undefined
-            }
+            data-token-segment={index === 0 ? 'value' : undefined}
             title="Change values"
             onClick={(event) => onOpenSegment('value', event.currentTarget)}
           >
@@ -124,7 +175,6 @@ function EnumValuePills({
   );
 }
 
-/** The value segment: enum pills, a value button, or nothing when valueless. */
 function TokenValueSegment({
   filter,
   field,
@@ -148,7 +198,7 @@ function TokenValueSegment({
 
   const enumValues =
     (filter.operator === 'in' || filter.operator === 'notIn') &&
-    isStringArray(filter.value)
+    Array.isArray(filter.value)
       ? filter.value
       : null;
 
@@ -170,7 +220,7 @@ function TokenValueSegment({
           tabIndex={-1}
           disabled={disabled}
           className={clsx(segmentClassName, 'filter-token-value')}
-          data-token-segment={segmentAttribute('value')}
+          data-token-segment="value"
           title="Change value"
           onClick={(event) => onOpenSegment('value', event.currentTarget)}
         >
@@ -182,12 +232,8 @@ function TokenValueSegment({
 }
 
 /**
- * One committed filter condition, rendered as a labelled group of sibling
- * buttons — field / operator / value / remove — so no interactive element
- * nests inside another. Every token root is a tab stop; arrow keys traverse
- * the segment buttons inside it. The caller renders the surrounding
- * listitem, so the joiner word and bracket glyphs can sit beside the chip
- * within the same list slot.
+ * Renders one condition as sibling buttons inside a labelled group, avoiding
+ * nested interactive elements while preserving one roving token stop.
  */
 export function FilterToken({
   filter,
@@ -215,69 +261,43 @@ export function FilterToken({
     const tokenElement = event.currentTarget;
     const target = event.target as HTMLElement;
     const isTokenRootTarget = target === tokenElement;
-
-    if (event.key === 'Delete' || event.key === 'Backspace') {
-      event.preventDefault();
-      // Safety step: on a segment, the first press only re-focuses the token
-      // root; a second press removes the whole token.
-      if (isTokenRootTarget) onRemove();
-      else tokenElement.focus();
-      return;
-    }
-    if ((event.key === 'Enter' || event.key === ' ') && isTokenRootTarget) {
-      event.preventDefault();
-      tokenElement.querySelector('button')?.focus();
-      return;
-    }
     if (
-      (event.key === 'Escape' || event.key === 'ArrowUp') &&
-      !isTokenRootTarget
+      handleTokenTraversal(
+        event,
+        tokenElement,
+        target,
+        isTokenRootTarget,
+        onMoveFocus,
+      )
     ) {
-      event.preventDefault();
-      event.stopPropagation();
-      tokenElement.focus();
       return;
     }
-    if (event.key === 'ArrowDown') {
-      event.preventDefault();
-      if (isTokenRootTarget) {
+
+    switch (event.key) {
+      case 'Delete':
+      case 'Backspace':
+        event.preventDefault();
+        // Safety step: on a segment, the first press only re-focuses the token
+        // root; a second press removes the whole token.
+        if (isTokenRootTarget) onRemove();
+        else tokenElement.focus();
+        return;
+      case 'Enter':
+      case ' ':
+        if (!isTokenRootTarget) return;
+        event.preventDefault();
         tokenElement.querySelector('button')?.focus();
         return;
-      }
-      // Only editor-opening controls respond to ArrowDown. The remove
-      // buttons are destructive and keep their two-step Delete safety net —
-      // ArrowDown must never trigger them.
-      const opensAnEditor =
-        target.matches(TOKEN_SEGMENT_SELECTOR) &&
-        target.getAttribute(TOKEN_SEGMENT_ATTRIBUTE) !==
-          segmentAttribute('remove');
-      if (opensAnEditor) target.click();
-      return;
-    }
-    const isTraversalKey =
-      event.key === 'ArrowLeft' ||
-      event.key === 'ArrowRight' ||
-      (event.key === 'Tab' && !isTokenRootTarget);
-    if (!isTraversalKey) return;
-    event.preventDefault();
-    const direction =
-      event.key === 'ArrowLeft' || (event.key === 'Tab' && event.shiftKey)
-        ? -1
-        : 1;
-    if (isTokenRootTarget) {
-      onMoveFocus(direction);
-      return;
-    }
-    // Walk every control inside the token — segments, enum pills, pill removes.
-    const tokenButtons = Array.from(tokenElement.querySelectorAll('button'));
-    const nextIndex =
-      tokenButtons.indexOf(target as HTMLButtonElement) + direction;
-    if (nextIndex < 0) {
-      tokenElement.focus();
-    } else if (nextIndex >= tokenButtons.length) {
-      onMoveFocus(1);
-    } else {
-      tokenButtons[nextIndex]?.focus();
+      case 'Escape':
+      case 'ArrowUp':
+        if (isTokenRootTarget) return;
+        event.preventDefault();
+        event.stopPropagation();
+        tokenElement.focus();
+        return;
+      case 'ArrowDown':
+        handleTokenArrowDown(event, tokenElement, target, isTokenRootTarget);
+        return;
     }
   };
 
@@ -306,7 +326,7 @@ export function FilterToken({
         tabIndex={-1}
         disabled={disabled}
         className={segmentClassName('field')}
-        data-token-segment={segmentAttribute('field')}
+        data-token-segment="field"
         title="Change field"
         onClick={(event) => onOpenSegment('field', event.currentTarget)}
       >
@@ -318,7 +338,7 @@ export function FilterToken({
         tabIndex={-1}
         disabled={disabled}
         className={segmentClassName('operator')}
-        data-token-segment={segmentAttribute('operator')}
+        data-token-segment="operator"
         title="Change operator"
         onClick={(event) => onOpenSegment('operator', event.currentTarget)}
       >
@@ -339,7 +359,7 @@ export function FilterToken({
         tabIndex={-1}
         disabled={disabled}
         className="filter-token-remove"
-        data-token-segment={segmentAttribute('remove')}
+        data-token-segment="remove"
         // The full phrase, not just the field: two conditions on the same
         // field must stay distinguishable in a screen reader's buttons list.
         aria-label={`Remove ${phrase} filter`}

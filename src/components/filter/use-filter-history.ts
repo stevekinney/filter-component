@@ -35,7 +35,6 @@ function deriveValidGroup(
   );
 }
 
-/** Owns committed history, public emission, and superseded-work cancellation. */
 export function useFilterHistory(
   fieldRegistry: FilterFieldRegistry,
   onChange:

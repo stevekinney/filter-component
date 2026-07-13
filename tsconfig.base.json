@@ -1,4 +1,3 @@
-// Shared compiler options extended by tsconfig.app.json, tsconfig.node.json, and tsconfig.end-to-end.json.
 {
   "compilerOptions": {
     "target": "es2023",

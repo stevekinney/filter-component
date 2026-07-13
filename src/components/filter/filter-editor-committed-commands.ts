@@ -24,7 +24,6 @@ type FilterEditorCommittedCommandsOptions = {
   announce: (message: string) => void;
 };
 
-/** Committed row commands exposed by the editor controller. */
 export function createFilterEditorCommittedCommands({
   getFieldRegistry,
   getCurrentHistory,

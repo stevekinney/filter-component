@@ -1,5 +1,3 @@
-/* One list slot: the leading joiner word, the read-only bracket glyphs, and
-   the chip travel together so they wrap as a unit. */
 .filter-token-item {
   display: flex;
   align-items: center;
@@ -84,7 +82,6 @@
     background: var(--filter-resolved-color-background-editing);
   }
 
-  /* The field name is the only bold segment. */
   &[data-token-segment='field'] {
     font-weight: 500;
   }

@@ -5,9 +5,9 @@ import {
 } from './filter-editor-reducer.ts';
 import type { FilterEditorControllerState } from './filter-editor-reducer.ts';
 import {
+  IDLE_FILTER_EDITOR_STATE,
   activeEditorSegment,
   findEditingFilter,
-  IDLE_FILTER_EDITOR_STATE,
 } from './filter-editor-state.ts';
 import type { FilterEditorState } from './filter-editor-state.ts';
 import { createFilterEntry } from '@/utilities/filter/filter-entry.ts';

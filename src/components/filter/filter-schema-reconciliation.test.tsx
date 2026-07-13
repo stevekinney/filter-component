@@ -2,8 +2,8 @@ import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { Filter } from './filter.tsx';
 import {
-  addStringFilter,
   FIELDS,
+  addStringFilter,
   queryTokens,
   setup,
 } from './filter-test-setup.tsx';
@@ -13,14 +13,13 @@ describe('field-definition changes and invalid tokens', () => {
   it('closes the editor when the field being edited disappears', async () => {
     const { onChange, user, addFilterInput, view } = setup();
     await user.click(addFilterInput);
-    await user.keyboard('sta{Enter}'); // Stage chosen → operator stage open
+    await user.keyboard('sta{Enter}');
     expect(screen.getByRole('dialog', { name: 'Stage' })).toBeInTheDocument();
 
     const withoutStage = FIELDS.filter((field) => field.key !== 'stage');
     view.rerender(<Filter fields={withoutStage} onChange={onChange} />);
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 
-    // The editor is idle again: typing reopens the field menu normally.
     await user.click(addFilterInput);
     await user.keyboard('na');
     expect(screen.getByRole('listbox', { name: 'Fields' })).toBeInTheDocument();
@@ -52,7 +51,6 @@ describe('field-definition changes and invalid tokens', () => {
       expect.any(AbortController),
     );
 
-    // Restoring the field re-validates and re-notifies.
     view.rerender(<Filter fields={FIELDS} onChange={onChange} />);
     expect(onChange).toHaveBeenCalledTimes(4);
     expect(onChange.mock.lastCall?.[0].conditions).toHaveLength(2);

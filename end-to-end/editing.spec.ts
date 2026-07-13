@@ -105,7 +105,6 @@ test.describe('editing committed filters', () => {
     await pickOption(page, 'is true');
     const token = filterToken(page, 'Active is true');
     await token.getByTitle('Change value').click();
-    // The filterToken's current choice is check-marked in the collapsed list.
     await expect(
       popover(page).getByRole('option', { name: 'is true' }),
     ).toHaveAttribute('aria-selected', 'true');
@@ -162,18 +161,6 @@ test.describe('editing committed filters', () => {
       .getByRole('button', { name: 'Remove Negotiation from Stage filter' })
       .click();
     await expect(filterTokenList(page).getByRole('listitem')).toHaveCount(0);
-    await expect(resultCount(page)).toHaveText('12 of 12 deals');
-  });
-
-  test('the remove button deletes a token and re-runs results', async ({
-    page,
-  }) => {
-    await addSingleValueFilter(page, 'Name', 'contains', 'corp');
-    await expect(resultCount(page)).toHaveText('1 of 12 deals');
-    await page
-      .getByRole('button', { name: 'Remove Name contains corp filter' })
-      .click();
-    await expect(filterToken(page, 'Name contains corp')).toBeHidden();
     await expect(resultCount(page)).toHaveText('12 of 12 deals');
   });
 

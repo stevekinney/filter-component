@@ -46,7 +46,6 @@ export const OPERATORS_BY_TYPE = {
   [T in FilterFieldType]: readonly FilterOperatorsByFieldType[T][];
 };
 
-/** True only when `A` and `B` contain exactly the same members. */
 type Equal<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
 
 // Element typing alone catches an extra operator in a menu above but not a
@@ -64,7 +63,6 @@ type MISSING_OR_EXTRA_OPERATOR_FOR<
 
 declare const _operatorMenuCompletenessCheck: MISSING_OR_EXTRA_OPERATOR_FOR;
 
-/** Human-readable operator labels, sentence case. */
 export const OPERATOR_LABELS: Record<FilterOperator, string> = {
   equals: 'is',
   notEquals: 'is not',
@@ -90,21 +88,16 @@ export const OPERATOR_LABELS: Record<FilterOperator, string> = {
   withinLast: 'within last',
 };
 
-/**
- * Boolean fields collapse the operator and value stages into one pick:
- * `true`/`false` commit `equals` with that value; the rest commit valueless
- * operators directly.
- */
-export type BooleanChoice = 'true' | 'false' | 'isEmpty' | 'isNotEmpty';
-
-export const BOOLEAN_CHOICES: { value: BooleanChoice; label: string }[] = [
+const BOOLEAN_CHOICES = [
   { value: 'true', label: 'is true' },
   { value: 'false', label: 'is false' },
   { value: 'isEmpty', label: 'is empty' },
   { value: 'isNotEmpty', label: 'is not empty' },
-];
+] as const;
 
-/** Boolean choices allowed by a field's narrowed operator contract. */
+/** Choice used by the collapsed boolean operator/value stage. */
+export type BooleanChoice = (typeof BOOLEAN_CHOICES)[number]['value'];
+
 export function booleanChoicesForField(
   field: FilterFieldDefinition<'boolean'>,
 ): readonly { value: BooleanChoice; label: string }[] {
@@ -116,45 +109,19 @@ export function booleanChoicesForField(
   );
 }
 
-/** Operators that take no value and commit immediately on selection. */
 export function isValuelessOperator(
   operator: FilterOperator,
 ): operator is 'isEmpty' | 'isNotEmpty' {
   return operator === 'isEmpty' || operator === 'isNotEmpty';
 }
 
-/** The operators a specific field offers: its narrowed set, or the type default. */
 export function operatorsForField(
   field: FilterFieldDefinition,
 ): readonly FilterOperator[] {
   return field.operators ?? OPERATORS_BY_TYPE[field.type];
 }
 
-/** The single field-definition lookup every module shares. */
-export function findField(
-  fields: readonly FilterFieldDefinition[],
-  key: string,
-): FilterFieldDefinition | undefined {
-  return fields.find((candidate) => candidate.key === key);
-}
-
-/**
- * Whether a field collapses the operator and value stages into one list
- * (`BOOLEAN_CHOICES`). Today that is exactly the boolean type; every call
- * site that special-cases the collapsed flow branches through this predicate
- * rather than on `field.type` directly.
- */
-export function usesBooleanChoiceStage(
-  field: FilterFieldDefinition,
-): field is FilterFieldDefinition<'boolean'> {
-  return field.type === 'boolean';
-}
-
-/**
- * Which editor a field type + operator pair needs. Determines the value
- * shape's UI: text, number, ranges, single/multi enum lists, date pickers,
- * or the `withinLast` duration editor.
- */
+/** Editor shape selected by a field/operator pair. */
 export type ValueEditorKind =
   | 'none'
   | 'text'

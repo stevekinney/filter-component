@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
-  andRuns,
-  describeAndRuns,
   EMPTY_FILTER_EXPRESSION,
+  describeAndRuns,
   filterExpression,
   fromFilterGroup,
   isFilterGroup,
@@ -257,9 +256,7 @@ describe('round-trip', () => {
         );
         const original = expression(conditions, joiners);
         const canonical = toFilterGroup(original);
-        // Expression → group → expression is the identity.
         expect(loadFilterGroup(canonical)).toEqual(original);
-        // Canonical group → expression → group is the identity.
         expect(toFilterGroup(loadFilterGroup(canonical))).toEqual(canonical);
       }
     }
@@ -332,19 +329,6 @@ describe('filterExpression', () => {
     expect(filterExpression(expression([a, b], ['or']), () => false)).toEqual(
       EMPTY_FILTER_EXPRESSION,
     );
-  });
-});
-
-describe('andRuns', () => {
-  it('treats the whole expression as one run without or joiners', () => {
-    expect(andRuns(expression([a, b], ['and']))).toEqual([[a, b]]);
-  });
-
-  it('starts a new run at each or joiner', () => {
-    expect(andRuns(expression([a, b, c], ['or', 'and']))).toEqual([
-      [a],
-      [b, c],
-    ]);
   });
 });
 

@@ -16,7 +16,6 @@ import type {
  * edits whose joiner bookkeeping has semantic weight (removal, exclusion).
  */
 
-/** Internal committed shape; grouping is derived from the joiner sequence. */
 export type FilterExpression = {
   conditions: FilterEntry[];
   joiners: FilterCombinator[];
@@ -27,7 +26,6 @@ export const EMPTY_FILTER_EXPRESSION: FilterExpression = {
   joiners: [],
 };
 
-/** Narrow a group member to a nested group (conditions carry no `combinator`). */
 export function isFilterGroup(
   member: FilterCondition | FilterGroup,
 ): member is FilterGroup {
@@ -39,7 +37,7 @@ export function isFilterGroup(
  * means no `'or'` joiner exists (the whole expression is one run); each
  * `'or'` joiner starts a new run.
  */
-export function andRuns(expression: FilterExpression): FilterEntry[][] {
+function andRuns(expression: FilterExpression): FilterEntry[][] {
   const runs: FilterEntry[][] = [];
   expression.conditions.forEach((condition, index) => {
     const lastRun = runs[runs.length - 1];
@@ -176,12 +174,9 @@ export function filterExpression(
  * a flat all-`and` expression renders without brackets, so nothing is
  * "in a group" yet.
  */
-export type AndRunMarker = {
-  /** Renders the opening "(" before this condition's chip. */
+type AndRunMarker = {
   opensRun: boolean;
-  /** Renders the closing ")" after this condition's chip. */
   closesRun: boolean;
-  /** Inside a bracketed (≥2-member) and-run — the chip's aria run context. */
   inRun: boolean;
 };
 

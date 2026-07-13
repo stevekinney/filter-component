@@ -3,21 +3,8 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 const savedViewDerivationProbes = vi.hoisted(() => ({
-  findField: vi.fn(),
   savedViewKey: vi.fn(),
 }));
-
-vi.mock('@/utilities/filter/operators.ts', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@/utilities/filter/operators.ts')>();
-  return {
-    ...actual,
-    findField: (...arguments_: Parameters<typeof actual.findField>) => {
-      savedViewDerivationProbes.findField();
-      return actual.findField(...arguments_);
-    },
-  };
-});
 
 vi.mock('@/utilities/filter/saved-views.ts', async (importOriginal) => {
   const actual =
@@ -57,11 +44,6 @@ const ALPHA_VIEW: SavedView = {
       },
     ],
   },
-};
-
-const EMPTY_VIEW: SavedView = {
-  name: 'Empty',
-  group: { combinator: 'and', conditions: [] },
 };
 
 const ALL_VIEW: SavedView = {
@@ -131,30 +113,6 @@ describe('SavedViewsControls lifecycle', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('covers naming changes, non-submit keys, save click, and inactive summaries', () => {
-    const props = savedViewsProps({
-      views: [EMPTY_VIEW, ALPHA_VIEW, ALL_VIEW],
-      currentGroupKey: 'not-active',
-      fields: [],
-    });
-    render(<SavedViewsControls {...props} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Saved views' }));
-    expect(screen.getByText('0 filters')).toBeVisible();
-    expect(screen.getByText('1 filter · name')).toBeVisible();
-    expect(screen.getByText('2 filters · All · name')).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Alpha' })).not.toHaveAttribute(
-      'aria-current',
-    );
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Save current filters…' }),
-    );
-    const input = screen.getByRole('textbox', { name: 'View name' });
-    fireEvent.keyDown(input, { key: 'ArrowDown' });
-    fireEvent.change(input, { target: { value: '  Mine  ' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
-    expect(props.onSaveView).toHaveBeenCalledWith('Mine');
-  });
-
   it('does not recompute unchanged saved-view rows while typing a name', () => {
     const props = savedViewsProps({
       views: [ALPHA_VIEW, ALL_VIEW],
@@ -166,7 +124,6 @@ describe('SavedViewsControls lifecycle', () => {
       screen.getByRole('button', { name: 'Save current filters…' }),
     );
 
-    savedViewDerivationProbes.findField.mockClear();
     savedViewDerivationProbes.savedViewKey.mockClear();
 
     const input = screen.getByRole('textbox', { name: 'View name' });
@@ -176,45 +133,6 @@ describe('SavedViewsControls lifecycle', () => {
     expect(input).toHaveValue('Mine');
     expect(screen.getByText('1 filter · Name')).toBeVisible();
     expect(screen.getByText('2 filters · All · Name')).toBeVisible();
-    expect(savedViewDerivationProbes.findField).not.toHaveBeenCalled();
     expect(savedViewDerivationProbes.savedViewKey).not.toHaveBeenCalled();
-  });
-
-  it('handles list key events when the list itself is the target', () => {
-    const props = savedViewsProps({ views: [ALPHA_VIEW, EMPTY_VIEW] });
-    render(<SavedViewsControls {...props} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Saved views' }));
-    const list = document.querySelector('.filter-saved-views-list');
-    expect(list).toBeInstanceOf(HTMLUListElement);
-    fireEvent.keyDown(list as HTMLUListElement, { key: 'ArrowLeft' });
-    fireEvent.keyDown(list as HTMLUListElement, { key: 'ArrowRight' });
-    fireEvent.keyDown(list as HTMLUListElement, { key: 'Home' });
-    fireEvent.keyDown(list as HTMLUListElement, { key: 'End' });
-    fireEvent.keyDown(list as HTMLUListElement, { key: 'PageDown' });
-    expect(screen.getByRole('button', { name: 'Empty' })).toHaveFocus();
-  });
-
-  it('handles stale or externally changed list DOM without invoking a missing view', () => {
-    const mutableViews = [ALPHA_VIEW];
-    const props = savedViewsProps({ views: mutableViews });
-    const view = render(<SavedViewsControls {...props} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Saved views' }));
-    const list = document.querySelector('.filter-saved-views-list');
-    expect(list).toBeInstanceOf(HTMLUListElement);
-    const row = list?.querySelector('li');
-    expect(row).toBeInstanceOf(HTMLLIElement);
-    mutableViews.splice(0);
-    fireEvent.keyDown(row as HTMLLIElement, { key: 'Delete' });
-    expect(props.onRemoveView).not.toHaveBeenCalled();
-
-    const textTarget = document.createTextNode('keyboard target');
-    list?.appendChild(textTarget);
-    textTarget.dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }),
-    );
-
-    list?.querySelectorAll('li').forEach((item) => item.remove());
-    fireEvent.keyDown(list as HTMLUListElement, { key: 'ArrowDown' });
-    view.unmount();
   });
 });

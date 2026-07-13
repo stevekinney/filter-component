@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  EMPTY_FILTER_HISTORY,
-  filterExpressionReducer,
-  filterHistoryReducer,
-} from './history.ts';
+import { filterHistoryReducer } from './history.ts';
 import type { FilterHistory } from './history.ts';
 import type { FilterEntry } from './filter-entry.ts';
 import type { FilterExpression } from './expression.ts';
@@ -40,10 +36,24 @@ function expression(
   return { conditions, joiners };
 }
 
-describe('filterExpressionReducer', () => {
+const EMPTY_HISTORY: FilterHistory = {
+  past: [],
+  present: expression([]),
+  future: [],
+};
+
+function reduceExpression(
+  present: FilterExpression,
+  action: Parameters<typeof filterHistoryReducer>[1],
+): FilterExpression {
+  return filterHistoryReducer({ past: [], present, future: [] }, action)
+    .present;
+}
+
+describe('committed filter actions', () => {
   it('adds the first filter without a joiner', () => {
     expect(
-      filterExpressionReducer(expression([]), {
+      reduceExpression(expression([]), {
         type: 'add',
         filter: nameFilter,
       }),
@@ -52,7 +62,7 @@ describe('filterExpressionReducer', () => {
 
   it('appends new filters with an and joiner', () => {
     expect(
-      filterExpressionReducer(expression([nameFilter, valueFilter], ['or']), {
+      reduceExpression(expression([nameFilter, valueFilter], ['or']), {
         type: 'add',
         filter: activeFilter,
       }),
@@ -64,7 +74,7 @@ describe('filterExpressionReducer', () => {
   it('updates a filter by id without touching joiners', () => {
     const updated: FilterEntry = { ...nameFilter, value: 'N' };
     expect(
-      filterExpressionReducer(expression([nameFilter, valueFilter], ['or']), {
+      reduceExpression(expression([nameFilter, valueFilter], ['or']), {
         type: 'update',
         id: 'a',
         filter: updated,
@@ -75,7 +85,7 @@ describe('filterExpressionReducer', () => {
   it('returns the same expression when updating an unknown id', () => {
     const filters = expression([nameFilter]);
     expect(
-      filterExpressionReducer(filters, {
+      reduceExpression(filters, {
         type: 'update',
         id: 'zzz',
         filter: valueFilter,
@@ -86,7 +96,7 @@ describe('filterExpressionReducer', () => {
   it('returns the same expression when an update changes nothing', () => {
     const filters = expression([nameFilter]);
     expect(
-      filterExpressionReducer(filters, {
+      reduceExpression(filters, {
         type: 'update',
         id: 'a',
         filter: { ...nameFilter },
@@ -96,7 +106,7 @@ describe('filterExpressionReducer', () => {
 
   it('removes a filter together with its leading joiner', () => {
     expect(
-      filterExpressionReducer(
+      reduceExpression(
         expression([nameFilter, valueFilter, activeFilter], ['and', 'or']),
         { type: 'remove', id: 'b' },
       ),
@@ -105,7 +115,7 @@ describe('filterExpressionReducer', () => {
 
   it('removes the first filter together with the first joiner', () => {
     expect(
-      filterExpressionReducer(
+      reduceExpression(
         expression([nameFilter, valueFilter, activeFilter], ['or', 'and']),
         { type: 'remove', id: 'a' },
       ),
@@ -114,14 +124,14 @@ describe('filterExpressionReducer', () => {
 
   it('returns the same expression when removing an unknown id', () => {
     const filters = expression([nameFilter]);
-    expect(
-      filterExpressionReducer(filters, { type: 'remove', id: 'zzz' }),
-    ).toBe(filters);
+    expect(reduceExpression(filters, { type: 'remove', id: 'zzz' })).toBe(
+      filters,
+    );
   });
 
   it('clears all filters and joiners', () => {
     expect(
-      filterExpressionReducer(expression([nameFilter, valueFilter], ['or']), {
+      reduceExpression(expression([nameFilter, valueFilter], ['or']), {
         type: 'clear',
       }),
     ).toEqual(expression([], []));
@@ -129,12 +139,12 @@ describe('filterExpressionReducer', () => {
 
   it('returns the same expression when clearing an empty expression', () => {
     const filters = expression([]);
-    expect(filterExpressionReducer(filters, { type: 'clear' })).toBe(filters);
+    expect(reduceExpression(filters, { type: 'clear' })).toBe(filters);
   });
 
   it('flips exactly the addressed joiner', () => {
     expect(
-      filterExpressionReducer(
+      reduceExpression(
         expression([nameFilter, valueFilter, activeFilter], ['and', 'and']),
         { type: 'flipJoiner', index: 1 },
       ),
@@ -145,7 +155,7 @@ describe('filterExpressionReducer', () => {
 
   it('flips an or joiner back to and', () => {
     expect(
-      filterExpressionReducer(expression([nameFilter, valueFilter], ['or']), {
+      reduceExpression(expression([nameFilter, valueFilter], ['or']), {
         type: 'flipJoiner',
         index: 0,
       }),
@@ -154,9 +164,9 @@ describe('filterExpressionReducer', () => {
 
   it('returns the same expression when flipping an out-of-range joiner', () => {
     const filters = expression([nameFilter, valueFilter], ['and']);
-    expect(
-      filterExpressionReducer(filters, { type: 'flipJoiner', index: 1 }),
-    ).toBe(filters);
+    expect(reduceExpression(filters, { type: 'flipJoiner', index: 1 })).toBe(
+      filters,
+    );
   });
 });
 
@@ -177,10 +187,10 @@ describe('filterHistoryReducer', () => {
   });
 
   it('does not create an entry for a no-op action', () => {
-    const history = filterHistoryReducer(EMPTY_FILTER_HISTORY, {
+    const history = filterHistoryReducer(EMPTY_HISTORY, {
       type: 'clear',
     });
-    expect(history).toBe(EMPTY_FILTER_HISTORY);
+    expect(history).toBe(EMPTY_HISTORY);
   });
 
   it('records one entry per joiner flip', () => {
@@ -217,7 +227,7 @@ describe('filterHistoryReducer', () => {
   });
 
   it('undo restores the previous expression and pushes present into future', () => {
-    const history = filterHistoryReducer(EMPTY_FILTER_HISTORY, {
+    const history = filterHistoryReducer(EMPTY_HISTORY, {
       type: 'add',
       filter: nameFilter,
     });
@@ -228,7 +238,7 @@ describe('filterHistoryReducer', () => {
   });
 
   it('redo reverses an undo', () => {
-    const added = filterHistoryReducer(EMPTY_FILTER_HISTORY, {
+    const added = filterHistoryReducer(EMPTY_HISTORY, {
       type: 'add',
       filter: nameFilter,
     });
@@ -238,19 +248,19 @@ describe('filterHistoryReducer', () => {
   });
 
   it('undo with an empty past is a no-op', () => {
-    expect(filterHistoryReducer(EMPTY_FILTER_HISTORY, { type: 'undo' })).toBe(
-      EMPTY_FILTER_HISTORY,
+    expect(filterHistoryReducer(EMPTY_HISTORY, { type: 'undo' })).toBe(
+      EMPTY_HISTORY,
     );
   });
 
   it('redo with an empty future is a no-op', () => {
-    expect(filterHistoryReducer(EMPTY_FILTER_HISTORY, { type: 'redo' })).toBe(
-      EMPTY_FILTER_HISTORY,
+    expect(filterHistoryReducer(EMPTY_HISTORY, { type: 'redo' })).toBe(
+      EMPTY_HISTORY,
     );
   });
 
   it('a committed change after undo clears the future (no branching redo)', () => {
-    const added = filterHistoryReducer(EMPTY_FILTER_HISTORY, {
+    const added = filterHistoryReducer(EMPTY_HISTORY, {
       type: 'add',
       filter: nameFilter,
     });
@@ -264,7 +274,7 @@ describe('filterHistoryReducer', () => {
   });
 
   it('replace swaps in a whole expression as an undoable entry', () => {
-    const added = filterHistoryReducer(EMPTY_FILTER_HISTORY, {
+    const added = filterHistoryReducer(EMPTY_HISTORY, {
       type: 'add',
       filter: nameFilter,
     });
@@ -283,7 +293,7 @@ describe('filterHistoryReducer', () => {
   });
 
   it('replace always commits — identical-load detection is the caller’s job (savedViewKey)', () => {
-    const added = filterHistoryReducer(EMPTY_FILTER_HISTORY, {
+    const added = filterHistoryReducer(EMPTY_HISTORY, {
       type: 'add',
       filter: nameFilter,
     });

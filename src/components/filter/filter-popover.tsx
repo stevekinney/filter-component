@@ -1,9 +1,8 @@
 import type { ReactNode } from 'react';
 import { fieldLabel } from '@/utilities/filter/formatting.ts';
 import {
-  findField,
-  getValueEditorKind,
   OPERATOR_LABELS,
+  getValueEditorKind,
 } from '@/utilities/filter/operators.ts';
 import type { BooleanChoice } from '@/utilities/filter/operators.ts';
 import { FilterValueEditor } from './filter-value-editor.tsx';
@@ -26,14 +25,11 @@ export type ActiveFilterEditorState = Exclude<
 export type FilterPopoverProps = {
   state: FilterEditorState;
   fields: readonly FilterFieldDefinition[];
-  /** Field choices already filtered for the active field-stage query. */
   fieldResults: readonly FilterFieldDefinition[];
-  /** The condition being edited, for check-marking its current selection. */
   editingFilter: FilterEntry | null;
   idPrefix: string;
-  /** The element the popover anchors to, resolved after each render. */
   resolveAnchor: () => HTMLElement | null;
-  /** Browser-driven light dismissal (outside click) — not commit or cancel. */
+  /** Called only for browser light dismissal, not commit or semantic cancellation. */
   onBrowserDismiss: () => void;
   onChangeQuery: (query: string) => void;
   onChangeActiveIndex: (index: number) => void;
@@ -51,15 +47,8 @@ type OpenFilterPopoverProps = FilterPopoverProps & {
 };
 
 /**
- * The one-at-a-time popover: field suggestions, a single-select list for
- * operators (or boolean's collapsed list and single enum values), a
- * multi-select list with an apply button for `in`/`notIn`, and a compact
- * input group for typed values. A native `popover="auto"` element anchored
- * to the control that opened it via `showPopover({ source })` — the browser
- * owns top-layer display, geometry (CSS anchor positioning), and
- * outside-click light dismissal; editor state stays the single source of
- * truth and browser events sync back into it. Renders nothing while the
- * editor is idle.
+ * Renders the active editor stage in one native auto popover. The browser owns
+ * top-layer placement and light dismissal; editor state remains authoritative.
  */
 export function FilterPopover(props: FilterPopoverProps) {
   if (props.state.stage === 'idle') return null;
@@ -84,14 +73,18 @@ function OpenFilterPopover(props: OpenFilterPopoverProps) {
     ariaLabel = 'Choose field';
     content = <FieldSelectionStage {...props} state={state} />;
   } else if (state.stage === 'operator') {
-    const field = findField(props.fields, state.fieldKey);
+    const field = props.fields.find(
+      (candidate) => candidate.key === state.fieldKey,
+    );
     if (!field) return null;
     ariaLabel = fieldLabel(field);
     content = (
       <SingleChoiceStage {...props} heading={ariaLabel} field={field} />
     );
   } else {
-    const field = findField(props.fields, state.fieldKey);
+    const field = props.fields.find(
+      (candidate) => candidate.key === state.fieldKey,
+    );
     if (!field) return null;
     const kind = getValueEditorKind(field.type, state.operator);
     ariaLabel = `${fieldLabel(field)} ${OPERATOR_LABELS[state.operator]}`;

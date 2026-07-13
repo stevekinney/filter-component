@@ -1,12 +1,7 @@
 import { Check, Trash2 } from 'lucide-react';
 import { memo } from 'react';
 import type { Dispatch, KeyboardEvent } from 'react';
-import {
-  SAVED_VIEW_ITEM_SELECTOR,
-  SAVED_VIEW_REMOVE_SELECTOR,
-} from '@/utilities/filter/dom-selectors.ts';
 import { fieldLabel } from '@/utilities/filter/formatting.ts';
-import { findField } from '@/utilities/filter/operators.ts';
 import { savedViewKey } from '@/utilities/filter/saved-views.ts';
 import type { SavedView } from '@/utilities/filter/saved-views.ts';
 import { stepIndex } from '@/utilities/list-navigation.ts';
@@ -23,11 +18,8 @@ function leafConditions(group: FilterGroup): FilterCondition[] {
 }
 
 /**
- * The subline under a saved view's name: leaf-condition count, the root
- * combinator word (only when more than one condition makes it meaningful —
- * an `or` root reads "Any" even when some branches are and-groups), and the
- * distinct field labels across every nesting level. A field no longer in
- * the schema falls back to its raw key.
+ * Summarizes leaf count, meaningful root combinator, and distinct field labels;
+ * missing definitions fall back to field keys.
  */
 function savedViewSummary(
   view: SavedView,
@@ -37,7 +29,9 @@ function savedViewSummary(
   const leaves = leafConditions(view.group);
   const labels: string[] = [];
   for (const condition of leaves) {
-    const field = findField(fields, condition.fieldKey);
+    const field = fields.find(
+      (candidate) => candidate.key === condition.fieldKey,
+    );
     const label = field ? fieldLabel(field) : condition.fieldKey;
     if (!labels.includes(label)) labels.push(label);
   }
@@ -60,11 +54,7 @@ type SavedViewsListProps = {
   onRemoveView: (name: string) => void;
 };
 
-/**
- * A stable render boundary around saved-view derivation and row navigation.
- * Naming-state changes stay in the parent popover, so unchanged rows retain
- * their rendered summaries while the name draft changes.
- */
+/** Memoized so editing a save-name draft does not rerender unchanged view rows. */
 export const SavedViewsList = memo(function SavedViewsList({
   fields,
   views,
@@ -94,7 +84,7 @@ export const SavedViewsList = memo(function SavedViewsList({
 
     const focusViewAt = (rowIndex: number) =>
       rows[rowIndex]
-        ?.querySelector<HTMLElement>(SAVED_VIEW_ITEM_SELECTOR)
+        ?.querySelector<HTMLElement>('[data-saved-view-item]')
         ?.focus();
 
     switch (event.key) {
@@ -115,7 +105,7 @@ export const SavedViewsList = memo(function SavedViewsList({
       case 'ArrowRight': {
         event.preventDefault();
         rows[index]
-          ?.querySelector<HTMLElement>(SAVED_VIEW_REMOVE_SELECTOR)
+          ?.querySelector<HTMLElement>('[data-saved-view-remove]')
           ?.focus();
         return;
       }

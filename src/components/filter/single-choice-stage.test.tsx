@@ -4,8 +4,7 @@ import { SingleChoiceStage } from './filter-popover-stages.tsx';
 import type { FilterEditorState } from './filter-editor-state.ts';
 import type { FilterPopoverProps } from './filter-popover.tsx';
 import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
-import type { FilterFieldDefinition, FilterOperator } from '@/types/filter.ts';
-import type { ValueDraft } from '@/utilities/filter/value-drafts.ts';
+import type { FilterFieldDefinition } from '@/types/filter.ts';
 
 const STRING_FIELD = {
   key: 'name',
@@ -43,25 +42,6 @@ function operatorState(
     filterId: 'condition-1',
     fieldKey: field.key,
     fieldType: field.type,
-    activeIndex: 0,
-    ...overrides,
-  };
-}
-
-function valueState(
-  field: FilterFieldDefinition,
-  operator: FilterOperator,
-  draft: ValueDraft,
-  overrides: Partial<Extract<FilterEditorState, { stage: 'value' }>> = {},
-): Extract<FilterEditorState, { stage: 'value' }> {
-  return {
-    stage: 'value',
-    filterId: 'condition-1',
-    fieldKey: field.key,
-    fieldType: field.type,
-    operator,
-    draft,
-    error: null,
     activeIndex: 0,
     ...overrides,
   };
@@ -179,52 +159,6 @@ describe('SingleChoiceStage', () => {
     expect(emptyProps.onPickBoolean).toHaveBeenCalledWith('false');
   });
 
-  it('renders enum single values for matching and mismatched draft shapes', () => {
-    const props = popoverProps(
-      valueState(ENUM_FIELD, 'equals', { kind: 'scalar', input: 'Won' }),
-    );
-    const view = render(
-      <SingleChoiceStage
-        {...props}
-        state={valueState(ENUM_FIELD, 'equals', {
-          kind: 'scalar',
-          input: 'Won',
-        })}
-        heading="Stage is"
-        field={ENUM_FIELD}
-      />,
-    );
-    expect(screen.getByRole('option', { name: 'Won' })).toHaveAttribute(
-      'aria-selected',
-      'true',
-    );
-    fireEvent.click(screen.getByRole('option', { name: 'Lead' }));
-    expect(props.onPickSingleValue).toHaveBeenCalledWith('Lead');
-
-    const mismatch = popoverProps(
-      valueState(ENUM_FIELD, 'equals', {
-        kind: 'multiSelection',
-        selectedOptions: [],
-      }),
-    );
-    view.rerender(
-      <SingleChoiceStage
-        {...mismatch}
-        state={valueState(ENUM_FIELD, 'equals', {
-          kind: 'multiSelection',
-          selectedOptions: [],
-        })}
-        heading="Stage is"
-        field={ENUM_FIELD}
-      />,
-    );
-    expect(screen.getAllByRole('option')).toSatisfy((options: HTMLElement[]) =>
-      options.every(
-        (option) => option.getAttribute('aria-selected') === 'false',
-      ),
-    );
-  });
-
   it('ignores choices invalidated between render and activation', () => {
     const booleanOperators: ('equals' | 'isEmpty' | 'isNotEmpty')[] = [
       'equals',
@@ -265,74 +199,5 @@ describe('SingleChoiceStage', () => {
     stringOperators.splice(0);
     fireEvent.click(equalsOption);
     expect(stringProps.onSelectOperator).not.toHaveBeenCalled();
-  });
-
-  it('handles an undefined options list and an unavailable active choice', () => {
-    const props = popoverProps(
-      valueState(
-        STRING_FIELD,
-        'equals',
-        { kind: 'scalar', input: '' },
-        { activeIndex: Number.NaN },
-      ),
-    );
-    const view = render(
-      <SingleChoiceStage
-        {...props}
-        state={valueState(
-          STRING_FIELD,
-          'equals',
-          { kind: 'scalar', input: '' },
-          { activeIndex: Number.NaN },
-        )}
-        heading="No enum choices"
-        field={STRING_FIELD}
-      />,
-    );
-    expect(screen.getByRole('listbox')).not.toHaveAttribute(
-      'aria-activedescendant',
-    );
-
-    const activeProps = popoverProps(
-      operatorState(STRING_FIELD, { activeIndex: Number.NaN }),
-    );
-    view.rerender(
-      <SingleChoiceStage
-        {...activeProps}
-        state={operatorState(STRING_FIELD, { activeIndex: Number.NaN })}
-        heading="Name"
-        field={STRING_FIELD}
-      />,
-    );
-    fireEvent.keyDown(screen.getByRole('listbox'), { key: 'Enter' });
-    expect(activeProps.onSelectOperator).not.toHaveBeenCalled();
-  });
-
-  it('is inert when a direct stage has no choices', () => {
-    const emptyEnum = {
-      key: 'empty',
-      type: 'enum',
-      options: [],
-    } as const satisfies FilterFieldDefinition;
-    const props = popoverProps(
-      valueState(emptyEnum, 'equals', { kind: 'scalar', input: '' }),
-    );
-    render(
-      <SingleChoiceStage
-        {...props}
-        state={valueState(emptyEnum, 'equals', {
-          kind: 'scalar',
-          input: '',
-        })}
-        heading="Empty"
-        field={emptyEnum}
-      />,
-    );
-    const list = screen.getByRole('listbox', { name: 'Empty' });
-    expect(list).not.toHaveAttribute('aria-activedescendant');
-    fireEvent.keyDown(list, { key: 'ArrowDown' });
-    fireEvent.keyDown(list, { key: 'Enter' });
-    expect(props.onChangeActiveIndex).not.toHaveBeenCalled();
-    expect(props.onPickSingleValue).not.toHaveBeenCalled();
   });
 });

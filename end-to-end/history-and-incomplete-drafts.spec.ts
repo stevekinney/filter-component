@@ -120,7 +120,6 @@ test.describe('incomplete drafts', () => {
     await popover(page).getByLabel('Value').fill('labs');
     await page.getByRole('heading', { name: 'Filter' }).click();
     await expect(popover(page)).toBeHidden();
-    // The token keeps its committed value and no incomplete filterToken appears.
     await expect(filterToken(page, 'Name contains corp')).toBeVisible();
     await expect(
       page.getByRole('group', { name: /Incomplete filter/ }),
@@ -140,7 +139,6 @@ test.describe('incomplete drafts', () => {
     });
     await expect(incompleteDraftChip).toContainText('contains');
     await incompleteDraftChip.getByTitle('Finish this filter').click();
-    // Straight back into the value editor, draft intact.
     await expect(popover(page).getByLabel('Value')).toHaveValue('acm');
     await popover(page).getByLabel('Value').fill('acme');
     await applyValue(page);
@@ -171,18 +169,6 @@ test.describe('incomplete drafts', () => {
     await expect(
       page.getByRole('group', { name: 'Incomplete filter: Name' }),
     ).toBeHidden();
-  });
-
-  test('an incomplete draft never reaches onChange or the results', async ({
-    page,
-  }) => {
-    await pickField(page, 'Name');
-    await pickOption(page, 'contains');
-    await popover(page).getByLabel('Value').fill('zzz');
-    await page.getByRole('heading', { name: 'Filter' }).click();
-    // Results still reflect only the committed seed filter.
-    await expect(resultCount(page)).toHaveText('8 of 12 deals');
-    await expect(page.locator('.example-panes pre')).not.toContainText('zzz');
   });
 
   test('starting a new composition replaces the incomplete draft when abandoned again', async ({

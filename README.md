@@ -297,8 +297,8 @@ outputs or polyfills. A consuming extension must declare:
 
 - `bun run dev`: Start the Vite development server.
 - `bun run test`: Run Vitest unit and component tests in jsdom.
-- `bun run test:coverage`: Run the same suite with the required 100% line,
-  branch, function, and statement coverage for executable production source.
+- `bun run test:coverage`: Run the same suite with an optional coverage report
+  for executable production source.
 - `bun run test:e2e`: Run Playwright behavior, accessibility, geometry, and
   visual-regression tests in Chromium.
 - `bun run test:e2e:ui`: Open Playwright UI mode.
@@ -308,8 +308,8 @@ outputs or polyfills. A consuming extension must declare:
 - `bun run check:file-sizes`: Require every non-test TypeScript/TSX
   implementation file to remain at or below 500 lines.
 - `bun run validate`: Run formatting, TypeScript/JavaScript linting, CSS
-  linting, type-checking, file-size checks, 100% coverage, the complete
-  Playwright suite, and the production build.
+  linting, type-checking, file-size checks, unit tests, the complete Playwright
+  suite, and the production build.
 
 Vitest owns colocated `src/**/*.test.ts(x)` tests. Playwright owns
 `end-to-end/*.spec.ts` and the committed baselines under

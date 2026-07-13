@@ -15,11 +15,9 @@ function seedViews(views: SavedView[]): void {
   window.localStorage.setItem(SAVED_VIEWS_STORAGE_KEY, JSON.stringify(views));
 }
 
-/** The single bookmarks trigger; null while neither savable nor holding views. */
 const savedViewsButton = () =>
   screen.queryByRole('button', { name: 'Saved views' });
 
-/** The in-menu save action; only present inside an open menu while savable. */
 const saveAction = () =>
   screen.queryByRole('button', { name: 'Save current filters…' });
 
@@ -51,7 +49,6 @@ const MARIA_VIEW: SavedView = {
   },
 };
 
-/** The group most recently reported through onChange. */
 function lastReportedGroup(
   onChange: ReturnType<typeof setup>['onChange'],
 ): FilterGroup {
@@ -99,9 +96,8 @@ describe('the in-menu save action', () => {
   it('is offered only while the group is savable', async () => {
     seedViews([MARIA_VIEW]);
     const { user, addFilterInput } = setup();
-    await addStringFilter(user, addFilterInput); // matches MARIA_VIEW
+    await addStringFilter(user, addFilterInput);
     await openMenu(user);
-    // The group already matches a saved view, so there is nothing to save.
     expect(saveAction()).not.toBeInTheDocument();
   });
 
@@ -202,7 +198,7 @@ describe('saved rows', () => {
   it('marks the active view with aria-current and lists a summary subline', async () => {
     seedViews([MARIA_VIEW]);
     const { user, addFilterInput } = setup();
-    await addStringFilter(user, addFilterInput); // matches MARIA_VIEW
+    await addStringFilter(user, addFilterInput);
 
     await openMenu(user);
     const row = within(menu()).getByRole('button', { name: 'Maria deals' });
@@ -320,21 +316,19 @@ describe('removing a view', () => {
     expect(
       screen.queryByRole('dialog', { name: 'Saved views' }),
     ).not.toBeInTheDocument();
-    // No conditions and nothing saved: the trigger is gone entirely.
     expect(savedViewsButton()).not.toBeInTheDocument();
   });
 
   it('keeps the trigger alive when the group is still savable', async () => {
     const { user, addFilterInput } = setup();
     await addStringFilter(user, addFilterInput);
-    await saveCurrentViewAs(user, 'Maria deals'); // group now matches the view
+    await saveCurrentViewAs(user, 'Maria deals');
 
     await openMenu(user);
     await user.click(
       screen.getByRole('button', { name: 'Remove view: Maria deals' }),
     );
 
-    // The group is unsaved again, so the trigger survives for the save action.
     expect(storedViews()).toEqual([]);
     expect(savedViewsButton()).toBeVisible();
     expect(savedViewsButton()).toHaveFocus();
@@ -411,9 +405,9 @@ describe('menu keyboard navigation', () => {
     await user.keyboard('{ArrowDown}');
     expect(viewButton('Beta')).toHaveFocus();
     await user.keyboard('{ArrowDown}{ArrowDown}');
-    expect(viewButton('Alpha')).toHaveFocus(); // wrapped past Gamma
+    expect(viewButton('Alpha')).toHaveFocus();
     await user.keyboard('{ArrowUp}');
-    expect(viewButton('Gamma')).toHaveFocus(); // wrapped back
+    expect(viewButton('Gamma')).toHaveFocus();
     await user.keyboard('{Home}');
     expect(viewButton('Alpha')).toHaveFocus();
     await user.keyboard('{End}');
@@ -438,13 +432,13 @@ describe('menu keyboard navigation', () => {
     const { user } = setup();
 
     await openMenu(user);
-    await user.keyboard('{ArrowDown}'); // Beta
+    await user.keyboard('{ArrowDown}');
     await user.keyboard('{Delete}');
 
     expect(storedViews().map((view) => view.name)).toEqual(['Alpha', 'Gamma']);
     expect(viewButton('Gamma')).toHaveFocus();
 
-    await user.keyboard('{Backspace}'); // Gamma was last; neighbor is Alpha
+    await user.keyboard('{Backspace}');
     expect(storedViews().map((view) => view.name)).toEqual(['Alpha']);
     expect(viewButton('Alpha')).toHaveFocus();
   });
@@ -485,7 +479,6 @@ describe('nested structure persistence', () => {
     await addStringFilter(user, addFilterInput, 'Maria');
     await addStringFilter(user, addFilterInput, 'Nadia');
     await addStringFilter(user, addFilterInput, 'Cora');
-    // Flip the first gap: Maria or (Nadia and Cora).
     const joiners = screen.getAllByRole('button', { name: /^Joined by and/ });
     await user.click(joiners[0] as HTMLElement);
 
@@ -530,7 +523,6 @@ describe('nested structure persistence', () => {
         },
       ],
     });
-    // The restored expression re-derives the same brackets and joiners.
     expect(
       screen.getByRole('button', {
         name: 'Joined by or. Switch to and — grouping adjusts automatically.',

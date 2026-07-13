@@ -6,8 +6,6 @@
     "module": "esnext",
     "types": ["vite/client"],
     "allowArbitraryExtensions": true,
-
-    /* Bundler mode */
     "moduleResolution": "bundler",
     "paths": {
       "@/*": ["./src/*"]

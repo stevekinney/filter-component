@@ -1,5 +1,4 @@
 import type { ChangeEvent, KeyboardEvent, RefObject } from 'react';
-import { fieldOptionId } from '@/utilities/filter/dom-selectors.ts';
 import type { FilterFieldDefinition } from '@/types/filter.ts';
 
 type AddFilterComboboxProps = {
@@ -7,12 +6,10 @@ type AddFilterComboboxProps = {
   idPrefix: string;
   disabled: boolean;
   lastFilterId: string | null;
-  /** Whether the field suggestion menu is open. */
   open: boolean;
   query: string;
   results: readonly FilterFieldDefinition[];
   activeIndex: number;
-  /** Whether Backspace/← at position 0 may move focus into the token row. */
   canFocusTokens: boolean;
   onOpenMenu: (query: string) => void;
   onQueryChange: (query: string) => void;
@@ -23,9 +20,9 @@ type AddFilterComboboxProps = {
 };
 
 /**
- * The add-filter input — a combobox whose suggestion menu opens on typing or
- * ↑/↓, never on focus alone. The listbox itself renders in the popover; this
- * input drives it through aria-activedescendant and the callbacks here.
+ * WAI-ARIA combobox for choosing a field. Typing or ArrowUp/ArrowDown opens the
+ * popover listbox; focus stays on this input through aria-activedescendant.
+ * Focus alone does not open it.
  */
 export function AddFilterCombobox({
   inputRef,
@@ -77,7 +74,7 @@ export function AddFilterCombobox({
       onSelectActive(activeField);
       return;
     }
-    onCloseMenu(); // Tab proceeds naturally with the menu closed
+    onCloseMenu();
   };
 
   const handleTokenFocusKey = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -125,7 +122,7 @@ export function AddFilterCombobox({
       aria-expanded={open}
       aria-controls={`${idPrefix}-fields`}
       aria-activedescendant={
-        activeField ? fieldOptionId(idPrefix, activeIndex) : undefined
+        activeField ? `${idPrefix}-field-${activeIndex}` : undefined
       }
       aria-autocomplete="list"
       aria-label="Add filter"

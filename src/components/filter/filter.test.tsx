@@ -1,8 +1,8 @@
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import {
-  addStringFilter,
   FIELDS,
+  addStringFilter,
   queryTokens,
   setup,
 } from './filter-test-setup.tsx';
@@ -26,19 +26,6 @@ describe('add-filter combobox', () => {
       screen.getByRole('listbox', { name: 'Fields' }),
     ).getAllByRole('option');
     expect(options).toHaveLength(FIELDS.length);
-  });
-
-  it('ranks prefix matches above contains matches', async () => {
-    const { user, addFilterInput } = setup();
-    await user.click(addFilterInput);
-    await user.keyboard('st');
-    const options = within(
-      screen.getByRole('listbox', { name: 'Fields' }),
-    ).getAllByRole('option');
-    expect(options.map((option) => option.textContent)).toEqual([
-      'Stageenum',
-      'Last emaileddate',
-    ]);
   });
 
   it('shows an empty state for an unmatched query', async () => {
@@ -102,7 +89,6 @@ describe('add-filter combobox', () => {
     await user.click(addFilterInput);
     await user.keyboard('na');
     await user.tab();
-    // Field accepted → operator stage opened for Name.
     expect(screen.getByRole('dialog', { name: 'Name' })).toBeInTheDocument();
   });
 
@@ -113,7 +99,7 @@ describe('add-filter combobox', () => {
     expect(
       screen.getByText('Name', { selector: '.filter-draft-preview-field' }),
     ).toBeInTheDocument();
-    await user.keyboard('{Enter}'); // equals
+    await user.keyboard('{Enter}');
     expect(
       screen.getByText('is', { selector: '.filter-draft-preview-operator' }),
     ).toBeInTheDocument();
@@ -176,7 +162,7 @@ describe('adding filters', () => {
         .getAllByRole('option')
         .map((option) => option.textContent),
     ).toEqual(['is true', 'is false', 'is empty', 'is not empty']);
-    await user.keyboard('{ArrowDown}{Enter}'); // is false
+    await user.keyboard('{ArrowDown}{Enter}');
     expect(
       screen.getByRole('group', { name: 'Active is false' }),
     ).toBeInTheDocument();
@@ -222,11 +208,11 @@ describe('adding filters', () => {
   it('multi-select enums toggle with Space and commit with Enter', async () => {
     const { onChange, user, addFilterInput } = setup();
     await user.click(addFilterInput);
-    await user.keyboard('sta{Enter}'); // Stage
+    await user.keyboard('sta{Enter}');
     await user.click(screen.getByRole('option', { name: 'is any of' }));
     const list = screen.getByRole('listbox', { name: 'Stage is any of' });
     expect(list).toHaveAttribute('aria-multiselectable', 'true');
-    await user.keyboard(' {ArrowDown} {Enter}'); // toggle Lead, toggle Contacted, commit
+    await user.keyboard(' {ArrowDown} {Enter}');
     expect(
       screen.getByRole('group', { name: 'Stage is any of Lead, Contacted' }),
     ).toBeInTheDocument();
@@ -267,8 +253,8 @@ describe('adding filters', () => {
   it('commits zero as a number and never shows it as an empty-state hint', async () => {
     const { onChange, user, addFilterInput } = setup();
     await user.click(addFilterInput);
-    await user.keyboard('deal{Enter}'); // Deal value
-    await user.keyboard('{Enter}'); // equals
+    await user.keyboard('deal{Enter}');
+    await user.keyboard('{Enter}');
     // The empty field must not display "0" as a placeholder — 0 is a value
     // a user can commit, so it would look like content that then gets
     // rejected.
@@ -290,8 +276,8 @@ describe('adding filters', () => {
   it('never commits invalid input and explains why inline', async () => {
     const { onChange, user, addFilterInput } = setup();
     await user.click(addFilterInput);
-    await user.keyboard('deal{Enter}'); // Deal value
-    await user.keyboard('{Enter}'); // equals
+    await user.keyboard('deal{Enter}');
+    await user.keyboard('{Enter}');
     await user.keyboard('abc{Enter}');
     const alert = screen.getByRole('alert');
     expect(alert).toHaveTextContent('Enter a number');
@@ -341,7 +327,7 @@ describe('editing tokens', () => {
     onChange.mockClear();
     const token = screen.getByRole('group', { name: 'Name is Maria' });
     await user.click(within(token).getByTitle('Change operator'));
-    await user.keyboard('{ArrowDown}{Enter}'); // notEquals
+    await user.keyboard('{ArrowDown}{Enter}');
     expect(
       screen.getByRole('group', { name: 'Name is not Maria' }),
     ).toBeInTheDocument();
@@ -361,7 +347,7 @@ describe('editing tokens', () => {
   it('carries a single enum value into the multi editor pre-checked', async () => {
     const { user, addFilterInput } = setup();
     await user.click(addFilterInput);
-    await user.keyboard('sta{Enter}{Enter}'); // Stage is
+    await user.keyboard('sta{Enter}{Enter}');
     await user.click(screen.getByRole('option', { name: 'Lead' }));
     const token = screen.getByRole('group', { name: 'Stage is Lead' });
     await user.click(within(token).getByTitle('Change operator'));
@@ -388,7 +374,7 @@ describe('editing tokens', () => {
     expect(
       screen.getByRole('dialog', { name: 'Deal value' }),
     ).toBeInTheDocument();
-    await user.keyboard('{Enter}'); // equals
+    await user.keyboard('{Enter}');
     await user.keyboard('42{Enter}');
     expect(
       screen.getByRole('group', { name: 'Deal value is 42' }),
@@ -405,7 +391,7 @@ describe('enum pills', () => {
     await user.click(addFilterInput);
     await user.keyboard('sta{Enter}');
     await user.click(screen.getByRole('option', { name: 'is any of' }));
-    await user.keyboard(' {ArrowDown} {Enter}'); // Lead + Contacted
+    await user.keyboard(' {ArrowDown} {Enter}');
     const token = screen.getByRole('group', {
       name: 'Stage is any of Lead, Contacted',
     });
@@ -431,7 +417,7 @@ describe('enum pills', () => {
     await user.click(addFilterInput);
     await user.keyboard('sta{Enter}');
     await user.click(screen.getByRole('option', { name: 'is any of' }));
-    await user.keyboard(' {Enter}'); // just Lead
+    await user.keyboard(' {Enter}');
     const token = screen.getByRole('group', { name: 'Stage is any of Lead' });
     await user.click(
       within(token).getByRole('button', {

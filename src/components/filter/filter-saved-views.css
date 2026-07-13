@@ -1,12 +1,8 @@
-/* The consolidated views surface: a save action on top (when the group is
-   savable), then the saved rows, kept to a sensible width so long names
-   truncate rather than widening the popover. */
 .filter-saved-views-popover {
   min-width: min(232px, calc(100vi - 16px));
   max-width: min(320px, calc(100vi - 16px));
 }
 
-/* Horizontal hairline between the save action and the saved rows. */
 .filter-popover-divider {
   height: 1px;
   margin-block: 4px;
@@ -18,7 +14,6 @@
   padding-inline: 8px;
 }
 
-/* Full-width primary action that swaps in place for the inline name field. */
 .filter-saved-views-save-action {
   display: flex;
   align-items: center;
@@ -58,8 +53,6 @@
   }
 }
 
-/* The whole name-and-summary area loads the view; long names and summaries
-   truncate rather than widening the popover. */
 .filter-saved-views-load {
   display: flex;
   align-items: center;
@@ -78,7 +71,6 @@
   }
 }
 
-/* Fixed leading slot so names align whether or not a row carries the check. */
 .filter-saved-views-check {
   display: flex;
   flex: none;

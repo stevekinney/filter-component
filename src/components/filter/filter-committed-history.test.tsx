@@ -1,47 +1,6 @@
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { addStringFilter, queryTokens, setup } from './filter-test-setup.tsx';
-import type { FilterList } from '@/types/filter.ts';
-
-describe('rail cluster dividers', () => {
-  const dividerCount = (view: ReturnType<typeof setup>['view']) =>
-    view.container.querySelectorAll('.filter-rail-divider').length;
-
-  const seed = (conditions: FilterList) =>
-    setup({
-      initialFilters: { combinator: 'and', conditions },
-    });
-
-  it('shows no rail (and no dividers) while the row is empty', () => {
-    const { view } = setup();
-    expect(view.container.querySelector('.filter-rail')).toBeNull();
-    expect(dividerCount(view)).toBe(0);
-  });
-
-  it('fences a divider count of one less than the visible clusters', async () => {
-    // Seeded filters, no history: Views + Clear → 2 clusters, 1 divider.
-    const two = seed([
-      {
-        fieldKey: 'name',
-        type: 'string',
-        operator: 'equals',
-        value: 'a',
-      },
-      {
-        fieldKey: 'name',
-        type: 'string',
-        operator: 'equals',
-        value: 'b',
-      },
-    ]);
-    expect(dividerCount(two.view)).toBe(1);
-
-    // Adding a filter by hand introduces history: Views + History + Clear →
-    // 3 clusters, 2 dividers.
-    await addStringFilter(two.user, two.addFilterInput, 'Cora');
-    expect(dividerCount(two.view)).toBe(2);
-  });
-});
 
 describe('undo and redo', () => {
   it('renders undo/redo icons only when available and emits restored filter lists', async () => {
@@ -100,7 +59,7 @@ describe('clear all', () => {
     const { onChange, user, addFilterInput } = setup();
     await addStringFilter(user, addFilterInput);
     await user.click(addFilterInput);
-    await user.keyboard('act{Enter}{Enter}'); // Active is true
+    await user.keyboard('act{Enter}{Enter}');
     await user.click(screen.getByRole('button', { name: 'Clear all filters' }));
     expect(queryTokens()).toHaveLength(0);
     expect(onChange).toHaveBeenLastCalledWith(
@@ -150,7 +109,6 @@ describe('smart joiners', () => {
     await addStringFilter(user, addFilterInput, 'Maria');
     await addStringFilter(user, addFilterInput, 'Nadia');
     await addStringFilter(user, addFilterInput, 'Cora');
-    // Flip the second gap: the first two chips stay an and-run.
     const joiners = screen.getAllByRole('button', { name: /^Joined by and/ });
     await user.click(joiners[1] as HTMLElement);
     expect(onChange).toHaveBeenLastCalledWith(
@@ -187,7 +145,6 @@ describe('smart joiners', () => {
         name: 'Name is Maria (in a group matching all)',
       }),
     ).toBeInTheDocument();
-    // The bare condition after the or carries no run context.
     expect(
       screen.getByRole('group', { name: 'Name is Cora' }),
     ).toBeInTheDocument();
@@ -203,8 +160,8 @@ describe('smart joiners', () => {
     const { onChange, user, addFilterInput } = setup();
     await addStringFilter(user, addFilterInput, 'Maria');
     await addStringFilter(user, addFilterInput, 'Nadia');
-    await user.click(joinerButton('and')); // A or B
-    await addStringFilter(user, addFilterInput, 'Cora'); // → A or (B and C)
+    await user.click(joinerButton('and'));
+    await addStringFilter(user, addFilterInput, 'Cora');
     expect(onChange).toHaveBeenLastCalledWith(
       {
         combinator: 'or',
@@ -241,8 +198,7 @@ describe('smart joiners', () => {
     await addStringFilter(user, addFilterInput, 'Nadia');
     await addStringFilter(user, addFilterInput, 'Cora');
     const joiners = screen.getAllByRole('button', { name: /^Joined by and/ });
-    await user.click(joiners[0] as HTMLElement); // A or B and C
-    // Deleting B removes its leading or: A and C remain one flat run.
+    await user.click(joiners[0] as HTMLElement);
     await user.click(
       within(screen.getByRole('group', { name: /Nadia/ })).getByRole('button', {
         name: 'Remove Name is Nadia filter',
@@ -327,7 +283,6 @@ describe('smart joiners', () => {
       await screen.findByRole('group', { name: 'Name is a' }),
     ).toBeVisible();
     expect(joinerButton('or')).toBeInTheDocument();
-    // Two single-condition runs: no brackets to draw.
     expect(view.container.querySelectorAll('.filter-bracket')).toHaveLength(0);
   });
 });

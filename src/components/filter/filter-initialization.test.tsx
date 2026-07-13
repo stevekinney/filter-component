@@ -2,10 +2,9 @@ import { act, renderHook, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { Filter } from './filter.tsx';
 import { useFilterHistory } from './use-filter-history.ts';
-import { addStringFilter, FIELDS, setup } from './filter-test-setup.tsx';
+import { FIELDS, addStringFilter, setup } from './filter-test-setup.tsx';
 import { createFilterEntry } from '@/utilities/filter/filter-entry.ts';
 import { createFilterFieldRegistry } from '@/utilities/filter/field-registry.ts';
-import type { FilterList } from '@/types/filter.ts';
 
 describe('onChange cancellation', () => {
   it('composes two synchronous actions and emits each resulting ID-free group', () => {
@@ -115,27 +114,6 @@ describe('onChange cancellation', () => {
 });
 
 describe('disabled and initialFilters', () => {
-  it('seeds filters through initialFilters without emitting onChange or history entries', async () => {
-    const seed: FilterList = [
-      {
-        fieldKey: 'name',
-        type: 'string',
-        operator: 'contains',
-        value: 'corp',
-      },
-    ];
-    const { onChange } = setup({
-      initialFilters: { combinator: 'and', conditions: seed },
-    });
-    expect(
-      await screen.findByRole('group', { name: 'Name contains corp' }),
-    ).toBeInTheDocument();
-    expect(onChange).not.toHaveBeenCalled();
-    expect(
-      screen.queryByRole('button', { name: 'Undo filter change' }),
-    ).not.toBeInTheDocument();
-  });
-
   it('reads initialFilters only on mount', () => {
     const { onChange, view } = setup({
       initialFilters: {

@@ -7,7 +7,6 @@ import type {
 } from './filter-editor-state.ts';
 import type { FilterFieldDefinition } from '@/types/filter.ts';
 
-/** Preview text for the active draft beside the add-filter input. */
 function formatDraftPreview(state: FilterEditorState): string {
   if (state.stage !== 'value') return '…';
   const { draft } = state;
@@ -15,26 +14,19 @@ function formatDraftPreview(state: FilterEditorState): string {
     case 'scalar':
       return draft.input || '…';
     case 'range':
-      if (draft.fromInput !== '' && draft.toInput !== '')
-        return `${draft.fromInput} and ${draft.toInput}`;
-      return draft.fromInput || draft.toInput || '…';
+      return (
+        [draft.fromInput, draft.toInput].filter(Boolean).join(' and ') || '…'
+      );
     case 'duration':
       return draft.amountInput === ''
         ? '…'
         : `${draft.amountInput} ${draft.unit}`;
     case 'multiSelection':
-      return draft.selectedOptions.length > 0
-        ? draft.selectedOptions.join(', ')
-        : '…';
+      return draft.selectedOptions.join(', ') || '…';
   }
 }
 
-/**
- * The non-interactive (aria-hidden) preview of the active draft that builds
- * up inline while a new condition is mid-composition; the popover is the
- * interactive surface. Renders nothing until a field has been chosen for a
- * new condition.
- */
+/** Aria-hidden preview used as the popover anchor while composing a new condition. */
 export function FilterDraftPreview({
   editorState,
   field,
@@ -68,10 +60,7 @@ export function FilterDraftPreview({
   );
 }
 
-/**
- * An abandoned mid-composition draft, kept as a resumable chip. Renders
- * nothing when there is no preserved draft or while the editor is open.
- */
+/** Resumable, uncommitted draft shown only while the editor is closed. */
 export function IncompleteDraftChip({
   incompleteDraft,
   field,
@@ -84,7 +73,7 @@ export function IncompleteDraftChip({
   field: FilterFieldDefinition | undefined;
   visible: boolean;
   disabled: boolean;
-  onResume: () => void;
+  onResume: (anchor: HTMLButtonElement) => void;
   onDiscard: () => void;
 }) {
   if (!incompleteDraft || !visible) return null;
@@ -94,14 +83,13 @@ export function IncompleteDraftChip({
       role="group"
       aria-label={`Incomplete filter: ${label}`}
       className="filter-chip filter-incomplete-draft-chip"
-      data-incomplete-draft="1"
     >
       <button
         type="button"
         disabled={disabled}
         className="filter-incomplete-draft-resume"
         title="Finish this filter"
-        onClick={onResume}
+        onClick={(event) => onResume(event.currentTarget)}
       >
         <CircleDashed aria-hidden="true" size={13} />
         <span className="filter-incomplete-draft-field">{label}</span>

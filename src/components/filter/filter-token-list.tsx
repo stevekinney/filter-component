@@ -1,6 +1,5 @@
 import { memo } from 'react';
 import { describeAndRuns } from '@/utilities/filter/expression.ts';
-import { findField } from '@/utilities/filter/operators.ts';
 import { getFilterValidationIssue } from '@/utilities/filter/validation.ts';
 import { FilterBracket, FilterJoiner } from './filter-expression-controls.tsx';
 import { FilterToken } from './filter-token.tsx';
@@ -40,7 +39,7 @@ type FilterTokenListItemProps = Omit<
   inAndRun: boolean;
 };
 
-/** A keyed memo boundary keeps structurally shared conditions out of updates. */
+/** Memoized so structurally shared conditions do not rerender. */
 const FilterTokenListItem = memo(function FilterTokenListItem({
   filter,
   index,
@@ -77,7 +76,7 @@ const FilterTokenListItem = memo(function FilterTokenListItem({
       {opensRun && <FilterBracket glyph="(" />}
       <FilterToken
         filter={filter}
-        field={findField(fields, filter.fieldKey)}
+        field={fields.find((candidate) => candidate.key === filter.fieldKey)}
         validationIssue={getFilterValidationIssue(filter, fields)}
         editingSegment={editingSegment}
         inAndRun={inAndRun}
@@ -95,12 +94,8 @@ const FilterTokenListItem = memo(function FilterTokenListItem({
 });
 
 /**
- * The committed chips with the smart-joiners furniture between them: each
- * list slot carries the chip's leading joiner word (gap `index - 1`), the
- * opening bracket when the chip starts a ≥2-member and-run, and the closing
- * bracket when it ends one. Brackets derive from the joiner sequence and
- * appear only once an `or` joiner exists — the joiner flip is the only
- * structural gesture, so nothing here manages groups.
+ * Renders committed conditions as list items; joiners and brackets are derived
+ * from the flat joiner sequence.
  */
 export function FilterTokenList({
   expression,
@@ -127,16 +122,20 @@ export function FilterTokenList({
         const leadingJoiner = joiners[index - 1];
         const previousFilter = conditions[index - 1];
         const marker = runMarkers[index];
+        const previousFilterId = previousFilter ? previousFilter.id : null;
+        const opensRun = marker ? marker.opensRun : false;
+        const closesRun = marker ? marker.closesRun : false;
+        const inAndRun = marker ? marker.inRun : false;
         return (
           <FilterTokenListItem
             key={filter.id}
             filter={filter}
             index={index}
             leadingJoiner={leadingJoiner}
-            previousFilterId={previousFilter?.id ?? null}
-            opensRun={marker?.opensRun ?? false}
-            closesRun={marker?.closesRun ?? false}
-            inAndRun={marker?.inRun ?? false}
+            previousFilterId={previousFilterId}
+            opensRun={opensRun}
+            closesRun={closesRun}
+            inAndRun={inAndRun}
             fields={fields}
             disabled={disabled}
             editingSegment={

@@ -1,6 +1,7 @@
+import clsx from 'clsx';
 import { Bookmark, Check, Plus, X } from 'lucide-react';
 import { useEffect, useId, useReducer, useRef } from 'react';
-import type { KeyboardEvent, ReactNode, RefObject } from 'react';
+import type { Dispatch, KeyboardEvent, ReactNode, RefObject } from 'react';
 import type { SavedView } from '@/utilities/filter/saved-views.ts';
 import { clampIndex } from '@/utilities/list-navigation.ts';
 import { PopoverValidationError } from './filter-popover-error.tsx';
@@ -8,14 +9,6 @@ import { SavedViewsList } from './filter-saved-views-list.tsx';
 import { useNativePopover } from './use-native-popover.ts';
 import type { FilterFieldDefinition } from '@/types/filter.ts';
 
-/**
- * A `popover="auto"` dialog for the saved-views controls, mounted only while
- * open — the same contract as `FilterPopover`: showing happens once after
- * mount, anchored to the trigger via `showPopover({ source })`; unmounting
- * hides without lifecycle events; a browser-driven close (light dismissal)
- * syncs back through `onBrowserDismiss`; Escape closes with focus returned
- * to the trigger.
- */
 function SavedViewsPopover({
   triggerRef,
   onBrowserDismiss,
@@ -106,23 +99,85 @@ function savedViewsMenuReducer(
   }
 }
 
-/**
- * The saved-views control: a single bookmarks button (shown while any views
- * exist or the current group is savable) that opens a complete views surface.
- * The menu carries a save action — a "Save current filters…" button that
- * swaps in place to an inline name field — shown only while the current group
- * is non-empty and not already saved, and one row per saved view. Each row
- * loads its view on click (an undoable, onChange-reported change) and carries
- * a check plus a tinted background while it is the active view; a separate
- * trailing × removes it, kept clear of the load hit-area.
- *
- * Keyboard: ArrowDown on the trigger opens onto the first view, ArrowUp onto
- * the last. Inside the list, ArrowDown/ArrowUp move with wraparound, Home/End
- * jump to the ends, ArrowRight/ArrowLeft step between a view and its × button,
- * and Delete/Backspace remove the view under focus — its neighbor receives
- * focus, mirroring token removal. Enter/Space activate; Escape returns to the
- * trigger.
- */
+function SavedViewSaveControl({
+  menuState,
+  viewsLength,
+  autofocusIndex,
+  nameInputRef,
+  errorId,
+  dispatchMenu,
+  submitName,
+  handleNameKeyDown,
+}: {
+  menuState: Exclude<SavedViewsMenuState, { stage: 'closed' }>;
+  viewsLength: number;
+  autofocusIndex: number;
+  nameInputRef: RefObject<HTMLInputElement | null>;
+  errorId: string;
+  dispatchMenu: Dispatch<SavedViewsMenuAction>;
+  submitName: (
+    namingState: Extract<SavedViewsMenuState, { stage: 'naming' }>,
+  ) => void;
+  handleNameKeyDown: (
+    event: KeyboardEvent<HTMLInputElement>,
+    namingState: Extract<SavedViewsMenuState, { stage: 'naming' }>,
+  ) => void;
+}) {
+  if (menuState.stage === 'naming') {
+    return (
+      <div className="filter-saved-views-save">
+        <div className="filter-value-editor-controls">
+          <input
+            ref={nameInputRef}
+            type="text"
+            aria-label="View name"
+            aria-describedby={menuState.nameError ? errorId : undefined}
+            placeholder="Name this view"
+            value={menuState.nameDraft}
+            onChange={(event) => {
+              dispatchMenu({
+                type: 'changeName',
+                autofocusIndex: menuState.autofocusIndex,
+                name: event.target.value,
+              });
+            }}
+            onKeyDown={(event) => handleNameKeyDown(event, menuState)}
+          />
+          <button
+            type="button"
+            aria-label="Save"
+            title="Save"
+            className="filter-value-editor-apply"
+            onClick={() => submitName(menuState)}
+          >
+            <Check aria-hidden="true" size={14} />
+          </button>
+        </div>
+        <PopoverValidationError error={menuState.nameError} id={errorId} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="filter-saved-views-save">
+      <button
+        type="button"
+        data-autofocus={viewsLength === 0 ? '1' : undefined}
+        className="filter-saved-views-save-action"
+        onClick={() =>
+          dispatchMenu({
+            type: 'beginNaming',
+            autofocusIndex,
+          })
+        }
+      >
+        <Plus aria-hidden="true" size={16} />
+        Save current filters…
+      </button>
+    </div>
+  );
+}
+
 export function SavedViewsControls({
   fields,
   views,
@@ -220,11 +275,9 @@ export function SavedViewsControls({
         type="button"
         data-saved-views-button="1"
         disabled={disabled}
-        className={
-          menuState.stage === 'closed'
-            ? 'filter-icon-button'
-            : 'filter-icon-button is-open'
-        }
+        className={clsx('filter-icon-button', {
+          'is-open': menuState.stage !== 'closed',
+        })}
         aria-label="Saved views"
         title="Saved views"
         aria-haspopup="dialog"
@@ -256,60 +309,16 @@ export function SavedViewsControls({
           </div>
 
           {canSaveCurrentGroup && (
-            <div className="filter-saved-views-save">
-              {menuState.stage === 'naming' ? (
-                <>
-                  <div className="filter-value-editor-controls">
-                    <input
-                      ref={nameInputRef}
-                      type="text"
-                      aria-label="View name"
-                      aria-describedby={
-                        menuState.nameError ? errorId : undefined
-                      }
-                      placeholder="Name this view"
-                      value={menuState.nameDraft}
-                      onChange={(event) => {
-                        dispatchMenu({
-                          type: 'changeName',
-                          autofocusIndex: menuState.autofocusIndex,
-                          name: event.target.value,
-                        });
-                      }}
-                      onKeyDown={(event) => handleNameKeyDown(event, menuState)}
-                    />
-                    <button
-                      type="button"
-                      aria-label="Save"
-                      title="Save"
-                      className="filter-value-editor-apply"
-                      onClick={() => submitName(menuState)}
-                    >
-                      <Check aria-hidden="true" size={14} />
-                    </button>
-                  </div>
-                  <PopoverValidationError
-                    error={menuState.nameError}
-                    id={errorId}
-                  />
-                </>
-              ) : (
-                <button
-                  type="button"
-                  data-autofocus={views.length === 0 ? '1' : undefined}
-                  className="filter-saved-views-save-action"
-                  onClick={() =>
-                    dispatchMenu({
-                      type: 'beginNaming',
-                      autofocusIndex,
-                    })
-                  }
-                >
-                  <Plus aria-hidden="true" size={16} />
-                  Save current filters…
-                </button>
-              )}
-            </div>
+            <SavedViewSaveControl
+              menuState={menuState}
+              viewsLength={views.length}
+              autofocusIndex={autofocusIndex}
+              nameInputRef={nameInputRef}
+              errorId={errorId}
+              dispatchMenu={dispatchMenu}
+              submitName={submitName}
+              handleNameKeyDown={handleNameKeyDown}
+            />
           )}
 
           {canSaveCurrentGroup && views.length > 0 && (

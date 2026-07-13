@@ -5,19 +5,10 @@ export function fieldLabel(field: FilterFieldDefinition): string {
   return field.label ?? field.key;
 }
 
-/**
- * `Array.isArray` doesn't narrow a string array out of a union of value
- * shapes; this guard does, and is shared by every module that branches on
- * multi-values.
- */
-export const isStringArray = (value: unknown): value is string[] =>
-  Array.isArray(value);
-
-/** Human-readable value for a token segment; empty for valueless operators. */
 export function formatFilterValue(filter: FilterCondition): string {
   const value = filter.value;
   if (value === undefined) return '';
-  if (isStringArray(value)) return value.join(', ');
+  if (Array.isArray(value)) return value.join(', ');
   if (typeof value === 'object') {
     if ('amount' in value) return `${value.amount} ${value.unit}`;
     return `${value.from} and ${value.to}`;

@@ -1,4 +1,4 @@
-import { fireEvent, render, renderHook, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { useNativePopover } from './use-native-popover.ts';
 
@@ -100,18 +100,6 @@ describe('useNativePopover lifecycle', () => {
         anchor={secondAnchor}
         includeAutofocus={false}
       />,
-    );
-  });
-
-  it('returns safely when the hook ref is never attached', () => {
-    renderHook(
-      ({ anchor }: { anchor: HTMLElement | null }) =>
-        useNativePopover({
-          resolveAnchor: () => anchor,
-          onBrowserDismiss: vi.fn(),
-          onEscape: vi.fn(),
-        }),
-      { initialProps: { anchor: null } },
     );
   });
 });

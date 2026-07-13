@@ -1,12 +1,8 @@
 import { useEffectEvent, useLayoutEffect, useRef } from 'react';
 import type { KeyboardEvent, RefObject, ToggleEvent } from 'react';
-import { AUTOFOCUS_SELECTOR } from '@/utilities/filter/dom-selectors.ts';
 
 type NativePopoverOptions = {
-  /**
-   * Changes only when resolving again could produce a different anchor. Omit
-   * when the hook is mounted for exactly one immutable anchor source.
-   */
+  /** Dependency key for changes that can resolve to a different anchor. */
   anchorKey?: unknown;
   resolveAnchor: () => HTMLElement | null;
   onBrowserDismiss: () => void;
@@ -27,8 +23,8 @@ function performPopoverReanchoring(
 }
 
 /**
- * Keeps a mounted native popover open and anchored while translating browser
- * dismissal and Escape into the owning state domain's semantic commands.
+ * Keeps a native popover anchored while translating browser dismissal and
+ * Escape into domain actions.
  */
 export function useNativePopover(options: NativePopoverOptions) {
   const {
@@ -55,7 +51,7 @@ export function useNativePopover(options: NativePopoverOptions) {
       if (isPopoverOpenRef.current) popover.hidePopover();
       popover.showPopover(anchor ? { source: anchor } : undefined);
       if (autofocusOnOpen) {
-        popover.querySelector<HTMLElement>(AUTOFOCUS_SELECTOR)?.focus();
+        popover.querySelector<HTMLElement>('[data-autofocus]')?.focus();
       }
     });
     currentAnchorRef.current = anchor;

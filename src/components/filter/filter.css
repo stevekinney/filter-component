@@ -30,9 +30,6 @@
   cursor: pointer;
 }
 
-/* Default focus treatment for buttons: an inset accent ring. Controls with a
-   different treatment (.filter-icon-button, .filter-popover-footer-apply) override
-   it; non-button focus targets (chips, option lists) style themselves. */
 :where(.filter button):focus-visible {
   outline: var(--filter-focus-ring);
   outline-offset: -2px;
@@ -51,8 +48,6 @@
   outline-offset: -2px;
 }
 
-/* Chip shell shared by committed tokens, the in-progress draft chip, and the
-   incomplete-draft chip. Variants own their border style and surface. */
 :where(.filter-chip) {
   display: inline-flex;
   align-items: stretch;
@@ -63,8 +58,6 @@
   background: var(--filter-resolved-color-background-primary);
 }
 
-/* Single-line truncation shared by token values, enum pill labels, and the
-   draft chip's value preview. Width limits stay with each consumer. */
 :where(
   .filter-token-value,
   .filter-token-pill-label,
@@ -146,8 +139,6 @@
   gap: 8px;
 }
 
-/* Grows to fill the composer block; shrinks first on a narrow row (down to
-   its min-width) while the rail keeps its size. */
 .filter-add-input {
   flex: 1 1 120px;
   min-width: min(120px, 100%);
@@ -163,9 +154,6 @@
   }
 }
 
-/* The right-side action rail: saved views, history, and clear as one unit
-   that never wraps internally, so the controls stay together and pinned to
-   the bottom-right. */
 .filter-rail {
   display: flex;
   align-items: center;
@@ -176,7 +164,6 @@
   margin-inline-start: auto;
 }
 
-/* Hairline fence between clusters. */
 .filter-rail-divider {
   width: 1px;
   height: 18px;
@@ -184,7 +171,6 @@
   background: var(--filter-resolved-color-border-primary);
 }
 
-/* Shared by the row's undo/redo/clear buttons and the popover's × cancel. */
 .filter-icon-button {
   display: flex;
   align-items: center;
@@ -215,7 +201,6 @@
   }
 }
 
-/* Polite live region for announcements. */
 .filter-visually-hidden {
   position: absolute;
   width: 1px;

@@ -5,9 +5,7 @@ import { SavedViewsControls } from './filter-saved-views.tsx';
 import type { SavedView } from '@/utilities/filter/saved-views.ts';
 import type { FilterFieldDefinition } from '@/types/filter.ts';
 
-/** A round icon button in the filter row; renders nothing while unavailable. */
 function RowActionButton(properties: {
-  visible: boolean;
   disabled: boolean;
   destructive?: boolean;
   label: string;
@@ -16,7 +14,6 @@ function RowActionButton(properties: {
   children: ReactNode;
 }) {
   const {
-    visible,
     disabled,
     destructive: destructiveOption,
     label,
@@ -26,7 +23,6 @@ function RowActionButton(properties: {
   } = properties;
   const destructive = destructiveOption ?? false;
 
-  if (!visible) return null;
   return (
     <button
       type="button"
@@ -43,7 +39,6 @@ function RowActionButton(properties: {
   );
 }
 
-/** The history cluster: undo and redo, each rendered only while available. */
 function HistoryControls({
   canUndo,
   canRedo,
@@ -59,24 +54,26 @@ function HistoryControls({
 }) {
   return (
     <>
-      <RowActionButton
-        visible={canUndo}
-        disabled={disabled}
-        label="Undo filter change"
-        title="Undo"
-        onClick={onUndo}
-      >
-        <Undo2 aria-hidden="true" size={18} />
-      </RowActionButton>
-      <RowActionButton
-        visible={canRedo}
-        disabled={disabled}
-        label="Redo filter change"
-        title="Redo"
-        onClick={onRedo}
-      >
-        <Redo2 aria-hidden="true" size={18} />
-      </RowActionButton>
+      {canUndo && (
+        <RowActionButton
+          disabled={disabled}
+          label="Undo filter change"
+          title="Undo"
+          onClick={onUndo}
+        >
+          <Undo2 aria-hidden="true" size={18} />
+        </RowActionButton>
+      )}
+      {canRedo && (
+        <RowActionButton
+          disabled={disabled}
+          label="Redo filter change"
+          title="Redo"
+          onClick={onRedo}
+        >
+          <Redo2 aria-hidden="true" size={18} />
+        </RowActionButton>
+      )}
     </>
   );
 }
@@ -98,17 +95,6 @@ type FilterRailProps = {
   onClearAll: () => void;
 };
 
-/**
- * The right-side action rail, pinned to the bottom-right of the control. Its
- * three clusters — saved views, history (undo/redo), and the destructive
- * clear — each appear only while available, ordered by how tightly they bind
- * to the query. (How conditions combine is no rail concern: the joiner words
- * between the chips own that.) A hairline divider precedes a cluster only
- * when an earlier cluster is also visible, so the divider count is always one
- * less than the number of visible clusters (a lone Clear shows none). The
- * rail never wraps internally: on a narrow row the input shrinks first while
- * the rail keeps its size.
- */
 export function FilterRail({
   disabled,
   fields,
@@ -157,7 +143,6 @@ export function FilterRail({
   if (hasFilters) {
     clusters.push(
       <RowActionButton
-        visible
         disabled={disabled}
         destructive
         label="Clear all filters"

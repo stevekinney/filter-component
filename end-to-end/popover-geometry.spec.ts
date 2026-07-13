@@ -99,7 +99,7 @@ test.describe('popover geometry', () => {
   test('near the inline-start edge an edit popover stays inside the viewport', async ({
     page,
   }) => {
-    // The seeded filterToken is the first item in the row, close to the viewport's
+    // The seeded filter token is the first item in the row, close to the viewport's
     // inline-start edge.
     await filterToken(page, 'Active is true')
       .getByTitle('Change field')

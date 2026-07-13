@@ -1,7 +1,6 @@
 /**
- * Inline validation message inside the popover. Rendered as `role="alert"`
- * so failed commits are announced; associate inputs via `aria-describedby`
- * pointing at `id`. Renders nothing while there is no error.
+ * Announces a validation error and links it to the active editor through
+ * aria-describedby.
  */
 export function PopoverValidationError({
   error,

@@ -22,7 +22,7 @@ pre-commit:
       stage_fixed: true
     - name: check-file-sizes
       run: bun run check:file-sizes
-    - name: test-coverage
-      run: bun run test:coverage
+    - name: test
+      run: bun run test
     - name: test-e2e
       run: bun run test:e2e

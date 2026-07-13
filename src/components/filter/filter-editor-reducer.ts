@@ -49,6 +49,72 @@ export function incompleteFromEditor(
       };
 }
 
+function preservedIncompleteDraft(
+  state: FilterEditorControllerState,
+  preserveCurrent: boolean,
+): IncompleteDraft | null {
+  if (!preserveCurrent) return state.incompleteDraft;
+  return incompleteFromEditor(state.editor) ?? state.incompleteDraft;
+}
+
+function idleEditor(
+  state: FilterEditorControllerState,
+  preserveCurrent: boolean,
+): FilterEditorControllerState {
+  const incompleteDraft = preservedIncompleteDraft(state, preserveCurrent);
+  if (
+    state.editor.stage === 'idle' &&
+    incompleteDraft === state.incompleteDraft
+  ) {
+    return state;
+  }
+  return { editor: IDLE_FILTER_EDITOR_STATE, incompleteDraft };
+}
+
+function changeQuery(
+  state: FilterEditorControllerState,
+  query: string,
+): FilterEditorControllerState {
+  if (state.editor.stage !== 'field') return state;
+  if (state.editor.query === query && state.editor.activeIndex === 0) {
+    return state;
+  }
+  return {
+    ...state,
+    editor: {
+      ...state.editor,
+      query,
+      activeIndex: 0,
+    },
+  };
+}
+
+function changeDraft(
+  state: FilterEditorControllerState,
+  draft: ValueDraft,
+): FilterEditorControllerState {
+  if (state.editor.stage !== 'value') return state;
+  if (state.editor.draft === draft && state.editor.error === null) return state;
+  return {
+    ...state,
+    editor: { ...state.editor, draft, error: null },
+  };
+}
+
+function setValidationError(
+  state: FilterEditorControllerState,
+  draft: ValueDraft,
+  error: string,
+): FilterEditorControllerState {
+  if (state.editor.stage !== 'value') return state;
+  if (state.editor.draft === draft && state.editor.error === error)
+    return state;
+  return {
+    ...state,
+    editor: { ...state.editor, draft, error },
+  };
+}
+
 export function filterEditorControllerReducer(
   state: FilterEditorControllerState,
   action: FilterEditorControllerAction,
@@ -57,75 +123,35 @@ export function filterEditorControllerReducer(
     case 'open':
       return {
         editor: action.editor,
-        incompleteDraft: action.preserveCurrent
-          ? (incompleteFromEditor(state.editor) ?? state.incompleteDraft)
-          : state.incompleteDraft,
+        incompleteDraft: preservedIncompleteDraft(
+          state,
+          action.preserveCurrent,
+        ),
       };
-    case 'idle': {
-      const incompleteDraft = action.preserveCurrent
-        ? (incompleteFromEditor(state.editor) ?? state.incompleteDraft)
-        : state.incompleteDraft;
+    case 'idle':
+      return idleEditor(state, action.preserveCurrent);
+    case 'changeQuery':
+      return changeQuery(state, action.query);
+    case 'changeActiveIndex':
       if (
-        state.editor.stage === 'idle' &&
-        incompleteDraft === state.incompleteDraft
-      ) {
-        return state;
-      }
-      return { editor: IDLE_FILTER_EDITOR_STATE, incompleteDraft };
-    }
-    case 'changeQuery': {
-      if (state.editor.stage !== 'field') return state;
-      if (
-        state.editor.query === action.query &&
-        state.editor.activeIndex === 0
+        state.editor.stage === 'idle' ||
+        state.editor.activeIndex === action.index
       ) {
         return state;
       }
       return {
         ...state,
-        editor: {
-          ...state.editor,
-          query: action.query,
-          activeIndex: 0,
-        },
+        editor: { ...state.editor, activeIndex: action.index },
       };
-    }
-    case 'changeActiveIndex':
-      return state.editor.stage === 'idle' ||
-        state.editor.activeIndex === action.index
-        ? state
-        : {
-            ...state,
-            editor: { ...state.editor, activeIndex: action.index },
-          };
     case 'changeDraft':
-      return state.editor.stage !== 'value' ||
-        (state.editor.draft === action.draft && state.editor.error === null)
-        ? state
-        : {
-            ...state,
-            editor: { ...state.editor, draft: action.draft, error: null },
-          };
+      return changeDraft(state, action.draft);
     case 'validationError':
-      return state.editor.stage !== 'value' ||
-        (state.editor.draft === action.draft &&
-          state.editor.error === action.error)
-        ? state
-        : {
-            ...state,
-            editor: {
-              ...state.editor,
-              draft: action.draft,
-              error: action.error,
-            },
-          };
+      return setValidationError(state, action.draft, action.error);
     case 'replaceIncomplete':
-      return state.incompleteDraft === action.draft
-        ? state
-        : { ...state, incompleteDraft: action.draft };
+      if (state.incompleteDraft === action.draft) return state;
+      return { ...state, incompleteDraft: action.draft };
     case 'discardIncomplete':
-      return state.incompleteDraft === null
-        ? state
-        : { ...state, incompleteDraft: null };
+      if (state.incompleteDraft === null) return state;
+      return { ...state, incompleteDraft: null };
   }
 }

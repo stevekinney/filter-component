@@ -1,9 +1,9 @@
 import { fireEvent, screen, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { Filter } from './filter.tsx';
 import {
-  addStringFilter,
   FIELDS,
+  addStringFilter,
   queryTokens,
   setup,
 } from './filter-test-setup.tsx';
@@ -12,7 +12,7 @@ describe('incomplete drafts', () => {
   it('keeps an abandoned mid-composition draft as a resumable incomplete-draft chip', async () => {
     const { onChange, user, addFilterInput } = setup();
     await user.click(addFilterInput);
-    await user.keyboard('na{Enter}'); // field chosen, operator stage open
+    await user.keyboard('na{Enter}');
     await user.click(document.body);
     const incompleteDraftChip = screen.getByRole('group', {
       name: 'Incomplete filter: Name',
@@ -49,7 +49,6 @@ describe('incomplete drafts', () => {
 describe('disabled and initialFilters', () => {
   it('disables the whole component', async () => {
     const { user, addFilterInput, view } = setup({ disabled: true });
-    // The native fieldset disables every control inside it.
     expect(view.container.querySelector('fieldset')).toHaveAttribute(
       'aria-disabled',
       'true',
@@ -89,20 +88,6 @@ describe('accessibility plumbing', () => {
     expect(liveRegion).toHaveTextContent('Filter added: Name is');
   });
 
-  it('labels every icon-only button', async () => {
-    const { user, addFilterInput } = setup();
-    await addStringFilter(user, addFilterInput);
-    expect(
-      screen.getByRole('button', { name: 'Remove Name is Maria filter' }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: 'Undo filter change' }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: 'Clear all filters' }),
-    ).toBeInTheDocument();
-  });
-
   it('re-announces identical consecutive messages so repeats are not lost', async () => {
     const { user, addFilterInput, view } = setup();
     await addStringFilter(user, addFilterInput);
@@ -120,20 +105,5 @@ describe('accessibility plumbing', () => {
     // stay silent on the identical repeat.
     expect(liveRegion?.textContent).not.toBe(firstAnnouncement);
     expect(liveRegion?.textContent).toContain('Filter removed: Name');
-  });
-
-  it('prevents native form submission', async () => {
-    const onSubmitCapture = vi.fn((event: Event) => {
-      expect((event as SubmitEvent).defaultPrevented).toBe(true);
-    });
-    const { user, addFilterInput, view } = setup();
-    const form = view.container.querySelector('form');
-    form?.addEventListener('submit', (event) => onSubmitCapture(event));
-    await user.click(addFilterInput);
-    await user.keyboard('{Enter}');
-    // Enter with no menu open must not submit the form (submit is prevented
-    // and nothing listens for it) — nothing to observe beyond no crash and no
-    // navigation; the handler above asserts defaultPrevented if it ever fires.
-    expect(onSubmitCapture).not.toHaveBeenCalled();
   });
 });

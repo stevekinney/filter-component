@@ -1,9 +1,5 @@
 import { z } from 'zod';
-import {
-  findField,
-  getValueEditorKind,
-  operatorsForField,
-} from './operators.ts';
+import { getValueEditorKind, operatorsForField } from './operators.ts';
 import type { ValueEditorKind } from './operators.ts';
 import { filterConditionSchema } from './filter-schema.ts';
 import type { ValueDraft } from './value-drafts.ts';
@@ -12,6 +8,7 @@ import type {
   FilterCondition,
   FilterFieldDefinition,
   FilterOperator,
+  RangeValue,
   WithinLastUnit,
 } from '@/types/filter.ts';
 
@@ -208,6 +205,29 @@ export type FilterValidationIssue = {
   reason: string;
 };
 
+function enumFilterValues(value: FilterEntry['value']): string[] {
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'string') return [value];
+  return [];
+}
+
+function getEnumValueIssue(
+  field: FilterFieldDefinition,
+  filter: FilterEntry,
+): FilterValidationIssue | null {
+  if (field.type !== 'enum' || filter.value === undefined) return null;
+  const options = field.options ?? [];
+  const missing = enumFilterValues(filter.value).filter(
+    (value) => !options.includes(value),
+  );
+  if (missing.length === 0) return null;
+  const verb = missing.length === 1 ? 'is' : 'are';
+  return {
+    segment: 'value',
+    reason: `${missing.join(', ')} ${verb} no longer a valid option`,
+  };
+}
+
 /**
  * Re-validates a committed filter against the current field definitions.
  * Fields can disappear or change type, operator sets can narrow, and enum
@@ -219,7 +239,7 @@ export function getFilterValidationIssue(
   filter: FilterEntry,
   fields: readonly FilterFieldDefinition[],
 ): FilterValidationIssue | null {
-  const field = findField(fields, filter.fieldKey);
+  const field = fields.find((candidate) => candidate.key === filter.fieldKey);
   if (!field) {
     return { segment: 'field', reason: 'This field is no longer available' };
   }
@@ -236,22 +256,8 @@ export function getFilterValidationIssue(
       reason: `This operator is no longer supported for ${label}`,
     };
   }
-  if (field.type === 'enum' && filter.value !== undefined) {
-    const options = field.options ?? [];
-    const values = Array.isArray(filter.value)
-      ? filter.value
-      : typeof filter.value === 'string'
-        ? [filter.value]
-        : [];
-    const missing = values.filter((value) => !options.includes(value));
-    if (missing.length > 0) {
-      const verb = missing.length === 1 ? 'is' : 'are';
-      return {
-        segment: 'value',
-        reason: `${missing.join(', ')} ${verb} no longer a valid option`,
-      };
-    }
-  }
+  const enumValueIssue = getEnumValueIssue(field, filter);
+  if (enumValueIssue) return enumValueIssue;
   const { id: _id, ...condition } = filter;
   const intrinsic = filterConditionSchema.safeParse(condition);
   if (intrinsic.success) return null;
@@ -265,28 +271,38 @@ export function getFilterValidationIssue(
  * `validateDraft`, and the `onChange` contract promises valid, executable
  * conditions only.
  */
+function isRangeValue(
+  value: FilterEntry['value'],
+): value is RangeValue<string> | RangeValue<number> {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'from' in value &&
+    'to' in value
+  );
+}
+
+function isInvertedRange(
+  value: RangeValue<string> | RangeValue<number>,
+): boolean {
+  if (typeof value.from === 'number' && typeof value.to === 'number') {
+    return value.from > value.to;
+  }
+  return String(value.from) > String(value.to);
+}
+
+function intrinsicRangeReason(value: FilterEntry['value']): string {
+  if (!isRangeValue(value)) return 'Choose both valid ends of the range';
+  if (isInvertedRange(value)) return 'Start must not exceed end';
+  return 'Choose both valid ends of the range';
+}
+
 function intrinsicValueReason(filter: FilterEntry): string {
   if (filter.operator === 'in' || filter.operator === 'notIn') {
     return 'Choose at least one valid option';
   }
   if (filter.operator === 'between') {
-    const { value } = filter;
-    const isRange =
-      typeof value === 'object' &&
-      value !== null &&
-      'from' in value &&
-      'to' in value;
-    if (!isRange) {
-      return 'Choose both valid ends of the range';
-    }
-    const inverted =
-      typeof value.from === 'number' && typeof value.to === 'number'
-        ? value.from > value.to
-        : String(value.from) > String(value.to);
-    if (inverted) {
-      return 'Start must not exceed end';
-    }
-    return 'Choose both valid ends of the range';
+    return intrinsicRangeReason(filter.value);
   }
   if (filter.operator === 'withinLast') {
     return 'Duration needs a positive whole number of days, weeks, or months';

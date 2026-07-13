@@ -32,12 +32,11 @@ describe('parseSavedViews', () => {
     const valid: SavedView = { name: 'Corp deals', group: GROUP };
     const parsed = parseSavedViews([
       42,
-      { name: '', group: GROUP }, // blank name
+      { name: '', group: GROUP },
       {
         name: 'Broken pairing',
         group: {
           combinator: 'and',
-          // `between` requires a { from, to } value.
           conditions: [
             { fieldKey: 'v', type: 'number', operator: 'between', value: 5 },
           ],
@@ -49,15 +48,6 @@ describe('parseSavedViews', () => {
       valid,
     ]);
     expect(parsed).toEqual([valid]);
-  });
-
-  it('applies defaults for a missing combinator, conditions, and name', () => {
-    const parsed = parseSavedViews([
-      { name: 'Bare', group: {} },
-      { group: GROUP },
-    ]);
-    expect(parsed[0]?.group).toEqual({ combinator: 'and', conditions: [] });
-    expect(parsed[1]?.name).toBe('Untitled view');
   });
 
   it('keeps the first of two views sharing a name', () => {
@@ -82,11 +72,6 @@ describe('parseSavedViews', () => {
       },
     };
     expect(parseSavedViews([view])).toEqual([view]);
-  });
-
-  it('keeps v1 flat saved views compatible', () => {
-    const v1View: SavedView = { name: 'V1 flat view', group: GROUP };
-    expect(parseSavedViews([v1View])).toEqual([v1View]);
   });
 });
 

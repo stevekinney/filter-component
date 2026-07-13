@@ -4,7 +4,18 @@ import type {
   IncompleteDraft,
 } from './filter-editor-state.ts';
 import type { FilterFieldRegistry } from '@/utilities/filter/field-registry.ts';
-import { createEmptyValueDraft } from '@/utilities/filter/value-drafts.ts';
+import { createFilterEntry } from '@/utilities/filter/filter-entry.ts';
+import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
+import {
+  createFilterCondition,
+  getFilterValidationIssue,
+} from '@/utilities/filter/validation.ts';
+import type { TokenSegment } from '@/utilities/filter/validation.ts';
+import {
+  convertCommittedValueToDraft,
+  createEmptyValueDraft,
+  createValueDraftFromCommittedValue,
+} from '@/utilities/filter/value-drafts.ts';
 import type { ValueDraft } from '@/utilities/filter/value-drafts.ts';
 import {
   booleanChoicesForField,
@@ -12,7 +23,11 @@ import {
   operatorsForField,
 } from '@/utilities/filter/operators.ts';
 import type { ValueEditorKind } from '@/utilities/filter/operators.ts';
-import type { FilterFieldDefinition } from '@/types/filter.ts';
+import type {
+  FilterCondition,
+  FilterFieldDefinition,
+  FilterOperator,
+} from '@/types/filter.ts';
 
 export function fieldActiveIndex(
   registry: FilterFieldRegistry,
@@ -80,8 +95,8 @@ function reconcileEnumDraft(
   return draft;
 }
 
-/** Removes choices that no longer exist in the current enum definition. */
-export function reconcileValueDraftForField(
+/** Preserves enum selections that still exist after field definitions change. */
+function reconcileValueDraftForField(
   draft: ValueDraft,
   field: FilterFieldDefinition,
 ): ValueDraft {
@@ -90,7 +105,118 @@ export function reconcileValueDraftForField(
     : draft;
 }
 
-/** Reconciles an open editor against the latest checked field registry. */
+type OperatorSelectionResolution =
+  | { type: 'commit'; value: NonNullable<FilterCondition['value']> }
+  | { type: 'edit'; draft: ValueDraft };
+
+/** Reuses a compatible committed value or prepares a draft for an operator change. */
+export function resolveOperatorSelection(
+  field: FilterFieldDefinition,
+  operator: FilterOperator,
+  token: FilterEntry | undefined,
+  fields: readonly FilterFieldDefinition[],
+): OperatorSelectionResolution {
+  const kind = getValueEditorKind(field.type, operator);
+  const emptyDraft = createEmptyValueDraft(kind);
+  if (
+    !token ||
+    token.fieldKey !== field.key ||
+    token.type !== field.type ||
+    token.value === undefined
+  ) {
+    return { type: 'edit', draft: emptyDraft };
+  }
+
+  const previousKind = getValueEditorKind(field.type, token.operator);
+  if (previousKind === kind) {
+    const candidate = createFilterEntry(
+      createFilterCondition(field, operator, token.value),
+      token.id,
+    );
+    if (getFilterValidationIssue(candidate, fields) === null) {
+      return { type: 'commit', value: token.value };
+    }
+  }
+
+  const draft = convertCommittedValueToDraft(token.value, kind);
+  return { type: 'edit', draft: reconcileValueDraftForField(draft, field) };
+}
+
+function fieldEditorForToken(
+  token: FilterEntry,
+  registry: FilterFieldRegistry,
+): Exclude<FilterEditorState, { stage: 'idle' }> {
+  return {
+    stage: 'field',
+    filterId: token.id,
+    query: '',
+    activeIndex: fieldActiveIndex(registry, token.fieldKey),
+  };
+}
+
+function operatorEditorForToken(
+  token: FilterEntry,
+  segment: TokenSegment,
+  field: FilterFieldDefinition,
+): Exclude<FilterEditorState, { stage: 'idle' }> {
+  const activeIndex =
+    field.type === 'boolean'
+      ? booleanActiveIndex(field, token.operator, token.value)
+      : Math.max(0, operatorsForField(field).indexOf(token.operator));
+  return {
+    stage: 'operator',
+    filterId: token.id,
+    fieldKey: field.key,
+    fieldType: field.type,
+    activeIndex,
+    sourceSegment: segment === 'value' ? 'value' : 'operator',
+  };
+}
+
+function valueEditorForToken(
+  token: FilterEntry,
+  field: FilterFieldDefinition,
+): Exclude<FilterEditorState, { stage: 'idle' }> | null {
+  const kind = getValueEditorKind(field.type, token.operator);
+  if (kind === 'none') return null;
+  const draft =
+    token.value === undefined
+      ? createEmptyValueDraft(kind)
+      : createValueDraftFromCommittedValue(token.value, kind);
+  const reconciledDraft = reconcileValueDraftForField(draft, field);
+  return {
+    stage: 'value',
+    filterId: token.id,
+    fieldKey: field.key,
+    fieldType: field.type,
+    operator: token.operator,
+    draft: reconciledDraft,
+    error: null,
+    activeIndex: enumActiveIndex(field.options, reconciledDraft, kind),
+  };
+}
+
+/** Builds the editor state for a token segment after checking current field definitions. */
+export function editorForTokenSegment(
+  token: FilterEntry,
+  segment: TokenSegment,
+  registry: FilterFieldRegistry,
+): Exclude<FilterEditorState, { stage: 'idle' }> | null {
+  const field = registry.byKey.get(token.fieldKey);
+  if (segment === 'field' || !field || field.type !== token.type) {
+    return fieldEditorForToken(token, registry);
+  }
+  if (
+    !operatorsForField(field).includes(token.operator) ||
+    segment === 'operator' ||
+    field.type === 'boolean'
+  ) {
+    return operatorEditorForToken(token, segment, field);
+  }
+  return valueEditorForToken(token, field);
+}
+
+/** Repairs or closes an open editor after field definitions change. */
 export function reconcileFilterEditor(
   editor: FilterEditorState,
   registry: FilterFieldRegistry,
@@ -126,7 +252,7 @@ export function reconcileFilterEditor(
     : { ...editor, draft, error: null, activeIndex: 0 };
 }
 
-/** Keeps resumable drafts safe when the parent changes field content in place. */
+/** Reconciles a resumable draft with changed field definitions. */
 export function reconcileIncompleteDraft(
   incomplete: IncompleteDraft | null,
   registry: FilterFieldRegistry,

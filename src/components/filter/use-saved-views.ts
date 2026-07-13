@@ -14,12 +14,9 @@ import type { FilterHistoryAction } from '@/utilities/filter/history.ts';
 import type { SavedViewsStorage } from '@/utilities/storage/saved-views-storage.ts';
 
 type UseSavedViewsOptions = {
-  /** The committed expression (`history.present`), the thing a view snapshots. */
   expression: FilterExpression;
   applyFilterHistoryAction: (action: FilterHistoryAction) => boolean;
-  /** Mints a condition id unique within this component instance. */
   createConditionId: () => string;
-  /** Returns the editor to idle before a load replaces the row. */
   resetEditor: () => void;
   announce: (message: string) => void;
   scheduleFocus: (target: FocusTarget) => void;
@@ -28,11 +25,8 @@ type UseSavedViewsOptions = {
 
 type UseSavedViewsResult = {
   savedViews: SavedView[];
-  /** Visible fallback when browser storage rejects a save or removal. */
   persistenceNotice: string | null;
-  /** Whether the row is non-empty and not already saved as a view. */
   canSaveCurrentGroup: boolean;
-  /** Identity key of the current group; a view with this key is the active one. */
   currentGroupKey: string;
   saveCurrentView: (name: string) => void;
   loadSavedView: (view: SavedView) => void;
@@ -40,14 +34,8 @@ type UseSavedViewsResult = {
 };
 
 /**
- * Owns the saved-views collection. The injected store is read once on mount;
- * every mutation updates session state immediately and writes the full
- * collection back in order. Saving under an existing name overwrites that
- * view. Loading dispatches a `replace` history action, so it is committed,
- * reported through `onChange`, and undoable like any other change — except
- * when the view already matches the current expression, which loads as a
- * no-op. Views persist the canonical nested group without condition ids;
- * loading assigns fresh ones and linearizes back into the joiner model.
+ * Owns validated saved-view state and persistence. Loads are committed,
+ * undoable replacements; identical canonical groups are no-ops.
  */
 export function useSavedViews({
   expression,

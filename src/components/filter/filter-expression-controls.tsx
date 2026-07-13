@@ -1,12 +1,8 @@
 import type { FilterCombinator } from '@/types/filter.ts';
 
 /**
- * The joiner word between two adjacent chips — the only structural gesture
- * in the smart-joiners model. Clicking (or Enter/Space while focused) flips
- * this one gap between `and` and `or`; grouping re-derives from the joiner
- * sequence, so the button promises exactly that in its accessible name.
- * A roving stop: reachable with ←/→ from the neighboring chips, never a
- * Tab stop of its own.
+ * Roving button between adjacent conditions. Activation flips only this gap;
+ * grouping is derived from the resulting joiner sequence.
  */
 export function FilterJoiner({
   index,
@@ -15,12 +11,10 @@ export function FilterJoiner({
   onFlip,
   onMoveFocus,
 }: {
-  /** Gap position: sits between condition `index` and `index + 1`. */
   index: number;
   joiner: FilterCombinator;
   disabled: boolean;
   onFlip: () => void;
-  /** Move focus to the chip on either side; the parent resolves the target. */
   onMoveFocus: (direction: -1 | 1) => void;
 }) {
   const flipped = joiner === 'and' ? 'or' : 'and';
@@ -46,12 +40,7 @@ export function FilterJoiner({
   );
 }
 
-/**
- * A read-only precedence indicator around a ≥2-member and-run. Rendered only
- * while an `or` joiner exists somewhere in the expression — mixed
- * combinators never appear without brackets, and an all-`and` bar never
- * shows any.
- */
+/** Read-only parentheses around multi-condition and-runs in a mixed expression. */
 export function FilterBracket({ glyph }: { glyph: '(' | ')' }) {
   return (
     <span aria-hidden="true" className="filter-bracket">

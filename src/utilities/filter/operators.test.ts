@@ -1,13 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
-  BOOLEAN_CHOICES,
+  OPERATORS_BY_TYPE,
   booleanChoicesForField,
-  findField,
   getValueEditorKind,
   isValuelessOperator,
-  OPERATORS_BY_TYPE,
   operatorsForField,
-  usesBooleanChoiceStage,
 } from './operators.ts';
 import type { FilterFieldDefinition } from '@/types/filter.ts';
 
@@ -27,11 +24,17 @@ describe('operator helpers', () => {
   });
 
   it('filters collapsed boolean choices through the allowed operators', () => {
+    const allChoices = [
+      { value: 'true', label: 'is true' },
+      { value: 'false', label: 'is false' },
+      { value: 'isEmpty', label: 'is empty' },
+      { value: 'isNotEmpty', label: 'is not empty' },
+    ];
     const defaultField: FilterFieldDefinition<'boolean'> = {
       key: 'active',
       type: 'boolean',
     };
-    expect(booleanChoicesForField(defaultField)).toEqual(BOOLEAN_CHOICES);
+    expect(booleanChoicesForField(defaultField)).toEqual(allChoices);
     expect(
       booleanChoicesForField({
         ...defaultField,
@@ -40,26 +43,13 @@ describe('operator helpers', () => {
     ).toEqual([{ value: 'isEmpty', label: 'is empty' }]);
     expect(
       booleanChoicesForField({ ...defaultField, operators: ['equals'] }),
-    ).toEqual(BOOLEAN_CHOICES.slice(0, 2));
+    ).toEqual(allChoices.slice(0, 2));
   });
 
-  it('recognizes valueless operators and boolean-stage fields', () => {
+  it('recognizes valueless operators', () => {
     expect(isValuelessOperator('isEmpty')).toBe(true);
     expect(isValuelessOperator('isNotEmpty')).toBe(true);
     expect(isValuelessOperator('equals')).toBe(false);
-    expect(usesBooleanChoiceStage({ key: 'active', type: 'boolean' })).toBe(
-      true,
-    );
-    expect(usesBooleanChoiceStage({ key: 'name', type: 'string' })).toBe(false);
-  });
-
-  it('finds fields by key and reports misses', () => {
-    const fields: readonly FilterFieldDefinition[] = [
-      { key: 'name', type: 'string' },
-      { key: 'value', type: 'number' },
-    ];
-    expect(findField(fields, 'value')).toBe(fields[1]);
-    expect(findField(fields, 'missing')).toBeUndefined();
   });
 });
 

@@ -5,18 +5,10 @@ import type {
 } from '@/components/filter/index.ts';
 import type { Deal } from './records.ts';
 
-/**
- * The demo parent's query engine: applies a filter group to the in-memory
- * deals array. This lives entirely outside the component — the `Filter`
- * component only reports filter groups; how they execute is the parent's
- * choice (this one combines simple predicates with the group's AND/OR
- * combinator).
- */
-
 const UNIT_MILLISECONDS: Record<WithinLastUnit, number> = {
   days: 86_400_000,
   weeks: 604_800_000,
-  months: 2_592_000_000, // 30 days
+  months: 2_592_000_000, // The demo treats one month as 30 days.
 };
 
 function isEmptyValue(value: unknown): boolean {
@@ -92,7 +84,10 @@ function matchesEnum(
   }
 }
 
-/** ISO date strings compare correctly as plain strings. */
+/**
+ * Compares validated YYYY-MM-DD values lexicographically because that format
+ * preserves chronological order.
+ */
 function matchesDate(
   recorded: string,
   filter: Exclude<
