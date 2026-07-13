@@ -7,14 +7,14 @@
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.04em;
-  color: var(--filter-text-muted);
-  text-decoration: underline dotted var(--filter-icon-muted);
+  color: var(--filter-resolved-color-text-secondary);
+  text-decoration: underline dotted var(--filter-resolved-color-icon-secondary);
   text-underline-offset: 3px;
 
   &:hover,
   &:focus-visible {
-    background: var(--filter-surface-accent-hover);
-    color: var(--filter-text-accent-strong);
+    background: var(--filter-resolved-color-background-action-subtle);
+    color: var(--filter-resolved-color-text-action-strong);
   }
 
   &:focus-visible {
@@ -29,14 +29,14 @@
   font-size: 22px;
   font-weight: 300;
   line-height: 26px;
-  color: var(--filter-icon-muted);
+  color: var(--filter-resolved-color-icon-secondary);
   user-select: none;
 }
 
 .filter-draft-preview {
   max-width: 100%;
-  border: 1px dashed var(--filter-accent);
-  background: var(--filter-surface-selected);
+  border: 1px dashed var(--filter-resolved-color-border-editing);
+  background: var(--filter-resolved-color-background-editing);
 
   > span {
     display: flex;
@@ -49,7 +49,11 @@
   .filter-draft-preview-divider {
     width: 1px;
     padding: 0;
-    background: color-mix(in oklch, var(--filter-accent) 24%, transparent);
+    background: color-mix(
+      in oklch,
+      var(--filter-resolved-color-border-editing) 24%,
+      transparent
+    );
   }
 }
 
@@ -65,18 +69,18 @@
 }
 
 .filter-draft-preview-operator {
-  color: var(--filter-text-muted);
+  color: var(--filter-resolved-color-text-secondary);
 }
 
 .filter-draft-preview-value {
-  color: var(--filter-text-accent-strong);
+  color: var(--filter-resolved-color-text-action-strong);
   max-width: 160px;
 }
 
 .filter-incomplete-draft-chip {
   max-width: 100%;
-  border: 1px dashed var(--filter-warning-border);
-  background: var(--filter-warning-surface);
+  border: 1px dashed var(--filter-resolved-color-border-warning);
+  background: var(--filter-resolved-color-background-warning);
 }
 
 .filter-incomplete-draft-resume {
@@ -87,30 +91,30 @@
   overflow: hidden;
   padding-block: 0;
   padding-inline: 8px 4px;
-  color: var(--filter-warning-text);
+  color: var(--filter-resolved-color-text-warning);
 
   &:hover {
-    background: var(--filter-warning-hover);
+    background: var(--filter-resolved-color-background-warning-hover);
   }
 }
 
 .filter-incomplete-draft-field {
   font-weight: 500;
-  color: var(--filter-text);
+  color: var(--filter-resolved-color-text-primary);
 }
 
 .filter-incomplete-draft-operator {
-  color: var(--filter-text-muted);
+  color: var(--filter-resolved-color-text-secondary);
 }
 
 .filter-incomplete-draft-discard {
   display: flex;
   align-items: center;
   padding: 0 6px;
-  color: var(--filter-text-muted);
+  color: var(--filter-resolved-color-text-secondary);
 
   &:hover {
-    background: var(--filter-danger-hover);
-    color: var(--filter-danger-text);
+    background: var(--filter-resolved-color-background-danger-hover);
+    color: var(--filter-resolved-color-text-danger);
   }
 }

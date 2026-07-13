@@ -76,7 +76,9 @@ test.describe('layout resilience', () => {
         rowFocusStyle: rowStyle.outlineStyle,
         surface: rowStyle.backgroundColor,
         text: formStyle.color,
-        textToken: formStyle.getPropertyValue('--filter-text').trim(),
+        resolvedTextToken: formStyle
+          .getPropertyValue('--filter-resolved-color-text-primary')
+          .trim(),
         width: form.getBoundingClientRect().width,
       };
     });
@@ -86,8 +88,82 @@ test.describe('layout resilience', () => {
     expect(styles.rowFocusStyle).toBe('solid');
     expect(styles.surface).not.toBe('rgba(0, 0, 0, 0)');
     expect(styles.text).not.toBe('rgba(0, 0, 0, 0)');
-    expect(styles.textToken).not.toContain('var(');
+    expect(styles.resolvedTextToken).not.toContain('var(');
     expect(styles.width).toBeGreaterThanOrEqual(120);
+  });
+
+  test('semantic color overrides inherit and remain independently addressable', async ({
+    page,
+  }) => {
+    await openReadyDemo(page);
+    await page.locator('.demo').evaluate((wrapper) => {
+      wrapper.style.setProperty(
+        '--filter-color-background-primary',
+        'rgb(240 241 242)',
+      );
+      wrapper.style.setProperty(
+        '--filter-color-text-placeholder',
+        'rgb(1 2 3)',
+      );
+      wrapper.style.setProperty('--filter-color-text-secondary', 'rgb(4 5 6)');
+      wrapper.style.setProperty(
+        '--filter-color-background-action',
+        'rgb(7 8 9)',
+      );
+      wrapper.style.setProperty('--filter-color-border-focus', 'rgb(10 11 12)');
+    });
+
+    const input = addFilterInput(page);
+    await input.click();
+    await expect(page.locator('.filter-row')).toHaveCSS(
+      'outline-color',
+      'rgb(10, 11, 12)',
+    );
+    const placeholderColor = await input.evaluate(
+      (element) => getComputedStyle(element, '::placeholder').color,
+    );
+    expect(placeholderColor).toBe('rgb(1, 2, 3)');
+
+    await page.keyboard.press('ArrowDown');
+    const dialog = page.locator('.filter-popover');
+    await expect(dialog).toHaveCSS('background-color', 'rgb(240, 241, 242)');
+    await expect(
+      dialog.locator('.filter-popover-option-hint').first(),
+    ).toHaveCSS('color', 'rgb(4, 5, 6)');
+
+    await pickField(page, 'Stage');
+    await pickOption(page, 'is any of');
+    await expect(dialog.getByRole('button', { name: 'Apply' })).toHaveCSS(
+      'background-color',
+      'rgb(7, 8, 9)',
+    );
+  });
+
+  test('shared palette colors flow into the filter defaults', async ({
+    page,
+  }) => {
+    await openReadyDemo(page);
+    await page.locator('.demo').evaluate((wrapper) => {
+      wrapper.style.setProperty('--neutral-0', 'rgb(230 231 232)');
+      wrapper.style.setProperty('--blue-500', 'rgb(20 21 22)');
+    });
+
+    const input = addFilterInput(page);
+    await input.click();
+    await expect(page.locator('.filter-row')).toHaveCSS(
+      'background-color',
+      'rgb(230, 231, 232)',
+    );
+    await expect(page.locator('.filter-row')).toHaveCSS(
+      'outline-color',
+      'rgb(20, 21, 22)',
+    );
+
+    await page.keyboard.press('ArrowDown');
+    await expect(page.locator('.filter-popover')).toHaveCSS(
+      'background-color',
+      'rgb(230, 231, 232)',
+    );
   });
 
   test('a 240px container keeps the maximal action rail inside the row', async ({

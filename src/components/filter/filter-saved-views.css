@@ -10,7 +10,7 @@
 .filter-popover-divider {
   height: 1px;
   margin-block: 4px;
-  background: var(--filter-border);
+  background: var(--filter-resolved-color-border-primary);
 }
 
 .filter-saved-views-save {
@@ -27,10 +27,10 @@
   padding: 6px 8px;
   border-radius: var(--filter-radius-control);
   font-weight: 500;
-  color: var(--filter-text-accent);
+  color: var(--filter-resolved-color-text-action);
 
   &:hover {
-    background: var(--filter-surface-accent-hover);
+    background: var(--filter-resolved-color-background-action-subtle);
   }
 }
 
@@ -54,7 +54,7 @@
   /* The active view (its group matches the current one) is tinted; the check
      in the load button carries the same state without relying on color. */
   &.is-active {
-    background: var(--filter-surface-selected);
+    background: var(--filter-resolved-color-background-selected);
   }
 }
 
@@ -70,7 +70,7 @@
   text-align: start;
 
   &:hover {
-    background: var(--filter-surface-hover);
+    background: var(--filter-resolved-color-background-hover);
   }
 
   &:focus-visible {
@@ -83,7 +83,7 @@
   display: flex;
   flex: none;
   width: 16px;
-  color: var(--filter-text-accent);
+  color: var(--filter-resolved-color-text-action);
 }
 
 .filter-saved-views-text {
@@ -101,7 +101,7 @@
 
 .filter-saved-views-summary {
   font-size: 11px;
-  color: var(--filter-text-muted);
+  color: var(--filter-resolved-color-text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -118,10 +118,10 @@
   margin-inline: 4px;
   padding: 0;
   border-radius: 50%;
-  color: var(--filter-text-muted);
+  color: var(--filter-resolved-color-text-secondary);
 
   &:hover {
-    background: var(--filter-danger-hover);
-    color: var(--filter-danger-text);
+    background: var(--filter-resolved-color-background-danger-hover);
+    color: var(--filter-resolved-color-text-danger);
   }
 }

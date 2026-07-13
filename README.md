@@ -166,8 +166,36 @@ native Popover, focus geometry, Shadow DOM, and layout behavior in Playwright.
 
 `src/components/filter/filter-component.css` is the single component
 stylesheet entrypoint. It imports component styles in a deterministic order
-and defines concrete defaults for the public `--filter-*` custom properties.
-The example palette and page layout are not component prerequisites.
+and includes `src/components/filter/filter-colors.css`, which provides concrete
+defaults for the public `--filter-color-*` custom properties. The names flatten
+the component-token hierarchy recommended by the
+[Design Tokens Community Group 2025.10 color guidance](https://www.designtokens.org/tr/2025.10/color/#component-tokens)
+into CSS; the DTCG interchange format itself is JSON, not CSS.
+
+`src/styles/colors.css` is the shared design-system palette. Each filter color
+resolves in this order: an explicit semantic `--filter-color-*` override, its
+corresponding palette token, then a literal fallback. The palette therefore
+themes the filter through ordinary inheritance, while the final fallback keeps
+the component self-contained when its stylesheet is installed alone in a
+document or Shadow Root.
+
+Set semantic color tokens on the filter or any ancestor. The component leaves
+the public properties unset and resolves its defaults internally, so ordinary
+CSS inheritance works even when the filter's own stylesheet loads later:
+
+```css
+.deal-filter-theme {
+  --filter-color-background-primary: oklch(20% 0.02 260deg);
+  --filter-color-text-primary: oklch(96% 0.01 260deg);
+  --filter-color-background-action: oklch(70% 0.16 250deg);
+  --filter-color-border-focus: oklch(80% 0.13 250deg);
+}
+```
+
+Tokens with the same default remain independent when their roles differ. For
+example, `--filter-color-text-placeholder` and
+`--filter-color-text-secondary` can be overridden separately, as can
+`--filter-color-background-action` and `--filter-color-border-focus`.
 
 For ordinary light DOM, import the stylesheet next to the public component as
 shown in the API example. A Chrome extension content script should use a

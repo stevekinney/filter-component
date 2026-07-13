@@ -32,11 +32,11 @@
      the list below becomes the scrolling region when content is taller. */
   max-height: min(320px, calc(50vb - 8px));
   padding: 4px 0;
-  background: var(--filter-surface);
+  background: var(--filter-resolved-color-background-primary);
 
   /* The UA popover style sets `color: CanvasText`, which would defeat
      inheritance from .filter. */
-  color: var(--filter-text);
+  color: var(--filter-resolved-color-text-primary);
   border-radius: var(--filter-radius-container);
   box-shadow: var(--filter-popover-shadow);
   overflow: hidden;
@@ -57,12 +57,12 @@
     width: 100%;
     box-sizing: border-box;
     padding: 4px 8px;
-    border: 1px solid var(--filter-border);
+    border: 1px solid var(--filter-resolved-color-border-primary);
     border-radius: var(--filter-radius-control);
     outline: none;
 
     &:focus {
-      border-color: var(--filter-accent);
+      border-color: var(--filter-resolved-color-border-focus);
     }
   }
 }
@@ -71,7 +71,7 @@
    active-option background. */
 :where(.filter-popover-heading, .filter-popover-option-hint) {
   font-size: 11px;
-  color: var(--filter-text-muted);
+  color: var(--filter-resolved-color-text-secondary);
 }
 
 .filter-popover-heading {
@@ -98,7 +98,7 @@
 }
 
 .filter-popover-checkbox {
-  color: var(--filter-icon-muted);
+  color: var(--filter-resolved-color-icon-secondary);
 }
 
 .filter-popover-option {
@@ -111,11 +111,11 @@
   /* The keyboard-active option — distinct from aria-selected, which
      marks the committed selection in the operator/value lists. */
   &[data-active] {
-    background: var(--filter-surface-selected);
+    background: var(--filter-resolved-color-background-selected);
   }
 
   &[aria-selected='true'] .filter-popover-checkbox {
-    color: var(--filter-text-accent);
+    color: var(--filter-resolved-color-text-action);
   }
 }
 
@@ -147,12 +147,12 @@
 }
 
 .filter-popover-check {
-  color: var(--filter-text-accent);
+  color: var(--filter-resolved-color-text-action);
 }
 
 .filter-popover-empty {
   padding: 8px 12px;
-  color: var(--filter-text-muted);
+  color: var(--filter-resolved-color-text-secondary);
 }
 
 .filter-popover-error {
@@ -160,7 +160,7 @@
   padding-inline: 12px;
   font-size: 12px;
   line-height: 16px;
-  color: var(--filter-danger-text);
+  color: var(--filter-resolved-color-text-danger);
 }
 
 .filter-popover-body {
@@ -183,7 +183,7 @@
   margin-block-start: 4px;
   padding-block: 6px 2px;
   padding-inline: 8px;
-  border-block-start: 1px solid var(--filter-border);
+  border-block-start: 1px solid var(--filter-resolved-color-border-primary);
 }
 
 .filter-popover-footer-apply {
@@ -191,17 +191,17 @@
   align-items: center;
   padding: 4px 10px;
   border-radius: var(--filter-radius-control);
-  background: var(--filter-accent);
-  color: var(--filter-on-accent);
+  background: var(--filter-resolved-color-background-action);
+  color: var(--filter-resolved-color-text-on-action);
 
   &:hover {
-    background: var(--filter-accent-hover);
+    background: var(--filter-resolved-color-background-action-hover);
   }
 
   /* An accent-colored ring would vanish against this button's accent
      surface; ring in the text color, offset outward instead of inset. */
   &:focus-visible {
-    outline: 2px solid var(--filter-text);
+    outline: 2px solid var(--filter-resolved-color-text-primary);
     outline-offset: 1px;
   }
 }
@@ -210,11 +210,11 @@
   display: flex;
   align-items: stretch;
   overflow: hidden;
-  border: 1px solid var(--filter-border);
+  border: 1px solid var(--filter-resolved-color-border-primary);
   border-radius: var(--filter-radius-control);
 
   &:focus-within {
-    border-color: var(--filter-accent);
+    border-color: var(--filter-resolved-color-border-focus);
   }
 
   input,
@@ -225,7 +225,7 @@
     padding: 5px 8px;
     border: none;
     outline: none;
-    background: var(--filter-surface);
+    background: var(--filter-resolved-color-background-primary);
   }
 
   .filter-value-amount {
@@ -233,7 +233,7 @@
   }
 
   .filter-value-unit {
-    border-inline-start: 1px solid var(--filter-border);
+    border-inline-start: 1px solid var(--filter-resolved-color-border-primary);
   }
 }
 
@@ -241,20 +241,20 @@
   display: flex;
   align-items: center;
   padding: 0 4px;
-  border-inline: 1px solid var(--filter-border);
-  background: var(--filter-surface-subtle);
+  border-inline: 1px solid var(--filter-resolved-color-border-primary);
+  background: var(--filter-resolved-color-background-secondary);
   font-size: 12px;
-  color: var(--filter-text-muted);
+  color: var(--filter-resolved-color-text-secondary);
 }
 
 .filter-value-editor-apply {
   display: flex;
   align-items: center;
   padding: 0 8px;
-  border-inline-start: 1px solid var(--filter-border);
-  color: var(--filter-text-accent);
+  border-inline-start: 1px solid var(--filter-resolved-color-border-primary);
+  color: var(--filter-resolved-color-text-action);
 
   &:hover {
-    background: var(--filter-surface-accent-hover);
+    background: var(--filter-resolved-color-background-action-subtle);
   }
 }

@@ -1,0 +1,130 @@
+/* CSS translation of the DTCG component-token and alias model. Public
+   --filter-color-* inputs inherit from a consumer, then resolve through the
+   shared palette when available, with literals keeping the component
+   self-contained in a document or Shadow Root. */
+.filter {
+  --filter-resolved-color-text-primary: var(
+    --filter-color-text-primary,
+    var(--neutral-alpha-800, rgb(0 0 0 / 87%))
+  );
+  --filter-resolved-color-text-secondary: var(
+    --filter-color-text-secondary,
+    var(--neutral-alpha-600, rgb(0 0 0 / 60%))
+  );
+  --filter-resolved-color-text-placeholder: var(
+    --filter-color-text-placeholder,
+    var(--filter-resolved-color-text-secondary)
+  );
+  --filter-resolved-color-icon-secondary: var(
+    --filter-color-icon-secondary,
+    var(--neutral-alpha-500, rgb(0 0 0 / 36%))
+  );
+  --filter-resolved-color-background-primary: var(
+    --filter-color-background-primary,
+    var(--neutral-0, oklch(100% 0 0deg))
+  );
+  --filter-resolved-color-background-secondary: var(
+    --filter-color-background-secondary,
+    var(--neutral-100, oklch(97.02% 0 89.88deg))
+  );
+  --filter-resolved-color-background-selected: var(
+    --filter-color-background-selected,
+    var(--indigo-50, oklch(95.33% 0.0164 274.82deg))
+  );
+  --filter-resolved-color-background-editing: var(
+    --filter-color-background-editing,
+    var(--indigo-50, oklch(95.33% 0.0164 274.82deg))
+  );
+  --filter-resolved-color-background-hover: var(
+    --filter-color-background-hover,
+    var(--neutral-alpha-200, rgb(0 0 0 / 8%))
+  );
+  --filter-resolved-color-border-primary: var(
+    --filter-color-border-primary,
+    var(--neutral-alpha-300, rgb(0 0 0 / 12%))
+  );
+  --filter-resolved-color-border-focus: var(
+    --filter-color-border-focus,
+    var(--blue-500, oklch(59.23% 0.18 257deg))
+  );
+  --filter-resolved-color-border-editing: var(
+    --filter-color-border-editing,
+    var(--blue-500, oklch(59.23% 0.18 257deg))
+  );
+  --filter-resolved-color-background-action: var(
+    --filter-color-background-action,
+    var(--blue-500, oklch(59.23% 0.18 257deg))
+  );
+  --filter-resolved-color-background-action-hover: var(
+    --filter-color-background-action-hover,
+    var(--blue-700, oklch(44.32% 0.1531 259.86deg))
+  );
+  --filter-resolved-color-background-action-subtle: var(
+    --filter-color-background-action-subtle,
+    color-mix(
+      in oklch,
+      var(--filter-resolved-color-background-action) 12%,
+      transparent
+    )
+  );
+  --filter-resolved-color-text-action: var(
+    --filter-color-text-action,
+    var(--blue-600, oklch(57.37% 0.1946 257.86deg))
+  );
+  --filter-resolved-color-text-action-strong: var(
+    --filter-color-text-action-strong,
+    var(--blue-700, oklch(44.32% 0.1531 259.86deg))
+  );
+  --filter-resolved-color-text-on-action: var(
+    --filter-color-text-on-action,
+    var(--neutral-0, oklch(100% 0 0deg))
+  );
+  --filter-resolved-color-text-danger: var(
+    --filter-color-text-danger,
+    var(--coral-600, oklch(58.37% 0.2116 27.91deg))
+  );
+  --filter-resolved-color-border-danger: var(
+    --filter-color-border-danger,
+    var(--coral-500, oklch(65.86% 0.2058 22.05deg))
+  );
+  --filter-resolved-color-background-danger: var(
+    --filter-color-background-danger,
+    var(--coral-50, oklch(95.33% 0.0218 14.06deg))
+  );
+  --filter-resolved-color-background-danger-hover: var(
+    --filter-color-background-danger-hover,
+    color-mix(
+      in oklch,
+      var(--filter-resolved-color-border-danger) 12%,
+      transparent
+    )
+  );
+  --filter-resolved-color-text-warning: var(
+    --filter-color-text-warning,
+    var(--orange-700, oklch(53.78% 0.1712 36.44deg))
+  );
+  --filter-resolved-color-border-warning: var(
+    --filter-color-border-warning,
+    var(--orange-500, oklch(70.36% 0.1865 42.12deg))
+  );
+  --filter-resolved-color-background-warning: var(
+    --filter-color-background-warning,
+    var(--orange-50, oklch(97.06% 0.0195 65.15deg))
+  );
+  --filter-resolved-color-background-warning-hover: var(
+    --filter-color-background-warning-hover,
+    color-mix(
+      in oklch,
+      var(--filter-resolved-color-border-warning) 12%,
+      transparent
+    )
+  );
+  --filter-resolved-color-shadow-drop: var(
+    --filter-color-shadow-drop,
+    var(--neutral-alpha-400, rgb(0 0 0 / 20%))
+  );
+  --filter-resolved-color-shadow-outline: var(
+    --filter-color-shadow-outline,
+    var(--neutral-alpha-300, rgb(0 0 0 / 12%))
+  );
+}
