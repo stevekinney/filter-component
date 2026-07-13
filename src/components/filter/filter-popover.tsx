@@ -8,6 +8,7 @@ import {
   MultipleChoiceStage,
   SingleChoiceStage,
 } from './filter-popover-stages.tsx';
+import { activeEditorSegment } from './filter-editor-state.ts';
 import type { FilterEditorState } from './filter-editor-state.ts';
 import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
 import type { ValueDraft } from '@/utilities/filter/value-drafts.ts';
@@ -52,7 +53,7 @@ export function FilterPopover(props: FilterPopoverProps) {
 function OpenFilterPopover(props: OpenFilterPopoverProps) {
   const { state, resolveAnchor, onBrowserDismiss, onCancel } = props;
   const { popoverRef, handleBeforeToggle, handleKeyDown } = useNativePopover({
-    anchorKey: state.filterId === null && state.stage !== 'field' ? 'new-draft-preview' : 'invoker',
+    anchorKey: `${state.filterId ?? 'new-filter'}:${activeEditorSegment(state)}`,
     resolveAnchor,
     onBrowserDismiss,
     onEscape: onCancel,

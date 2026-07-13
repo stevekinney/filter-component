@@ -77,7 +77,7 @@ export function AddFilterCombobox({
   };
 
   const handleTabKey = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (!open) return;
+    if (!open || event.shiftKey) return;
 
     if (query !== '' && activeField) {
       // Tab accepts the highlighted suggestion once a query has been typed.

@@ -1,5 +1,5 @@
-import { screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { fireEvent, screen, within } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 import { queryTokens, setup as renderFilter } from './filter-test-setup.tsx';
 import type { FilterList } from '@/types/filter.ts';
 
@@ -185,14 +185,26 @@ describe('focus restoration', () => {
   });
 
   it('swaps popovers when another segment is clicked', async () => {
-    const { user } = setup();
-    const token = screen.getByRole('group', {
-      name: 'Deal value greater than 100',
-    });
-    await user.click(within(token).getByTitle('Change operator'));
-    expect(screen.getByRole('dialog', { name: 'Deal value' })).toBeInTheDocument();
-    await user.click(within(token).getByTitle('Change value'));
-    expect(screen.getByRole('dialog', { name: 'Deal value greater than' })).toBeInTheDocument();
-    expect(screen.getAllByRole('dialog')).toHaveLength(1);
+    const showPopover = vi.spyOn(HTMLElement.prototype, 'showPopover');
+
+    try {
+      const { user } = setup();
+      const token = screen.getByRole('group', {
+        name: 'Deal value greater than 100',
+      });
+      const operator = within(token).getByTitle('Change operator');
+      const value = within(token).getByTitle('Change value');
+
+      await user.click(operator);
+      expect(screen.getByRole('dialog', { name: 'Deal value' })).toBeInTheDocument();
+      expect(showPopover).toHaveBeenLastCalledWith({ source: operator });
+
+      fireEvent.click(value);
+      expect(screen.getByRole('dialog', { name: 'Deal value greater than' })).toBeInTheDocument();
+      expect(screen.getAllByRole('dialog')).toHaveLength(1);
+      expect(showPopover).toHaveBeenLastCalledWith({ source: value });
+    } finally {
+      showPopover.mockRestore();
+    }
   });
 });

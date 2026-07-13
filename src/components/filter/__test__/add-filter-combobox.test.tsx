@@ -35,6 +35,22 @@ function comboboxProps(
 }
 
 describe('AddFilterCombobox rendering branches', () => {
+  it('preserves native backward focus navigation for Shift+Tab', () => {
+    const props = comboboxProps({
+      open: true,
+      query: 'na',
+    });
+    render(<AddFilterCombobox {...props} />);
+
+    const keyDownWasNotPrevented = fireEvent.keyDown(screen.getByRole('combobox'), {
+      key: 'Tab',
+      shiftKey: true,
+    });
+
+    expect(keyDownWasNotPrevented).toBe(true);
+    expect(props.onSelectActive).not.toHaveBeenCalled();
+  });
+
   it('moves into tokens only from the start and closes only on an open blur', () => {
     const focusable = comboboxProps({
       lastFilterId: 'condition-last',
