@@ -1,4 +1,5 @@
 import type { ComponentPropsWithRef } from 'react';
+import type { SavedViewsStorage } from '@/utilities/storage/saved-views-storage.ts';
 
 /**
  * `FilterOperatorsByFieldType` is the single source of truth for the type
@@ -175,4 +176,6 @@ export type FilterProps = Omit<
   disabled?: boolean;
   /** Silent, non-undoable seed read only when the component mounts. */
   initialFilters?: FilterGroup;
+  /** Saved-view persistence read once on mount; defaults to local storage. */
+  savedViewsStorage?: SavedViewsStorage;
 };

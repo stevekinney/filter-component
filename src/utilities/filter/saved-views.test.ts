@@ -1,11 +1,5 @@
-import { beforeEach, describe, expect, it } from 'vitest';
-import {
-  parseSavedViews,
-  readSavedViews,
-  SAVED_VIEWS_STORAGE_KEY,
-  savedViewKey,
-  writeSavedViews,
-} from './saved-views.ts';
+import { describe, expect, it } from 'vitest';
+import { parseSavedViews, savedViewKey } from './saved-views.ts';
 import type { SavedView } from './saved-views.ts';
 import type { FilterGroup } from '@/types/filter.ts';
 
@@ -26,10 +20,6 @@ const GROUP: FilterGroup = {
     },
   ],
 };
-
-beforeEach(() => {
-  window.localStorage.clear();
-});
 
 describe('parseSavedViews', () => {
   it('returns no views for non-array input', () => {
@@ -97,44 +87,6 @@ describe('parseSavedViews', () => {
   it('keeps v1 flat saved views compatible', () => {
     const v1View: SavedView = { name: 'V1 flat view', group: GROUP };
     expect(parseSavedViews([v1View])).toEqual([v1View]);
-  });
-});
-
-describe('readSavedViews / writeSavedViews', () => {
-  it('reads nothing when the key is absent', () => {
-    expect(readSavedViews()).toEqual([]);
-  });
-
-  it('reads nothing from malformed JSON', () => {
-    window.localStorage.setItem(SAVED_VIEWS_STORAGE_KEY, '{not json');
-    expect(readSavedViews()).toEqual([]);
-  });
-
-  it('round-trips views through storage', () => {
-    const views: SavedView[] = [{ name: 'Corp deals', group: GROUP }];
-    expect(writeSavedViews(views)).toBe(true);
-    expect(readSavedViews()).toEqual(views);
-    expect(window.localStorage.getItem(SAVED_VIEWS_STORAGE_KEY)).not.toContain(
-      '"id"',
-    );
-  });
-
-  it('returns no views when storage reads fail', () => {
-    const throwingStorage: Pick<Storage, 'getItem'> = {
-      getItem: () => {
-        throw new DOMException('denied', 'SecurityError');
-      },
-    };
-    expect(readSavedViews(throwingStorage)).toEqual([]);
-  });
-
-  it('reports storage write failures without throwing', () => {
-    const throwingStorage: Pick<Storage, 'setItem'> = {
-      setItem: () => {
-        throw new DOMException('quota', 'QuotaExceededError');
-      },
-    };
-    expect(writeSavedViews([], throwingStorage)).toBe(false);
   });
 });
 

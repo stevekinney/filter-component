@@ -55,7 +55,7 @@ const savedViewSchema = z
   })
   .strict();
 
-/** A named canonical public filter group persisted in local storage. */
+/** A named canonical public filter group that can be persisted and restored. */
 export type SavedView = z.infer<typeof savedViewSchema>;
 
 /** Validates each stored view independently and keeps the first unique name. */
@@ -70,33 +70,6 @@ export function parseSavedViews(raw: unknown): SavedView[] {
     views.push(result.data);
   }
   return views;
-}
-
-/** Reads untrusted storage; denied access, malformed JSON, or bad data means no views. */
-export function readSavedViews(
-  storage?: Pick<Storage, 'getItem'>,
-): SavedView[] {
-  try {
-    const target = storage ?? window.localStorage;
-    const raw = target.getItem(SAVED_VIEWS_STORAGE_KEY);
-    return raw === null ? [] : parseSavedViews(JSON.parse(raw));
-  } catch {
-    return [];
-  }
-}
-
-/** Persists views and reports whether the write reached storage. */
-export function writeSavedViews(
-  views: readonly SavedView[],
-  storage?: Pick<Storage, 'setItem'>,
-): boolean {
-  try {
-    const target = storage ?? window.localStorage;
-    target.setItem(SAVED_VIEWS_STORAGE_KEY, JSON.stringify(views));
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 /** Canonical, key-order-independent identity for active-view comparison. */

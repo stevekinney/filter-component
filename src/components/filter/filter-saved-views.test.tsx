@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { addStringFilter, setup } from './filter-test-setup.tsx';
 import { SAVED_VIEWS_STORAGE_KEY } from '@/utilities/filter/saved-views.ts';
 import type { SavedView } from '@/utilities/filter/saved-views.ts';
+import type { SavedViewsStorage } from '@/utilities/storage/saved-views-storage.ts';
 import type { FilterGroup } from '@/types/filter.ts';
 
 function storedViews(): SavedView[] {
@@ -80,6 +81,18 @@ describe('trigger visibility', () => {
     await addStringFilter(user, addFilterInput);
     expect(savedViewsButton()).toBeVisible();
   });
+
+  it('loads views through an injected in-memory store', () => {
+    const savedViewsStorage: SavedViewsStorage = {
+      getSavedViews: vi.fn(() => [MARIA_VIEW]),
+      saveSavedViews: vi.fn(),
+    };
+
+    setup({ savedViewsStorage });
+
+    expect(savedViewsButton()).toBeVisible();
+    expect(savedViewsStorage.getSavedViews).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('the in-menu save action', () => {
@@ -103,6 +116,20 @@ describe('the in-menu save action', () => {
       screen.queryByRole('dialog', { name: 'Saved views' }),
     ).not.toBeInTheDocument();
     expect(savedViewsButton()).toHaveFocus();
+  });
+
+  it('saves through an injected in-memory store', async () => {
+    const saveSavedViews = vi.fn<SavedViewsStorage['saveSavedViews']>();
+    const savedViewsStorage: SavedViewsStorage = {
+      getSavedViews: vi.fn(() => []),
+      saveSavedViews,
+    };
+    const { user, addFilterInput } = setup({ savedViewsStorage });
+    await addStringFilter(user, addFilterInput);
+
+    await saveCurrentViewAs(user, 'Maria deals');
+
+    expect(saveSavedViews).toHaveBeenCalledWith([MARIA_VIEW]);
   });
 
   it('shows a visible session-only notice when saving cannot reach storage', async () => {

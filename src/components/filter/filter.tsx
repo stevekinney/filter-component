@@ -21,6 +21,7 @@ import { clampIndex, stepIndex } from '@/utilities/list-navigation.ts';
 import type { TokenSegment } from '@/utilities/filter/validation.ts';
 import { createFilterFieldRegistry } from '@/utilities/filter/field-registry.ts';
 import { useFilterFocus } from './use-filter-focus.ts';
+import { localSavedViewsStorage } from '@/utilities/storage/local-storage.ts';
 import type { FilterFieldDefinition, FilterProps } from '@/types/filter.ts';
 
 /**
@@ -38,6 +39,7 @@ export function Filter({
   onChange,
   disabled = false,
   initialFilters,
+  savedViewsStorage = localSavedViewsStorage,
   className,
   ...formProps
 }: FilterProps) {
@@ -140,6 +142,7 @@ export function Filter({
     resetEditor,
     announce,
     scheduleFocus,
+    savedViewsStorage,
   });
 
   const isChoosingNewFilterField =

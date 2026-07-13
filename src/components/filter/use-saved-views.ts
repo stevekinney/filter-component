@@ -1,17 +1,17 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { FocusTarget } from './use-filter-focus.ts';
 import {
   fromFilterGroup,
   toFilterGroup,
 } from '@/utilities/filter/expression.ts';
 import {
-  readSavedViews,
+  parseSavedViews,
   savedViewKey,
-  writeSavedViews,
 } from '@/utilities/filter/saved-views.ts';
 import type { SavedView } from '@/utilities/filter/saved-views.ts';
 import type { FilterExpression } from '@/utilities/filter/expression.ts';
 import type { FilterHistoryAction } from '@/utilities/filter/history.ts';
+import type { SavedViewsStorage } from '@/utilities/storage/saved-views-storage.ts';
 
 type UseSavedViewsOptions = {
   /** The committed expression (`history.present`), the thing a view snapshots. */
@@ -23,6 +23,7 @@ type UseSavedViewsOptions = {
   resetEditor: () => void;
   announce: (message: string) => void;
   scheduleFocus: (target: FocusTarget) => void;
+  savedViewsStorage: SavedViewsStorage;
 };
 
 type UseSavedViewsResult = {
@@ -39,14 +40,14 @@ type UseSavedViewsResult = {
 };
 
 /**
- * Owns the saved-views collection: state seeded from `localStorage`, every
- * mutation written back through, and the three user actions. Saving under an
- * existing name overwrites that view. Loading dispatches a `replace` history
- * action, so it is committed, reported through `onChange`, and undoable like
- * any other change — except when the view already matches the current
- * expression, which loads as a no-op. Views persist the canonical nested
- * group without condition ids; loading assigns fresh ones and linearizes
- * back into the joiner model.
+ * Owns the saved-views collection. The injected store is read once on mount;
+ * every mutation updates session state immediately and writes the full
+ * collection back in order. Saving under an existing name overwrites that
+ * view. Loading dispatches a `replace` history action, so it is committed,
+ * reported through `onChange`, and undoable like any other change — except
+ * when the view already matches the current expression, which loads as a
+ * no-op. Views persist the canonical nested group without condition ids;
+ * loading assigns fresh ones and linearizes back into the joiner model.
  */
 export function useSavedViews({
   expression,
@@ -55,16 +56,97 @@ export function useSavedViews({
   resetEditor,
   announce,
   scheduleFocus,
+  savedViewsStorage,
 }: UseSavedViewsOptions): UseSavedViewsResult {
-  const [savedViews, setSavedViews] = useState<SavedView[]>(() =>
-    readSavedViews(),
+  const storageRef = useRef(savedViewsStorage);
+  const [initialRead] = useState(() => {
+    try {
+      const stored = storageRef.current.getSavedViews();
+      return stored instanceof Promise
+        ? { pending: stored, savedViews: [] }
+        : { pending: null, savedViews: parseSavedViews(stored) };
+    } catch {
+      return { pending: null, savedViews: [] };
+    }
+  });
+  const [savedViews, setSavedViews] = useState<SavedView[]>(
+    initialRead.savedViews,
+  );
+  const [isStorageReady, setIsStorageReady] = useState(
+    initialRead.pending === null,
   );
   const [persistenceNotice, setPersistenceNotice] = useState<string | null>(
     null,
   );
-  const persist = (next: SavedView[]) => {
+  const isMountedRef = useRef(true);
+  const pendingWriteRef = useRef<Promise<void> | null>(null);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    if (initialRead.pending) {
+      void initialRead.pending.then(
+        (stored) => {
+          if (!isMountedRef.current) return;
+          setSavedViews(parseSavedViews(stored));
+          setIsStorageReady(true);
+        },
+        () => {
+          if (isMountedRef.current) setIsStorageReady(true);
+        },
+      );
+    }
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, [initialRead]);
+
+  const trackWrite = (
+    operation: Promise<void>,
+    onSuccess: () => void,
+    onFailure: () => void,
+  ) => {
+    pendingWriteRef.current = operation;
+    void operation.then(
+      () => {
+        if (isMountedRef.current) onSuccess();
+        if (pendingWriteRef.current === operation) {
+          pendingWriteRef.current = null;
+        }
+      },
+      () => {
+        if (isMountedRef.current) onFailure();
+        if (pendingWriteRef.current === operation) {
+          pendingWriteRef.current = null;
+        }
+      },
+    );
+  };
+
+  const persist = (
+    next: SavedView[],
+    onSuccess: () => void,
+    onFailure: () => void,
+  ) => {
     setSavedViews(next);
-    return writeSavedViews(next);
+    const pendingWrite = pendingWriteRef.current;
+    if (pendingWrite) {
+      const operation = pendingWrite
+        .catch(() => undefined)
+        .then(() => storageRef.current.saveSavedViews(next));
+      trackWrite(operation, onSuccess, onFailure);
+      return;
+    }
+
+    try {
+      const result = storageRef.current.saveSavedViews(next);
+      if (result instanceof Promise) {
+        trackWrite(result, onSuccess, onFailure);
+      } else {
+        onSuccess();
+      }
+    } catch {
+      onFailure();
+    }
   };
 
   // Views snapshot the whole expression — invalid conditions included, so a
@@ -78,26 +160,27 @@ export function useSavedViews({
   const saveCurrentView = (name: string) => {
     const view: SavedView = { name, group: currentGroup };
     const exists = savedViews.some((candidate) => candidate.name === name);
-    const persisted = persist(
-      exists
-        ? savedViews.map((candidate) =>
-            candidate.name === name ? view : candidate,
-          )
-        : [...savedViews, view],
+    const next = exists
+      ? savedViews.map((candidate) =>
+          candidate.name === name ? view : candidate,
+        )
+      : [...savedViews, view];
+    persist(
+      next,
+      () => {
+        setPersistenceNotice(null);
+        announce(`View saved: ${name}`);
+      },
+      () => {
+        setPersistenceNotice(
+          `“${name}” is saved for this session only because browser storage is unavailable.`,
+        );
+        announce(`View saved for this session only: storage is unavailable`);
+      },
     );
     // The save action gives way to the saved row once the group is saved;
     // focus the trigger, which stays mounted now that a view exists.
     scheduleFocus({ type: 'savedViewsTrigger' });
-    setPersistenceNotice(
-      persisted
-        ? null
-        : `“${name}” is saved for this session only because browser storage is unavailable.`,
-    );
-    announce(
-      persisted
-        ? `View saved: ${name}`
-        : `View saved for this session only: storage is unavailable`,
-    );
   };
 
   const loadSavedView = (view: SavedView) => {
@@ -120,11 +203,18 @@ export function useSavedViews({
   const removeSavedView = (name: string) => {
     const index = savedViews.findIndex((candidate) => candidate.name === name);
     const remaining = savedViews.filter((candidate) => candidate.name !== name);
-    const persisted = persist(remaining);
-    setPersistenceNotice(
-      persisted
-        ? null
-        : `“${name}” was removed for this session only because browser storage is unavailable.`,
+    persist(
+      remaining,
+      () => {
+        setPersistenceNotice(null);
+        announce(`View removed: ${name}`);
+      },
+      () => {
+        setPersistenceNotice(
+          `“${name}” was removed for this session only because browser storage is unavailable.`,
+        );
+        announce(`View removed for this session only: storage is unavailable`);
+      },
     );
     if (remaining.length > 0) {
       // The removed row unmounts; land on its neighbor — the view now at the
@@ -144,18 +234,15 @@ export function useSavedViews({
           : { type: 'addInput' },
       );
     }
-    announce(
-      persisted
-        ? `View removed: ${name}`
-        : `View removed for this session only: storage is unavailable`,
-    );
   };
 
   return {
     savedViews,
     persistenceNotice,
     canSaveCurrentGroup:
-      expression.conditions.length > 0 && !isCurrentGroupSaved,
+      isStorageReady &&
+      expression.conditions.length > 0 &&
+      !isCurrentGroupSaved,
     currentGroupKey,
     saveCurrentView,
     loadSavedView,

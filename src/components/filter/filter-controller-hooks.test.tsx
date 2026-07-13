@@ -1,5 +1,5 @@
-import { act, renderHook } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, renderHook, waitFor } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 import { useFilterHistory } from './use-filter-history.ts';
 import { useSavedViews } from './use-saved-views.ts';
 import type { FocusTarget } from './use-filter-focus.ts';
@@ -9,6 +9,7 @@ import { EMPTY_FILTER_EXPRESSION } from '@/utilities/filter/expression.ts';
 import type { FilterExpression } from '@/utilities/filter/expression.ts';
 import type { FilterHistoryAction } from '@/utilities/filter/history.ts';
 import type { SavedView } from '@/utilities/filter/saved-views.ts';
+import type { SavedViewsStorage } from '@/utilities/storage/saved-views-storage.ts';
 
 const nameEntry = (value: string, id = value): FilterExpression => ({
   conditions: [
@@ -115,11 +116,21 @@ describe('useFilterHistory', () => {
 });
 
 describe('useSavedViews', () => {
-  beforeEach(() => {
-    window.localStorage.clear();
-  });
+  function createMemoryStorage(
+    initial: ReturnType<SavedViewsStorage['getSavedViews']> = [],
+  ) {
+    return {
+      getSavedViews: vi.fn<SavedViewsStorage['getSavedViews']>(() => initial),
+      saveSavedViews: vi.fn<SavedViewsStorage['saveSavedViews']>(
+        () => undefined,
+      ),
+    };
+  }
 
-  function setupSavedViews(expression: FilterExpression) {
+  function setupSavedViews(
+    expression: FilterExpression,
+    savedViewsStorage: SavedViewsStorage = createMemoryStorage(),
+  ) {
     const applyFilterHistoryAction = vi.fn<
       (action: FilterHistoryAction) => boolean
     >(() => true);
@@ -135,6 +146,7 @@ describe('useSavedViews', () => {
         resetEditor,
         announce,
         scheduleFocus,
+        savedViewsStorage,
       }),
     );
     return {
@@ -147,7 +159,8 @@ describe('useSavedViews', () => {
   }
 
   it('saves, overwrites, and keeps failed writes in memory', () => {
-    const hook = setupSavedViews(nameEntry('Maria'));
+    const storage = createMemoryStorage();
+    const hook = setupSavedViews(nameEntry('Maria'), storage);
     expect(hook.result.current.canSaveCurrentGroup).toBe(true);
     act(() => hook.result.current.saveCurrentView('Primary'));
     expect(hook.result.current.savedViews).toHaveLength(1);
@@ -155,6 +168,9 @@ describe('useSavedViews', () => {
       type: 'savedViewsTrigger',
     });
     expect(hook.announce).toHaveBeenCalledWith('View saved: Primary');
+    expect(storage.saveSavedViews).toHaveBeenLastCalledWith([
+      expect.objectContaining({ name: 'Primary' }),
+    ]);
     expect(hook.result.current.canSaveCurrentGroup).toBe(false);
 
     act(() => hook.result.current.saveCurrentView('Secondary'));
@@ -164,11 +180,9 @@ describe('useSavedViews', () => {
       'Secondary',
     ]);
 
-    const setItemSpy = vi
-      .spyOn(Storage.prototype, 'setItem')
-      .mockImplementation(() => {
-        throw new DOMException('blocked', 'SecurityError');
-      });
+    storage.saveSavedViews.mockImplementation(() => {
+      throw new DOMException('blocked', 'SecurityError');
+    });
     act(() => hook.result.current.saveCurrentView('Session'));
     expect(
       hook.result.current.savedViews.some((view) => view.name === 'Session'),
@@ -179,7 +193,185 @@ describe('useSavedViews', () => {
     expect(hook.result.current.persistenceNotice).toBe(
       '“Session” is saved for this session only because browser storage is unavailable.',
     );
-    setItemSpy.mockRestore();
+  });
+
+  it('hydrates from an asynchronous reader before enabling saves', async () => {
+    let resolveRead: (stored: unknown) => void = () => undefined;
+    const storage = createMemoryStorage();
+    storage.getSavedViews.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveRead = resolve;
+        }),
+    );
+    const storedView: SavedView = {
+      name: 'Stored',
+      group: { combinator: 'and', conditions: [] },
+    };
+    const hook = setupSavedViews(nameEntry('Maria'), storage);
+
+    expect(hook.result.current.canSaveCurrentGroup).toBe(false);
+    act(() => resolveRead([storedView, { invalid: true }]));
+
+    await waitFor(() => {
+      expect(hook.result.current.savedViews).toEqual([storedView]);
+      expect(hook.result.current.canSaveCurrentGroup).toBe(true);
+    });
+    expect(storage.getSavedViews).toHaveBeenCalledTimes(1);
+  });
+
+  it('treats synchronous and asynchronous read failures as no saved views', async () => {
+    const synchronousFailure = createMemoryStorage();
+    synchronousFailure.getSavedViews.mockImplementation(() => {
+      throw new Error('blocked');
+    });
+    const synchronousHook = setupSavedViews(
+      nameEntry('Maria'),
+      synchronousFailure,
+    );
+    expect(synchronousHook.result.current.savedViews).toEqual([]);
+    expect(synchronousHook.result.current.canSaveCurrentGroup).toBe(true);
+
+    const asynchronousFailure = createMemoryStorage();
+    asynchronousFailure.getSavedViews.mockRejectedValue(new Error('offline'));
+    const asynchronousHook = setupSavedViews(
+      nameEntry('Maria'),
+      asynchronousFailure,
+    );
+    expect(asynchronousHook.result.current.canSaveCurrentGroup).toBe(false);
+    await waitFor(() => {
+      expect(asynchronousHook.result.current.canSaveCurrentGroup).toBe(true);
+    });
+    expect(asynchronousHook.result.current.savedViews).toEqual([]);
+  });
+
+  it('ignores asynchronous read settlement after unmount', async () => {
+    let resolveRead: (stored: unknown) => void = () => undefined;
+    let rejectRead: (reason: Error) => void = () => undefined;
+    const successfulRead = createMemoryStorage();
+    successfulRead.getSavedViews.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveRead = resolve;
+        }),
+    );
+    const successfulHook = setupSavedViews(nameEntry('Maria'), successfulRead);
+    successfulHook.unmount();
+    await act(async () => {
+      resolveRead([]);
+      await Promise.resolve();
+    });
+
+    const failedRead = createMemoryStorage();
+    failedRead.getSavedViews.mockImplementation(
+      () =>
+        new Promise((_, reject) => {
+          rejectRead = reject;
+        }),
+    );
+    const failedHook = setupSavedViews(nameEntry('Maria'), failedRead);
+    failedHook.unmount();
+    await act(async () => {
+      rejectRead(new Error('offline'));
+      await Promise.resolve();
+    });
+  });
+
+  it('serializes asynchronous writes in action order', async () => {
+    let resolveFirstWrite: () => void = () => undefined;
+    const storage = createMemoryStorage();
+    storage.saveSavedViews.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveFirstWrite = resolve;
+        }),
+    );
+    const hook = setupSavedViews(nameEntry('Maria'), storage);
+
+    act(() => hook.result.current.saveCurrentView('One'));
+    act(() => hook.result.current.saveCurrentView('Two'));
+    expect(storage.saveSavedViews).toHaveBeenCalledTimes(1);
+
+    act(() => resolveFirstWrite());
+    await waitFor(() => {
+      expect(storage.saveSavedViews).toHaveBeenCalledTimes(2);
+    });
+    expect(storage.saveSavedViews).toHaveBeenLastCalledWith([
+      expect.objectContaining({ name: 'One' }),
+      expect.objectContaining({ name: 'Two' }),
+    ]);
+  });
+
+  it('continues the write queue after an earlier write rejects', async () => {
+    let rejectFirstWrite: (reason: Error) => void = () => undefined;
+    const storage = createMemoryStorage();
+    storage.saveSavedViews.mockImplementationOnce(
+      () =>
+        new Promise((_, reject) => {
+          rejectFirstWrite = reject;
+        }),
+    );
+    const hook = setupSavedViews(nameEntry('Maria'), storage);
+
+    act(() => hook.result.current.saveCurrentView('One'));
+    act(() => hook.result.current.saveCurrentView('Two'));
+    act(() => rejectFirstWrite(new Error('offline')));
+
+    await waitFor(() => {
+      expect(storage.saveSavedViews).toHaveBeenCalledTimes(2);
+      expect(hook.announce).toHaveBeenLastCalledWith('View saved: Two');
+    });
+  });
+
+  it('keeps optimistic state when an asynchronous write rejects', async () => {
+    const storage = createMemoryStorage();
+    storage.saveSavedViews.mockRejectedValue(new Error('offline'));
+    const hook = setupSavedViews(nameEntry('Maria'), storage);
+
+    act(() => hook.result.current.saveCurrentView('Session'));
+    expect(hook.result.current.savedViews).toHaveLength(1);
+    await waitFor(() => {
+      expect(hook.result.current.persistenceNotice).toBe(
+        '“Session” is saved for this session only because browser storage is unavailable.',
+      );
+    });
+    expect(hook.announce).toHaveBeenLastCalledWith(
+      'View saved for this session only: storage is unavailable',
+    );
+  });
+
+  it('ignores asynchronous write settlement after unmount', async () => {
+    let resolveWrite: () => void = () => undefined;
+    let rejectWrite: (reason: Error) => void = () => undefined;
+    const successfulWrite = createMemoryStorage();
+    successfulWrite.saveSavedViews.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveWrite = resolve;
+        }),
+    );
+    const successfulHook = setupSavedViews(nameEntry('Maria'), successfulWrite);
+    act(() => successfulHook.result.current.saveCurrentView('Saved'));
+    successfulHook.unmount();
+    await act(async () => {
+      resolveWrite();
+      await Promise.resolve();
+    });
+
+    const failedWrite = createMemoryStorage();
+    failedWrite.saveSavedViews.mockImplementation(
+      () =>
+        new Promise((_, reject) => {
+          rejectWrite = reject;
+        }),
+    );
+    const failedHook = setupSavedViews(nameEntry('Maria'), failedWrite);
+    act(() => failedHook.result.current.saveCurrentView('Saved'));
+    failedHook.unmount();
+    await act(async () => {
+      rejectWrite(new Error('offline'));
+      await Promise.resolve();
+    });
   });
 
   it('loads a different view and treats the current one as a no-op', () => {
@@ -254,20 +446,18 @@ describe('useSavedViews', () => {
       type: 'savedViewsTrigger',
     });
 
-    window.localStorage.clear();
     const empty = setupSavedViews(EMPTY_FILTER_EXPRESSION);
     act(() => empty.result.current.removeSavedView('Missing'));
     expect(empty.scheduleFocus).toHaveBeenLastCalledWith({ type: 'addInput' });
   });
 
   it('announces a session-only removal when storage rejects the write', () => {
-    const hook = setupSavedViews(nameEntry('Maria'));
+    const storage = createMemoryStorage();
+    const hook = setupSavedViews(nameEntry('Maria'), storage);
     act(() => hook.result.current.saveCurrentView('Only'));
-    const setItemSpy = vi
-      .spyOn(Storage.prototype, 'setItem')
-      .mockImplementation(() => {
-        throw new DOMException('blocked', 'SecurityError');
-      });
+    storage.saveSavedViews.mockImplementation(() => {
+      throw new DOMException('blocked', 'SecurityError');
+    });
     act(() => hook.result.current.removeSavedView('Only'));
     expect(hook.result.current.savedViews).toHaveLength(0);
     expect(hook.announce).toHaveBeenLastCalledWith(
@@ -276,6 +466,5 @@ describe('useSavedViews', () => {
     expect(hook.result.current.persistenceNotice).toBe(
       '“Only” was removed for this session only because browser storage is unavailable.',
     );
-    setItemSpy.mockRestore();
   });
 });

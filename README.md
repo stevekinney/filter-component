@@ -140,17 +140,66 @@ Runtime validation happens where data enters the component:
 - Saved-view storage is untrusted input. Each malformed view is dropped
   independently, while the documented legacy flat view shape still loads.
 
-Saved views persist canonical groups without internal identifiers in
-`localStorage` under `filter.saved-views`. A storage write failure keeps the
-in-memory view available for the current session and announces that it was not
-persisted.
+Saved views persist canonical groups without internal identifiers. By default,
+the component uses `localStorage` under `filter.saved-views`. A storage write
+failure keeps the in-memory view available for the current session and
+announces that it was not persisted.
+
+Pass `savedViewsStorage` to use another persistence boundary. Its reader runs
+once when the component mounts and may return either a value or a Promise. Its
+writer may likewise be synchronous or asynchronous; writes are serialized so
+whole-collection API updates cannot land out of order. Retrieved values remain
+untrusted and pass through the component's saved-view schema.
+
+For a Chrome extension, create an adapter from any Promise-based
+`chrome.storage` area (`local`, `sync`, or `session`):
+
+```tsx
+import { createChromeSavedViewsStorage, Filter } from '@/components/filter';
+
+const savedViewsStorage = createChromeSavedViewsStorage(chrome.storage.local);
+
+export function DealFilters() {
+  return <Filter fields={fields} savedViewsStorage={savedViewsStorage} />;
+}
+```
+
+The extension manifest must include the `storage` permission. An API-backed or
+in-memory implementation uses the same small contract:
+
+```tsx
+import { Filter, type SavedViewsStorage } from '@/components/filter';
+
+const savedViewsStorage: SavedViewsStorage = {
+  async getSavedViews() {
+    const response = await fetch('/api/saved-views');
+    if (!response.ok) throw new Error('Could not load saved views');
+    return response.json();
+  },
+  async saveSavedViews(savedViews) {
+    const response = await fetch('/api/saved-views', {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(savedViews),
+    });
+    if (!response.ok) throw new Error('Could not save saved views');
+  },
+};
+
+export function DealFilters() {
+  return <Filter fields={fields} savedViewsStorage={savedViewsStorage} />;
+}
+```
 
 ## Source tour
 
 - `src/components/filter/`: Public entrypoints, rendering components, editor
   and history controllers, and their component tests.
-- `src/utilities/filter/`: Pure expression, validation, persistence, search,
-  formatting, and value-draft logic. Start here when changing domain rules.
+- `src/utilities/filter/`: Pure expression, validation, saved-view modeling,
+  search, formatting, and value-draft logic. Start here when changing domain
+  rules.
+- `src/utilities/storage/`: The saved-view persistence contract plus local and
+  Chrome storage adapters.
 - `src/types/filter.ts`: The public semantic API. Internal history and editor
   types live beside the modules that own them.
 - `src/example/`: The demo parent, fixture records, synchronous filter
