@@ -95,6 +95,10 @@
   align-items: center;
 }
 
+.filter-token .filter-token-warning {
+  padding-right: 2px;
+}
+
 .filter-token-remove,
 .filter-token-pill-remove {
   &:hover {

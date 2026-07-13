@@ -33,13 +33,14 @@ function initialFilterGroup(): FilterGroup {
   };
 }
 
-function exampleFilterFields(): readonly FilterFieldDefinition[] {
+function exampleFilterFields(
+  enabledFieldKeys: readonly string[],
+): readonly FilterFieldDefinition[] {
   const parameters = new URLSearchParams(window.location.search);
   const hasNarrowBooleanFlag = parameters.has('narrowBoolean');
   const hasLongLabelFlag = parameters.has('longLabel');
 
-  if (!hasNarrowBooleanFlag && !hasLongLabelFlag) return DEAL_FILTER_FIELDS;
-  return DEAL_FILTER_FIELDS.map((field) => {
+  return DEAL_FILTER_FIELDS.filter((field) => enabledFieldKeys.includes(field.key)).map((field) => {
     if (hasNarrowBooleanFlag && field.type === 'boolean') {
       return { ...field, operators: ['equals'] as const };
     }
@@ -138,6 +139,9 @@ function DealsTable({ filteredDeals }: { filteredDeals: Deal[] | null }) {
  */
 function Application() {
   const [disabled, setDisabled] = useState(false);
+  const [enabledFieldKeys, setEnabledFieldKeys] = useState<readonly string[]>(() =>
+    DEAL_FILTER_FIELDS.map((field) => field.key),
+  );
   const [filteredDeals, setFilteredDeals] = useState<Deal[] | null>(null);
   const [currentFilters, setCurrentFilters] = useState<FilterGroup>(INITIAL_FILTERS);
   const [eventLog, setEventLog] = useState<LogEntry[]>([]);
@@ -184,6 +188,14 @@ function Application() {
     applyGroup(INITIAL_FILTERS);
   });
 
+  const setFieldEnabled = (fieldKey: string, enabled: boolean) => {
+    setEnabledFieldKeys((currentFieldKeys) =>
+      enabled
+        ? [...currentFieldKeys, fieldKey]
+        : currentFieldKeys.filter((currentFieldKey) => currentFieldKey !== fieldKey),
+    );
+  };
+
   return (
     <main className="example">
       <header className="example-header">
@@ -191,7 +203,7 @@ function Application() {
       </header>
 
       <Filter
-        fields={exampleFilterFields()}
+        fields={exampleFilterFields(enabledFieldKeys)}
         disabled={disabled}
         initialFilters={initialFilterGroup()}
         onChange={handleFiltersChange}
@@ -212,6 +224,21 @@ function Application() {
       <DealsTable filteredDeals={filteredDeals} />
 
       <section aria-label="Example harness" className="example-harness">
+        <fieldset className="example-field-toggles">
+          <legend>Available filters</legend>
+          <div className="example-field-options">
+            {DEAL_FILTER_FIELDS.map((field) => (
+              <label key={field.key}>
+                <input
+                  type="checkbox"
+                  checked={enabledFieldKeys.includes(field.key)}
+                  onChange={(event) => setFieldEnabled(field.key, event.target.checked)}
+                />
+                {field.label}
+              </label>
+            ))}
+          </div>
+        </fieldset>
         <div className="example-panes">
           <div>
             <h2>Current state</h2>
