@@ -45,6 +45,7 @@ export function parseSavedViews(raw: unknown): SavedView[] {
     const result = savedViewSchema.safeParse(entry);
 
     if (!result.success || seenNames.has(result.data.name)) continue;
+
     seenNames.add(result.data.name);
     views.push(result.data);
   }

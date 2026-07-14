@@ -267,6 +267,7 @@ export function getFilterValidationIssue(
       reason: `This operator is no longer supported for ${label}`,
     };
   }
+
   const enumValueIssue = getEnumValueIssue(field, filter);
 
   if (enumValueIssue) return enumValueIssue;
