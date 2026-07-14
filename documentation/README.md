@@ -326,13 +326,17 @@ Committed conditions are later checked against the _live_ registry by `getFilter
 
 ## The composition root
 
-[`filter.tsx`](../src/components/filter/filter.tsx) wires the system together. This is the **composition root**: the one module where concrete dependencies are assembled and passed to narrower state owners and rendering components. It deliberately has a small wrapper and a memoized implementation.
+[`filter.tsx`](../src/components/filter/filter.tsx) wires the system together. This is the **composition root**: the one module where concrete dependencies are assembled and passed to narrower state owners and rendering components. It deliberately separates a content-sensitive public wrapper from a compiler-optimized implementation.
 
 ### Content-sensitive wrapper
 
-`Filter` computes `stableSerialize(properties.fields)` before rendering `CompiledFilter`. The wrapper includes `'use no memo'` so the [React Compiler](https://react.dev/learn/react-compiler) does not cache the signature behind object identity. This protects the supported case where a consumer mutates nested field content and rerenders with the same array object.
+The public `Filter` wrapper computes `stableSerialize(properties.fields)` on every parent render. This is intentional: the component supports a consumer mutating nested field content, such as an enum's `options`, and then rerendering with the same `fields` array object. Object identity alone therefore cannot tell us whether the schema changed.
 
-### `CompiledFilter`
+`'use no memo'` opts _this wrapper only_ out of [React Compiler](https://react.dev/reference/react-compiler/directives/use-no-memo) optimization. Without that directive, the compiler could reuse the previous calculation when the `fields` reference is unchanged, leaving the component with stale field metadata. The resulting `fieldDefinitionContentSignature` is passed to `CompilerOptimizedFilter`; when nested content changes, the new string crosses its explicit `memo` boundary and causes the field registry to rebuild.
+
+The boundary is deliberately narrow. `CompilerOptimizedFilter` and its stateful descendants remain compiler-optimized, and editor-state updates happen inside that component. Consequently, typing, focus changes, and popover transitions do not rerun `stableSerialize`; only a parent render enters the content-sensitive wrapper.
+
+### `CompilerOptimizedFilter`
 
 The inner component:
 
@@ -922,8 +926,9 @@ This project uses the React Compiler in development and production, then tests t
 
 ### Deliberate memoization
 
-- `Filter` computes the content signature outside compiled state and opts out of memoization.
-- `CompiledFilter` is wrapped with `memo`.
+- `Filter` uses `'use no memo'` so every parent render recomputes the field-definition content signature, even when the `fields` object identity is unchanged.
+- `CompilerOptimizedFilter` is wrapped with `memo`; the content signature changes its props when nested field content changes, while unrelated parent renders can stop at this boundary.
+- Stateful editor updates occur inside `CompilerOptimizedFilter`, so they do not rerender `Filter` or repeat field serialization.
 - Each token list item is memoized so structural sharing keeps unchanged conditions still.
 - Field option rows are memoized so changing an active index rerenders only the old and new active rows.
 - The saved-view list is memoized so typing a view name does not rerender unchanged rows.

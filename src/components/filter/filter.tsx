@@ -90,21 +90,27 @@ function getEditorPresentation(
 export function Filter(properties: FilterProps) {
   'use no memo';
 
-  // Field definitions are deliberately content-sensitive: consumers may
-  // mutate a nested options array and rerender with the same `fields` object.
-  // Keep that small content-version check outside the compiled state owner so
-  // editor updates never repeat the serialization work.
-  const fieldDefinitionSignature = stableSerialize(properties.fields);
+  // This wrapper must run on every parent render, even when `fields` retains
+  // its identity. Consumers may mutate nested field content in place, so the
+  // React Compiler cannot safely memoize this calculation by object identity.
+  // The inner component remains compiler-optimized and only rerenders when
+  // this content signature or another prop actually changes.
+  const fieldDefinitionContentSignature = stableSerialize(properties.fields);
 
-  return <CompiledFilter {...properties} fieldDefinitionSignature={fieldDefinitionSignature} />;
+  return (
+    <CompilerOptimizedFilter
+      {...properties}
+      fieldDefinitionContentSignature={fieldDefinitionContentSignature}
+    />
+  );
 }
 
-const CompiledFilter = memo(function CompiledFilter(
-  properties: FilterProps & { fieldDefinitionSignature: string },
+const CompilerOptimizedFilter = memo(function CompilerOptimizedFilter(
+  properties: FilterProps & { fieldDefinitionContentSignature: string },
 ) {
   const {
     fields,
-    fieldDefinitionSignature,
+    fieldDefinitionContentSignature,
     onChange,
     disabled: disabledProperty,
     initialFilters,
@@ -120,8 +126,8 @@ const CompiledFilter = memo(function CompiledFilter(
   const filterIdCounterRef = useRef(0);
   const createConditionId = () => `${idPrefix}-filter-${++filterIdCounterRef.current}`;
   const fieldRegistry = useMemo(
-    () => createFilterFieldRegistry(fields, fieldDefinitionSignature),
-    [fields, fieldDefinitionSignature],
+    () => createFilterFieldRegistry(fields, fieldDefinitionContentSignature),
+    [fields, fieldDefinitionContentSignature],
   );
   const validatedFields = fieldRegistry.fields;
   const { history, getCurrentHistory, applyFilterHistoryAction } = useFilterHistory(
