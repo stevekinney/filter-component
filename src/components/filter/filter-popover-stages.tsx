@@ -12,6 +12,7 @@ import { PopoverValidationError } from './filter-popover-error.tsx';
 import type { ActiveFilterEditorState, FilterPopoverProps } from './filter-popover.tsx';
 import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
 import type { FilterFieldDefinition } from '@/types/filter.ts';
+import { useActiveOptionScroll } from './use-active-action-scroll.ts';
 
 function buildOperatorOrBooleanChoices(
   field: FilterFieldDefinition,
@@ -128,6 +129,7 @@ export function FieldSelectionStage({
 }) {
   const activeIndex = clampIndex(state.activeIndex, fieldResults.length);
   const activeResult = fieldResults[activeIndex];
+  const listRef = useActiveOptionScroll(activeIndex, activeResult?.key);
 
   const handleNavigationKey = (event: KeyboardEvent<HTMLInputElement>) => {
     event.preventDefault();
@@ -171,6 +173,7 @@ export function FieldSelectionStage({
         onKeyDown={handleSearchKeyDown}
       />
       <div
+        ref={listRef}
         id={`${idPrefix}-fields`}
         role="listbox"
         aria-label="Fields"
@@ -215,6 +218,7 @@ export function SingleChoiceStage(
       : buildOperatorOrBooleanChoices(field, editingFilter);
 
   const activeIndex = clampIndex(state.activeIndex, options.length);
+  const listRef = useActiveOptionScroll(activeIndex);
 
   const selectChoice = (value: string) => {
     if (state.stage === 'operator' && field.type === 'boolean') {
@@ -250,6 +254,7 @@ export function SingleChoiceStage(
     <>
       <div className="filter-popover-heading">{heading}</div>
       <div
+        ref={listRef}
         data-autofocus="1"
         tabIndex={0}
         role="listbox"
@@ -299,6 +304,7 @@ export function MultipleChoiceStage(
   const options = field.options ?? [];
   const selectedOptions = state.draft.kind === 'multiSelection' ? state.draft.selectedOptions : [];
   const activeIndex = clampIndex(state.activeIndex, options.length);
+  const listRef = useActiveOptionScroll(activeIndex);
 
   const toggleChoice = (option: string) => {
     const nextSelectedOptions = selectedOptions.includes(option)
@@ -347,6 +353,7 @@ export function MultipleChoiceStage(
         </button>
       </div>
       <div
+        ref={listRef}
         data-autofocus="1"
         tabIndex={0}
         role="listbox"
