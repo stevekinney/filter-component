@@ -74,7 +74,6 @@ export type FilterFieldRegistry = {
 /** Validates injected definitions and builds a content-sensitive lookup. */
 export function createFilterFieldRegistry(
   value: readonly FilterFieldDefinition[],
-  signature = stableSerialize(value),
 ): FilterFieldRegistry {
   const result = z.array(fieldDefinitionSchema).safeParse(value);
 
@@ -95,6 +94,6 @@ export function createFilterFieldRegistry(
   return {
     fields,
     byKey,
-    signature,
+    signature: stableSerialize(fields),
   };
 }

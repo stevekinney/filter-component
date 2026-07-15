@@ -122,7 +122,7 @@ describe('compiled Filter render boundaries', () => {
     expect(renderProbes.filterTokenList).toHaveBeenCalledTimes(rendersBeforeTyping.filterTokenList);
   });
 
-  it('rebuilds field metadata when nested options mutate in place', async () => {
+  it('rebuilds field metadata when the field snapshot changes', async () => {
     const user = userEvent.setup();
     const options = ['Lead', 'Won'];
     const fields = [
@@ -141,13 +141,13 @@ describe('compiled Filter render boundaries', () => {
     await user.click(screen.getByRole('option', { name: /Stage/ }));
     await user.click(screen.getByRole('option', { name: 'is any of' }));
     expect(screen.getByRole('option', { name: 'Won' })).toBeVisible();
-    const buildsBeforeMutation = renderProbes.fieldRegistry.mock.calls.length;
+    const buildsBeforeReplacement = renderProbes.fieldRegistry.mock.calls.length;
 
-    options.splice(1, 1);
-    view.rerender(<Filter fields={fields} onChange={onChange} />);
+    const changedFields = [{ ...fields[0]!, options: ['Lead'] }];
+    view.rerender(<Filter fields={changedFields} onChange={onChange} />);
 
     expect(screen.queryByRole('option', { name: 'Won' })).toBeNull();
-    expect(renderProbes.fieldRegistry).toHaveBeenCalledTimes(buildsBeforeMutation + 1);
+    expect(renderProbes.fieldRegistry).toHaveBeenCalledTimes(buildsBeforeReplacement + 1);
   });
 
   it('reuses field search results while only the active index changes', async () => {

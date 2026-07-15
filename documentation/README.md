@@ -181,16 +181,16 @@ import '@/components/filter/styles/filter-component.css';
 
 [`FilterProps`](../src/types/filter.ts) starts with `ComponentPropsWithRef<'form'>`, then removes `children`, native `onChange`, and `onSubmit`.
 
-| Prop                           | Contract                                                                    |
-| ------------------------------ | --------------------------------------------------------------------------- |
-| `fields`                       | Required `readonly FilterFieldDefinition[]`.                                |
-| `onChange`                     | Optional `(filters, abortController) => void`. The return value is ignored. |
-| `disabled`                     | Optional boolean; defaults to `false`.                                      |
-| `initialFilters`               | Optional one-time `FilterGroup` seed.                                       |
-| `savedViewsStorage`            | Optional mount-captured persistence adapter; defaults to local storage.     |
-| `aria-label`                   | Native form attribute; defaults to `Filters`.                               |
-| `className`                    | Merged with the mandatory `filter` class.                                   |
-| Remaining form props and `ref` | Forwarded to the root `<form>`.                                             |
+| Prop                           | Contract                                                                                                   |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| `fields`                       | Required immutable `readonly FilterFieldDefinition[]` snapshot; replace the array when definitions change. |
+| `onChange`                     | Optional `(filters, abortController) => void`. The return value is ignored.                                |
+| `disabled`                     | Optional boolean; defaults to `false`.                                                                     |
+| `initialFilters`               | Optional one-time `FilterGroup` seed.                                                                      |
+| `savedViewsStorage`            | Optional mount-captured persistence adapter; defaults to local storage.                                    |
+| `aria-label`                   | Native form attribute; defaults to `Filters`.                                                              |
+| `className`                    | Merged with the mandatory `filter` class.                                                                  |
+| Remaining form props and `ref` | Forwarded to the root `<form>`.                                                                            |
 
 The root always prevents native submit. A consumer cannot supply `children`, a native form `onChange`, or an `onSubmit` because those would conflict with the component's controlled DOM structure and semantic callback.
 
@@ -271,7 +271,7 @@ If validation fails, registry creation throws a `TypeError` with Zod's formatted
 - Builds a `Map` keyed by `field.key`.
 - Stores a stable content signature.
 
-The clone prevents later mutation from changing an existing registry behind its back. The signature means a parent that mutates `fields[0].options` in place and rerenders still triggers a new registry. Object keys are serialized in sorted order, while array order remains significant because field, operator, and enum menu order are product behavior.
+The component treats `fields` as an immutable schema snapshot. A parent must provide a new array when any definition changes. The clone prevents later caller mutation from changing an existing registry behind its back, while the content signature lets editor and history state reconcile only when the replacement schema has meaningfully changed. Object keys are serialized in sorted order, while array order remains significant because field, operator, and enum menu order are product behavior.
 
 ### Operators and values
 
@@ -326,19 +326,9 @@ Committed conditions are later checked against the _live_ registry by `getFilter
 
 ## The composition root
 
-[`filter.tsx`](../src/components/filter/filter.tsx) wires the system together. This is the **composition root**: the one module where concrete dependencies are assembled and passed to narrower state owners and rendering components. It deliberately separates a content-sensitive public wrapper from a compiler-optimized implementation.
+[`filter.tsx`](../src/components/filter/filter.tsx) wires the system together. This is the **composition root**: the one module where concrete dependencies are assembled and passed to narrower state owners and rendering components.
 
-### Content-sensitive wrapper
-
-The public `Filter` wrapper computes `stableSerialize(properties.fields)` on every parent render. This is intentional: the component supports a consumer mutating nested field content, such as an enum's `options`, and then rerendering with the same `fields` array object. Object identity alone therefore cannot tell us whether the schema changed.
-
-`'use no memo'` opts _this wrapper only_ out of [React Compiler](https://react.dev/reference/react-compiler/directives/use-no-memo) optimization. Without that directive, the compiler could reuse the previous calculation when the `fields` reference is unchanged, leaving the component with stale field metadata. The resulting `fieldDefinitionContentSignature` is passed to `CompilerOptimizedFilter`; when nested content changes, the new string crosses its explicit `memo` boundary and causes the field registry to rebuild.
-
-The boundary is deliberately narrow. `CompilerOptimizedFilter` and its stateful descendants remain compiler-optimized, and editor-state updates happen inside that component. Consequently, typing, focus changes, and popover transitions do not rerun `stableSerialize`; only a parent render enters the content-sensitive wrapper.
-
-### `CompilerOptimizedFilter`
-
-The inner component:
+The `Filter` component:
 
 - Applies defaults for `disabled`, storage, and `aria-label`.
 - Creates a React `useId` prefix and monotonic condition identifiers.
@@ -926,9 +916,9 @@ This project uses the React Compiler in development and production, then tests t
 
 ### Deliberate memoization
 
-- `Filter` uses `'use no memo'` so every parent render recomputes the field-definition content signature, even when the `fields` object identity is unchanged.
-- `CompilerOptimizedFilter` is wrapped with `memo`; the content signature changes its props when nested field content changes, while unrelated parent renders can stop at this boundary.
-- Stateful editor updates occur inside `CompilerOptimizedFilter`, so they do not rerender `Filter` or repeat field serialization.
+- `Filter` treats `fields` as an immutable snapshot and rebuilds its validated registry when the array identity changes.
+- The registry's stable content signature tells editor and history effects whether a replacement schema changed meaningfully.
+- React Compiler optimizes `Filter` and its descendants without a component-level opt-out.
 - Each token list item is memoized so structural sharing keeps unchanged conditions still.
 - Field option rows are memoized so changing an active index rerenders only the old and new active rows.
 - The saved-view list is memoized so typing a view name does not rerender unchanged rows.
@@ -1211,7 +1201,7 @@ The shim implements toggle lifecycle and pointerdown-based auto-popover light di
 | `filter-disabled-and-incomplete.test.tsx`  | Native disabled behavior, retained drafts, and repeated announcements                                    |
 | `filter-keyboard.test.tsx`                 | Token internals, joiner focus, destructive safety, and semantic focus restoration                        |
 | `filter-controller-hooks.test.tsx`         | Latest callbacks, schema re-emission, async saved-view reads/writes, queue ordering, failures, and focus |
-| `filter-controller-regressions.test.tsx`   | Strict Mode, same-event command state, in-place schema mutation, disabling, and repair regressions       |
+| `filter-controller-regressions.test.tsx`   | Strict Mode, same-event command state, schema replacement, disabling, and repair regressions             |
 | `use-filter-editor.test.tsx`               | Every editor command guard, transition, commit, resume, reconciliation, and disabled flow                |
 | `filter-editor-reducer.test.ts`            | Pure transient reducer and selectors                                                                     |
 | `filter-editor-reconciliation.test.ts`     | Active indexes, value reuse, editor repair, and incomplete reconciliation                                |
@@ -1230,7 +1220,7 @@ The shim implements toggle lifecycle and pointerdown-based auto-popover light di
 `filter-rendering.compiler.test.tsx` runs only in `compiler-test` mode. It checks that:
 
 - Typing a value draft does not rerender committed tokens or row actions.
-- In-place nested field mutations rebuild metadata.
+- Replacement field snapshots rebuild metadata.
 - Active-index changes reuse field search results.
 - New-field and existing-token field search share the same derived results.
 
@@ -1416,7 +1406,7 @@ This is the file-by-file tour. Start at the narrowest owner of the behavior you 
 
 | File                                                                                                  | Responsibility                                                                                                  |
 | ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| [`filter.tsx`](../src/components/filter/filter.tsx)                                                   | Content signature wrapper, composition root, refs, controller wiring, row, popover, and live region             |
+| [`filter.tsx`](../src/components/filter/filter.tsx)                                                   | Composition root, identity-based field registry, refs, controller wiring, row, popover, and live region         |
 | [`filter-editor-state.ts`](../src/components/filter/filter-editor-state.ts)                           | Active editor and incomplete-draft types plus segment/editing selectors                                         |
 | [`filter-editor-reducer.ts`](../src/components/filter/filter-editor-reducer.ts)                       | Pure transient editor/incomplete-draft reducer                                                                  |
 | [`use-filter-editor.ts`](../src/components/filter/use-filter-editor.ts)                               | Stage orchestration, synchronous command state, draft preservation, schema/disabled effects, and command facade |
