@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { memo, useId, useMemo, useRef, useState } from 'react';
+import { useId, useMemo, useRef, useState } from 'react';
 import { activeEditorSegment, findEditingFilter } from './filter-editor-state.ts';
 import type { FilterEditorState } from './filter-editor-state.ts';
 import { searchFields } from '@/utilities/filter/field-search.ts';
@@ -15,7 +15,6 @@ import { clampIndex, stepIndex } from '@/utilities/list-navigation.ts';
 import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
 import type { TokenSegment } from '@/utilities/filter/validation.ts';
 import { createFilterFieldRegistry } from '@/utilities/filter/field-registry.ts';
-import { stableSerialize } from '@/utilities/filter/stable-serialize.ts';
 import { useFilterFocus } from './use-filter-focus.ts';
 import { localSavedViewsStorage } from '@/utilities/storage/local-storage.ts';
 import type { FilterFieldDefinition, FilterProps } from '@/types/filter.ts';
@@ -88,29 +87,8 @@ function getEditorPresentation(
  * parent's responsibility.
  */
 export function Filter(properties: FilterProps) {
-  'use no memo';
-
-  // This wrapper must run on every parent render, even when `fields` retains
-  // its identity. Consumers may mutate nested field content in place, so the
-  // React Compiler cannot safely memoize this calculation by object identity.
-  // The inner component remains compiler-optimized and only rerenders when
-  // this content signature or another prop actually changes.
-  const fieldDefinitionContentSignature = stableSerialize(properties.fields);
-
-  return (
-    <CompilerOptimizedFilter
-      {...properties}
-      fieldDefinitionContentSignature={fieldDefinitionContentSignature}
-    />
-  );
-}
-
-const CompilerOptimizedFilter = memo(function CompilerOptimizedFilter(
-  properties: FilterProps & { fieldDefinitionContentSignature: string },
-) {
   const {
     fields,
-    fieldDefinitionContentSignature,
     onChange,
     disabled: disabledProperty,
     initialFilters,
@@ -125,10 +103,7 @@ const CompilerOptimizedFilter = memo(function CompilerOptimizedFilter(
   const idPrefix = useId();
   const filterIdCounterRef = useRef(0);
   const createConditionId = () => `${idPrefix}-filter-${++filterIdCounterRef.current}`;
-  const fieldRegistry = useMemo(
-    () => createFilterFieldRegistry(fields, fieldDefinitionContentSignature),
-    [fields, fieldDefinitionContentSignature],
-  );
+  const fieldRegistry = useMemo(() => createFilterFieldRegistry(fields), [fields]);
   const validatedFields = fieldRegistry.fields;
   const { history, getCurrentHistory, applyFilterHistoryAction } = useFilterHistory(
     fieldRegistry,
@@ -378,4 +353,4 @@ const CompilerOptimizedFilter = memo(function CompilerOptimizedFilter(
       </span>
     </form>
   );
-});
+}

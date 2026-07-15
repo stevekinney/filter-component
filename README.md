@@ -75,16 +75,16 @@ Each real commit calls `onChange` with the entire valid group and a fresh [`Abor
 
 `FilterProps` extends native `<form>` props, with `children`, native `onChange`, and `onSubmit` reserved by the component.
 
-| Prop                | Type                                                               | Behavior                                                                                                                                     |
-| ------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `fields`            | `readonly FilterFieldDefinition[]`                                 | Required injected field schema. Definitions are validated at runtime and copied into an internal registry.                                   |
-| `onChange`          | `(filters: FilterGroup, abortController: AbortController) => void` | Receives the complete valid-only group after each committed edit. Optional.                                                                  |
-| `initialFilters`    | `FilterGroup`                                                      | One-time mount seed. It is silent and not undoable. Recursive groups are accepted, then normalized into the component's joiner model.        |
-| `disabled`          | `boolean`                                                          | Disables the whole fieldset, removes chip roots from the tab order, and closes any open editor. Defaults to `false`.                         |
-| `savedViewsStorage` | `SavedViewsStorage`                                                | One-time persistence dependency. Defaults to browser [`localStorage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage). |
-| `aria-label`        | `string`                                                           | Names the form. Defaults to `Filters`.                                                                                                       |
-| `className`         | `string`                                                           | Merged with the component's `filter` class. Use it for scoped token overrides.                                                               |
-| Other form props    | Native form attributes and `ref`                                   | Spread onto the root `<form>`. Native submission is always prevented.                                                                        |
+| Prop                | Type                                                               | Behavior                                                                                                                                        |
+| ------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `fields`            | `readonly FilterFieldDefinition[]`                                 | Required immutable field-schema snapshot. Replace the array when definitions change; values are validated and copied into an internal registry. |
+| `onChange`          | `(filters: FilterGroup, abortController: AbortController) => void` | Receives the complete valid-only group after each committed edit. Optional.                                                                     |
+| `initialFilters`    | `FilterGroup`                                                      | One-time mount seed. It is silent and not undoable. Recursive groups are accepted, then normalized into the component's joiner model.           |
+| `disabled`          | `boolean`                                                          | Disables the whole fieldset, removes chip roots from the tab order, and closes any open editor. Defaults to `false`.                            |
+| `savedViewsStorage` | `SavedViewsStorage`                                                | One-time persistence dependency. Defaults to browser [`localStorage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage).    |
+| `aria-label`        | `string`                                                           | Names the form. Defaults to `Filters`.                                                                                                          |
+| `className`         | `string`                                                           | Merged with the component's `filter` class. Use it for scoped token overrides.                                                                  |
+| Other form props    | Native form attributes and `ref`                                   | Spread onto the root `<form>`. Native submission is always prevented.                                                                           |
 
 The complete public entrypoint exports three runtime values:
 

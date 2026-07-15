@@ -158,6 +158,7 @@ export type FilterProps = Omit<
   ComponentPropsWithRef<'form'>,
   'children' | 'onChange' | 'onSubmit'
 > & {
+  /** Immutable schema snapshot. Replace the array when any field definition changes. */
   fields: readonly FilterFieldDefinition[];
   onChange?: (filters: FilterGroup, abortController: AbortController) => void;
   disabled?: boolean;

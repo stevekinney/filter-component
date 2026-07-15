@@ -54,8 +54,11 @@ describe('controller integration regressions', () => {
       name: 'Incomplete filter: Flexible',
     });
 
-    fields[1] = { key: 'flexible', label: 'Flexible', type: 'number' };
-    view.rerender(<Filter fields={fields} onChange={onChange} />);
+    const changedFields: FilterFieldDefinition[] = [
+      fields[0]!,
+      { key: 'flexible', label: 'Flexible', type: 'number' },
+    ];
+    view.rerender(<Filter fields={changedFields} onChange={onChange} />);
     await user.click(within(incomplete).getByTitle('Finish this filter'));
 
     expect(screen.getByRole('dialog', { name: 'Choose field' })).toBeInTheDocument();
@@ -66,7 +69,7 @@ describe('controller integration regressions', () => {
     );
   });
 
-  it('detects an in-place type change and returns to field selection', async () => {
+  it('detects a type change and returns to field selection', async () => {
     const fields: FilterFieldDefinition[] = [
       { key: 'flexible', label: 'Flexible', type: 'string' },
     ];
@@ -77,15 +80,17 @@ describe('controller integration regressions', () => {
     await user.click(screen.getByRole('option', { name: /Flexible/ }));
     expect(screen.getByRole('dialog', { name: 'Flexible' })).toBeInTheDocument();
 
-    fields[0] = { key: 'flexible', label: 'Flexible', type: 'number' };
-    view.rerender(<Filter fields={fields} onChange={onChange} />);
+    const changedFields: FilterFieldDefinition[] = [
+      { key: 'flexible', label: 'Flexible', type: 'number' },
+    ];
+    view.rerender(<Filter fields={changedFields} onChange={onChange} />);
 
     expect(await screen.findByRole('dialog', { name: 'Choose field' })).toBeInTheDocument();
     expect(addFilterInput).toHaveFocus();
     expect(screen.getByRole('option', { name: /Flexible/ })).toHaveTextContent('number');
   });
 
-  it('detects an in-place operator removal and backs up to operator selection', async () => {
+  it('detects an operator removal and backs up to operator selection', async () => {
     const options = ['Lead', 'Won'];
     const fields: FilterFieldDefinition[] = [
       {
@@ -104,14 +109,16 @@ describe('controller integration regressions', () => {
     await user.click(screen.getByRole('option', { name: 'is any of' }));
     expect(screen.getByRole('dialog', { name: 'Stage is any of' })).toBeInTheDocument();
 
-    fields[0] = {
-      key: 'stage',
-      label: 'Stage',
-      type: 'enum',
-      options,
-      operators: ['equals'],
-    };
-    view.rerender(<Filter fields={fields} onChange={onChange} />);
+    const changedFields: FilterFieldDefinition[] = [
+      {
+        key: 'stage',
+        label: 'Stage',
+        type: 'enum',
+        options,
+        operators: ['equals'],
+      },
+    ];
+    view.rerender(<Filter fields={changedFields} onChange={onChange} />);
 
     const operatorList = await screen.findByRole('listbox', { name: 'Stage' });
     expect(
@@ -123,7 +130,7 @@ describe('controller integration regressions', () => {
     expect(screen.queryByRole('button', { name: 'Apply' })).not.toBeInTheDocument();
   });
 
-  it('reconciles enum options mutated in place while the value editor is open', async () => {
+  it('reconciles replaced enum options while the value editor is open', async () => {
     const options = ['Lead', 'Won'];
     const fields: FilterFieldDefinition[] = [
       {
@@ -143,8 +150,16 @@ describe('controller integration regressions', () => {
     await user.click(screen.getByRole('option', { name: 'Won' }));
     expect(screen.getByRole('option', { name: 'Won' })).toHaveAttribute('aria-selected', 'true');
 
-    options.splice(1, 1);
-    view.rerender(<Filter fields={fields} onChange={onChange} />);
+    const changedFields: FilterFieldDefinition[] = [
+      {
+        key: 'stage',
+        label: 'Stage',
+        type: 'enum',
+        options: ['Lead'],
+        operators: ['in'],
+      },
+    ];
+    view.rerender(<Filter fields={changedFields} onChange={onChange} />);
 
     expect(screen.queryByRole('option', { name: 'Won' })).toBeNull();
     await user.click(screen.getByRole('button', { name: 'Apply' }));
