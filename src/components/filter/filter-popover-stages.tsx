@@ -215,11 +215,9 @@ export function SingleChoiceStage(
           label: option,
           selected: state.draft.kind === 'scalar' && state.draft.input === option,
         }))
-      : buildOperatorOrBooleanChoices(field, editingFilter);
-
   const activeIndex = clampIndex(state.activeIndex, options.length);
-  const listRef = useActiveOptionScroll(activeIndex);
-
+  const activeOptionKey = options[activeIndex]?.value;
+  const listRef = useActiveOptionScroll(activeIndex, activeOptionKey);
   const selectChoice = (value: string) => {
     if (state.stage === 'operator' && field.type === 'boolean') {
       const choice = booleanChoicesForField(field).find((candidate) => candidate.value === value);
@@ -301,11 +299,9 @@ export function MultipleChoiceStage(
     onCommitValue,
     onCancel,
   } = props;
-  const options = field.options ?? [];
-  const selectedOptions = state.draft.kind === 'multiSelection' ? state.draft.selectedOptions : [];
   const activeIndex = clampIndex(state.activeIndex, options.length);
-  const listRef = useActiveOptionScroll(activeIndex);
-
+  const activeOptionKey = options[activeIndex];
+  const listRef = useActiveOptionScroll(activeIndex, activeOptionKey);
   const toggleChoice = (option: string) => {
     const nextSelectedOptions = selectedOptions.includes(option)
       ? selectedOptions.filter((candidate) => candidate !== option)
