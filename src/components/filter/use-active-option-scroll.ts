@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 
 export function useActiveOptionScroll<T extends HTMLElement = HTMLDivElement>(
   activeIndex: number,
@@ -6,7 +6,7 @@ export function useActiveOptionScroll<T extends HTMLElement = HTMLDivElement>(
 ) {
   const listRef = useRef<T | null>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     listRef.current?.querySelector('[data-active]')?.scrollIntoView({
       block: 'nearest',
       inline: 'nearest',

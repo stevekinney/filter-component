@@ -215,6 +215,8 @@ export function SingleChoiceStage(
           label: option,
           selected: state.draft.kind === 'scalar' && state.draft.input === option,
         }))
+      : buildOperatorOrBooleanChoices(field, editingFilter);
+
   const activeIndex = clampIndex(state.activeIndex, options.length);
   const activeOptionKey = options[activeIndex]?.value;
   const listRef = useActiveOptionScroll(activeIndex, activeOptionKey);
@@ -299,6 +301,8 @@ export function MultipleChoiceStage(
     onCommitValue,
     onCancel,
   } = props;
+  const options = field.options ?? [];
+  const selectedOptions = state.draft.kind === 'multiSelection' ? state.draft.selectedOptions : [];
   const activeIndex = clampIndex(state.activeIndex, options.length);
   const activeOptionKey = options[activeIndex];
   const listRef = useActiveOptionScroll(activeIndex, activeOptionKey);
