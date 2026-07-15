@@ -110,6 +110,12 @@ if (typeof HTMLElement.prototype.showPopover !== 'function') {
   };
 }
 
+// jsdom has no layout engine, so it does not provide this standard scrolling
+// primitive.
+if (typeof HTMLElement.prototype.scrollIntoView !== 'function') {
+  HTMLElement.prototype.scrollIntoView = function () {};
+}
+
 // jsdom's UA stylesheet has `[popover]:not(:popover-open) { display: none }`
 // but never matches `:popover-open`, so shown popovers stay invisible to
 // Testing Library. Component CSS isn't loaded under vitest, so override with
