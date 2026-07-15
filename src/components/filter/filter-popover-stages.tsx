@@ -12,7 +12,7 @@ import { PopoverValidationError } from './filter-popover-error.tsx';
 import type { ActiveFilterEditorState, FilterPopoverProps } from './filter-popover.tsx';
 import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
 import type { FilterFieldDefinition } from '@/types/filter.ts';
-import { useActiveOptionScroll } from './use-active-action-scroll.ts';
+import { useActiveOptionScroll } from './use-active-option-scroll.ts';
 
 function buildOperatorOrBooleanChoices(
   field: FilterFieldDefinition,
