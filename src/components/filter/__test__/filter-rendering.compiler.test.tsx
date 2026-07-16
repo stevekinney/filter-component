@@ -15,8 +15,8 @@ const renderProbes = vi.hoisted(() => ({
   filterTokenList: vi.fn(),
 }));
 
-vi.mock('@/utilities/filter/field-search.ts', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/utilities/filter/field-search.ts')>();
+vi.mock('@filter/utilities/field-search.ts', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@filter/utilities/field-search.ts')>();
 
   return {
     ...actual,
@@ -27,8 +27,8 @@ vi.mock('@/utilities/filter/field-search.ts', async (importOriginal) => {
   };
 });
 
-vi.mock('@/utilities/filter/field-registry.ts', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/utilities/filter/field-registry.ts')>();
+vi.mock('@filter/utilities/field-registry.ts', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@filter/utilities/field-registry.ts')>();
 
   return {
     ...actual,
@@ -52,8 +52,8 @@ vi.mock('../filter-action-rail.tsx', async (importOriginal) => {
   return { ...actual, FilterRail: FilterRailRenderProbe };
 });
 
-vi.mock('../filter-token.tsx', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../filter-token.tsx')>();
+vi.mock('@filter/tokens/filter-token.tsx', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@filter/tokens/filter-token.tsx')>();
 
   function FilterTokenRenderProbe(props: ComponentProps<typeof actual.FilterToken>) {
     renderProbes.filterToken();
@@ -63,8 +63,8 @@ vi.mock('../filter-token.tsx', async (importOriginal) => {
   return { ...actual, FilterToken: FilterTokenRenderProbe };
 });
 
-vi.mock('../filter-token-list.tsx', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../filter-token-list.tsx')>();
+vi.mock('@filter/tokens/filter-token-list.tsx', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@filter/tokens/filter-token-list.tsx')>();
 
   function FilterTokenListRenderProbe(props: ComponentProps<typeof actual.FilterTokenList>) {
     renderProbes.filterTokenList();

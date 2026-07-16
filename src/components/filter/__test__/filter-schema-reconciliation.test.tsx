@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import type { FilterFieldDefinition } from '@/types/filter.ts';
+import type { FilterFieldDefinition } from '@filter/types.ts';
 
 import { Filter } from '../filter.tsx';
 import { addStringFilter, FIELDS, queryTokens, setup } from './filter-test-setup.tsx';

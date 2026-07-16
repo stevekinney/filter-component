@@ -2,18 +2,17 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import type { ComponentProps } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { FilterFieldDefinition } from '@/types/filter.ts';
-import { savedViewKey } from '@/utilities/filter/saved-views.ts';
-import type { SavedView } from '@/utilities/filter/saved-views.ts';
-
-import { SavedViewsControls } from '../filter-saved-views.tsx';
+import { SavedViewsControls } from '@filter/saved-views/filter-saved-views.tsx';
+import type { FilterFieldDefinition } from '@filter/types.ts';
+import { savedViewKey } from '@filter/utilities/saved-views.ts';
+import type { SavedView } from '@filter/utilities/saved-views.ts';
 
 const savedViewDerivationProbes = vi.hoisted(() => ({
   savedViewKey: vi.fn(),
 }));
 
-vi.mock('@/utilities/filter/saved-views.ts', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/utilities/filter/saved-views.ts')>();
+vi.mock('@filter/utilities/saved-views.ts', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@filter/utilities/saved-views.ts')>();
   return {
     ...actual,
     savedViewKey: (...arguments_: Parameters<typeof actual.savedViewKey>) => {

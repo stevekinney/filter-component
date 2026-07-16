@@ -186,6 +186,7 @@ function Application() {
 
   useEffect(() => {
     if (hasAppliedInitialFiltersRef.current) return;
+
     hasAppliedInitialFiltersRef.current = true;
     applyGroup(INITIAL_FILTERS);
   });

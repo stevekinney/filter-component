@@ -1,61 +1,29 @@
 import clsx from 'clsx';
 import { useId, useMemo, useRef, useState } from 'react';
 
-import type { FilterFieldDefinition, FilterProps } from '@/types/filter.ts';
-import { createFilterFieldRegistry } from '@/utilities/filter/field-registry.ts';
-import { searchFields } from '@/utilities/filter/field-search.ts';
-import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
-import type { TokenSegment } from '@/utilities/filter/validation.ts';
-import { clampIndex, stepIndex } from '@/utilities/list-navigation.ts';
-import { localSavedViewsStorage } from '@/utilities/storage/local-storage.ts';
+import {
+  activeEditorSegment,
+  findEditingFilter,
+  useFilterEditor,
+} from '@filter/hooks/use-filter-editor/index.ts';
+import type { FilterEditorState } from '@filter/hooks/use-filter-editor/index.ts';
+import { useFilterFieldSelection } from '@filter/hooks/use-filter-field-selection.ts';
+import { useFilterFocus } from '@filter/hooks/use-filter-focus.ts';
+import { useFilterHistory } from '@filter/hooks/use-filter-history.ts';
+import { useSavedViews } from '@filter/hooks/use-saved-views.ts';
+import type { FilterFieldDefinition, FilterProps } from '@filter/types.ts';
+import { createFilterFieldRegistry } from '@filter/utilities/field-registry.ts';
+import type { FilterEntry } from '@filter/utilities/filter-entry.ts';
+import { stepIndex } from '@filter/utilities/list-navigation.ts';
+import { localSavedViewsStorage } from '@filter/utilities/storage/local-storage.ts';
+import type { TokenSegment } from '@filter/utilities/validation.ts';
 
 import { AddFilterCombobox } from './add-filter-combobox.tsx';
 import { FilterRail } from './filter-action-rail.tsx';
-import { FilterDraftPreview, IncompleteDraftChip } from './filter-draft-chips.tsx';
-import { activeEditorSegment, findEditingFilter } from './filter-editor-state.ts';
-import type { FilterEditorState } from './filter-editor-state.ts';
-import { FilterPopover } from './filter-popover.tsx';
-import { FilterTokenList } from './filter-token-list.tsx';
-import { useFilterEditor } from './use-filter-editor.ts';
-import { useFilterFocus } from './use-filter-focus.ts';
-import { useFilterHistory } from './use-filter-history.ts';
-import { useSavedViews } from './use-saved-views.ts';
-
-const NO_FIELD_RESULTS: readonly FilterFieldDefinition[] = [];
-
-function useFilterFieldSelection(
-  editorState: FilterEditorState,
-  fields: readonly FilterFieldDefinition[],
-) {
-  const isChoosingFilterField = editorState.stage === 'field';
-  const isChoosingNewFilterField = isChoosingFilterField && editorState.filterId === null;
-  const fieldQuery = isChoosingFilterField ? editorState.query : null;
-
-  const fieldResults = useMemo(
-    () => (fieldQuery === null ? NO_FIELD_RESULTS : searchFields(fields, fieldQuery)),
-    [fieldQuery, fields],
-  );
-
-  const matchingFields = isChoosingNewFilterField ? fieldResults : NO_FIELD_RESULTS;
-  const activeFieldIndex = isChoosingNewFilterField
-    ? clampIndex(editorState.activeIndex, matchingFields.length)
-    : 0;
-
-  let inputQuery = '';
-
-  if (isChoosingNewFilterField && editorState.stage === 'field') {
-    inputQuery = editorState.query;
-  }
-
-  return {
-    activeFieldIndex,
-    canFocusTokens: editorState.stage === 'idle' || editorState.filterId === null,
-    fieldResults,
-    inputQuery,
-    isChoosingNewFilterField,
-    matchingFields,
-  };
-}
+import { FilterDraftPreview } from './filter-draft-preview.tsx';
+import { IncompleteDraftChip } from './filter-incomplete-draft-chip.tsx';
+import { FilterPopover } from './popover/index.ts';
+import { FilterTokenList } from './tokens/index.ts';
 
 function getEditorPresentation(
   editorState: FilterEditorState,
@@ -178,6 +146,7 @@ export function Filter(properties: FilterProps) {
       filterFieldsetRef.current?.querySelector<HTMLElement>('[data-draft-preview]');
 
     if (draftPreview) return draftPreview;
+
     const captured = popoverAnchorRef.current;
 
     if (captured?.isConnected) return captured;
@@ -235,6 +204,7 @@ export function Filter(properties: FilterProps) {
     const joinerIndex = direction === 1 ? index : index - 1;
 
     if (joinerIndex < 0) return;
+
     focus({ type: 'joiner', index: joinerIndex });
   };
 

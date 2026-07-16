@@ -1,12 +1,11 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { FilterFieldDefinition } from '@/types/filter.ts';
-import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
-
-import type { FilterEditorState } from '../filter-editor-state.ts';
-import { SingleChoiceStage } from '../filter-popover-stages.tsx';
-import type { FilterPopoverProps } from '../filter-popover.tsx';
+import type { FilterEditorState } from '@filter/hooks/use-filter-editor/filter-editor-state.ts';
+import type { FilterPopoverProps } from '@filter/popover/filter-popover.tsx';
+import { SingleChoiceStage } from '@filter/popover/single-choice-stage.tsx';
+import type { FilterFieldDefinition } from '@filter/types.ts';
+import type { FilterEntry } from '@filter/utilities/filter-entry.ts';
 
 const STRING_FIELD = {
   key: 'name',

@@ -1,6 +1,6 @@
 import type { ChangeEvent, KeyboardEvent, RefObject } from 'react';
 
-import type { FilterFieldDefinition } from '@/types/filter.ts';
+import type { FilterFieldDefinition } from '@filter/types.ts';
 
 type AddFilterComboboxProps = {
   inputRef: RefObject<HTMLInputElement | null>;

@@ -1,18 +1,17 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { FilterFieldDefinition } from '@/types/filter.ts';
-import { EMPTY_FILTER_EXPRESSION } from '@/utilities/filter/expression.ts';
-import type { FilterExpression } from '@/utilities/filter/expression.ts';
-import { createFilterFieldRegistry } from '@/utilities/filter/field-registry.ts';
-import { createFilterEntry } from '@/utilities/filter/filter-entry.ts';
-import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
-import { filterHistoryReducer } from '@/utilities/filter/history.ts';
-import type { FilterHistory, FilterHistoryAction } from '@/utilities/filter/history.ts';
-
-import * as filterEditorReducerModule from '../filter-editor-reducer.ts';
-import { useFilterEditor } from '../use-filter-editor.ts';
-import type { FocusTarget } from '../use-filter-focus.ts';
+import * as filterEditorReducerModule from '@filter/hooks/use-filter-editor/filter-editor-reducer.ts';
+import { useFilterEditor } from '@filter/hooks/use-filter-editor/use-filter-editor.ts';
+import type { FocusTarget } from '@filter/hooks/use-filter-focus.ts';
+import type { FilterFieldDefinition } from '@filter/types.ts';
+import { EMPTY_FILTER_EXPRESSION } from '@filter/utilities/expression.ts';
+import type { FilterExpression } from '@filter/utilities/expression.ts';
+import { createFilterFieldRegistry } from '@filter/utilities/field-registry.ts';
+import { createFilterEntry } from '@filter/utilities/filter-entry.ts';
+import type { FilterEntry } from '@filter/utilities/filter-entry.ts';
+import { filterHistoryReducer } from '@filter/utilities/history.ts';
+import type { FilterHistory, FilterHistoryAction } from '@filter/utilities/history.ts';
 
 const FIELDS: readonly FilterFieldDefinition[] = [
   { key: 'name', label: 'Name', type: 'string' },

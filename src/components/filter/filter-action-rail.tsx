@@ -2,10 +2,10 @@ import { FilterX, Redo2, Undo2 } from 'lucide-react';
 import { Fragment } from 'react';
 import type { ReactNode } from 'react';
 
-import type { FilterFieldDefinition } from '@/types/filter.ts';
-import type { SavedView } from '@/utilities/filter/saved-views.ts';
+import type { FilterFieldDefinition } from '@filter/types.ts';
+import type { SavedView } from '@filter/utilities/saved-views.ts';
 
-import { SavedViewsControls } from './filter-saved-views.tsx';
+import { SavedViewsControls } from './saved-views/index.ts';
 
 function RowActionButton(properties: {
   disabled: boolean;

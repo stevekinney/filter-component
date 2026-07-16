@@ -24,6 +24,7 @@ export default defineConfig(({ mode }) => {
     plugins: [react(), ...(mode === 'test' ? [] : [babel({ presets: [compilerPreset] })])],
     resolve: {
       alias: {
+        '@filter': fileURLToPath(new URL('./src/components/filter', import.meta.url)),
         '@': fileURLToPath(new URL('./src', import.meta.url)),
       },
     },

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { useNativePopover } from '../use-native-popover.ts';
+import { useNativePopover } from '@/utilities/hooks/use-native-popover.ts';
 
 type NativePopoverHarnessProps = {
   anchor: HTMLElement | null;

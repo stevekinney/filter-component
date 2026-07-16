@@ -112,6 +112,7 @@ function matches(deal: Deal, filter: FilterCondition, now: Date): boolean {
   if (filter.operator === 'isEmpty') return isEmptyValue(recorded);
   if (filter.operator === 'isNotEmpty') return !isEmptyValue(recorded);
   if (isEmptyValue(recorded)) return false;
+
   switch (filter.type) {
     case 'string':
       return matchesString(String(recorded), filter);

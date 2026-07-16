@@ -1,7 +1,7 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { FilterList } from '@/types/filter.ts';
+import type { FilterList } from '@filter/types.ts';
 
 import { queryTokens, setup as renderFilter } from './filter-test-setup.tsx';
 

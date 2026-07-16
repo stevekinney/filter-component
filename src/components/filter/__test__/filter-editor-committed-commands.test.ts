@@ -1,13 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { EMPTY_FILTER_EXPRESSION } from '@/utilities/filter/expression.ts';
-import type { FilterExpression } from '@/utilities/filter/expression.ts';
-import { createFilterFieldRegistry } from '@/utilities/filter/field-registry.ts';
-import { createFilterEntry } from '@/utilities/filter/filter-entry.ts';
-import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
-import type { FilterHistory, FilterHistoryAction } from '@/utilities/filter/history.ts';
-
-import { createFilterEditorCommittedCommands } from '../filter-editor-committed-commands.ts';
+import { createFilterEditorCommittedCommands } from '@filter/hooks/use-filter-editor/filter-editor-committed-commands.ts';
+import { EMPTY_FILTER_EXPRESSION } from '@filter/utilities/expression.ts';
+import type { FilterExpression } from '@filter/utilities/expression.ts';
+import { createFilterFieldRegistry } from '@filter/utilities/field-registry.ts';
+import { createFilterEntry } from '@filter/utilities/filter-entry.ts';
+import type { FilterEntry } from '@filter/utilities/filter-entry.ts';
+import type { FilterHistory, FilterHistoryAction } from '@filter/utilities/history.ts';
 
 const name = createFilterEntry(
   {

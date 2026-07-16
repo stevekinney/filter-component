@@ -1,17 +1,16 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { EMPTY_FILTER_EXPRESSION } from '@/utilities/filter/expression.ts';
-import type { FilterExpression } from '@/utilities/filter/expression.ts';
-import { createFilterFieldRegistry } from '@/utilities/filter/field-registry.ts';
-import { createFilterEntry } from '@/utilities/filter/filter-entry.ts';
-import type { FilterHistoryAction } from '@/utilities/filter/history.ts';
-import type { SavedView } from '@/utilities/filter/saved-views.ts';
-import type { SavedViewsStorage } from '@/utilities/storage/saved-views-storage.ts';
-
-import type { FocusTarget } from '../use-filter-focus.ts';
-import { useFilterHistory } from '../use-filter-history.ts';
-import { useSavedViews } from '../use-saved-views.ts';
+import type { FocusTarget } from '@filter/hooks/use-filter-focus.ts';
+import { useFilterHistory } from '@filter/hooks/use-filter-history.ts';
+import { useSavedViews } from '@filter/hooks/use-saved-views.ts';
+import { EMPTY_FILTER_EXPRESSION } from '@filter/utilities/expression.ts';
+import type { FilterExpression } from '@filter/utilities/expression.ts';
+import { createFilterFieldRegistry } from '@filter/utilities/field-registry.ts';
+import { createFilterEntry } from '@filter/utilities/filter-entry.ts';
+import type { FilterHistoryAction } from '@filter/utilities/history.ts';
+import type { SavedView } from '@filter/utilities/saved-views.ts';
+import type { SavedViewsStorage } from '@filter/utilities/storage/saved-views-storage.ts';
 
 const nameEntry = (value: string, id = value): FilterExpression => ({
   conditions: [
