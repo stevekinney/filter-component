@@ -10,6 +10,17 @@ const nameField: FilterFieldDefinition = {
   type: 'string',
 };
 
+const assigneeField = {
+  key: 'assignee',
+  label: 'Assigned to',
+  type: 'enum',
+  valueCardinality: 'multiple',
+  options: [
+    { value: 'person-1', label: 'Ada Lovelace' },
+    { value: 'person-2', label: 'Grace Hopper' },
+  ],
+} as const satisfies FilterFieldDefinition;
+
 describe('formatFilterValue', () => {
   it('formats scalars, lists, ranges, and durations', () => {
     const scalar: FilterCondition = {
@@ -71,5 +82,19 @@ describe('tokenPhrase', () => {
       operator: 'isEmpty',
     };
     expect(tokenPhrase(filter, undefined)).toBe('ghost is empty');
+  });
+
+  it('renders enum labels while falling back to stale stable values', () => {
+    const filter: FilterCondition = {
+      fieldKey: 'assignee',
+      type: 'enum',
+      operator: 'containsAny',
+      value: ['person-1', 'removed-person'],
+    };
+
+    expect(formatFilterValue(filter, assigneeField)).toBe('Ada Lovelace, removed-person');
+    expect(tokenPhrase(filter, assigneeField)).toBe(
+      'Assigned to contains any of Ada Lovelace, removed-person',
+    );
   });
 });

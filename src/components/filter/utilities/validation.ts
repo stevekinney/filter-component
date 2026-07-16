@@ -8,6 +8,7 @@ import type {
   WithinLastUnit,
 } from '@filter/types.ts';
 
+import { enumOptionsForField } from './field-registry.ts';
 import type { FilterEntry } from './filter-entry.ts';
 import { filterConditionSchema } from './filter-schema.ts';
 import { getValueEditorKind, operatorsForField } from './operators.ts';
@@ -82,23 +83,30 @@ const validateBooleanDraft: DraftValidator = (_field, _operator, draft) => {
 
 const validateSingleEnumDraft: DraftValidator = (field, _operator, draft) => {
   if (draft.kind !== 'scalar' || draft.input === '') return invalid('Choose a value');
-  if (!(field.options ?? []).includes(draft.input)) return invalid('Choose a listed option');
+  if (
+    field.type !== 'enum' ||
+    !enumOptionsForField(field).some((option) => option.value === draft.input)
+  ) {
+    return invalid('Choose a listed option');
+  }
 
   return valid(draft.input);
 };
 
 const validateMultipleEnumDraft: DraftValidator = (field, _operator, draft) => {
-  if (draft.kind !== 'multiSelection' || draft.selectedOptions.length === 0) {
+  if (draft.kind !== 'multiSelection' || draft.selectedOptionValues.length === 0) {
     return invalid('Choose at least one option');
   }
 
-  const options = field.options ?? [];
+  if (field.type !== 'enum') return invalid('Choose listed options');
 
-  if (draft.selectedOptions.some((option) => !options.includes(option))) {
+  const optionValues = new Set(enumOptionsForField(field).map((option) => option.value));
+
+  if (draft.selectedOptionValues.some((option) => !optionValues.has(option))) {
     return invalid('Choose listed options');
   }
 
-  return valid([...draft.selectedOptions]);
+  return valid([...draft.selectedOptionValues]);
 };
 
 const validateDateDraft: DraftValidator = (field, operator, draft) => {
@@ -229,8 +237,8 @@ function getEnumValueIssue(
 ): FilterValidationIssue | null {
   if (field.type !== 'enum' || filter.value === undefined) return null;
 
-  const options = field.options ?? [];
-  const missing = enumFilterValues(filter.value).filter((value) => !options.includes(value));
+  const optionValues = new Set(enumOptionsForField(field).map((option) => option.value));
+  const missing = enumFilterValues(filter.value).filter((value) => !optionValues.has(value));
 
   if (missing.length === 0) return null;
 
@@ -312,9 +320,16 @@ function intrinsicRangeReason(value: FilterEntry['value']): string {
   return 'Choose both valid ends of the range';
 }
 
+const ENUM_SET_OPERATORS = new Set<FilterOperator>([
+  'in',
+  'notIn',
+  'containsAny',
+  'containsAll',
+  'containsNone',
+]);
+
 function intrinsicValueReason(filter: FilterEntry): string {
-  if (filter.operator === 'in' || filter.operator === 'notIn')
-    return 'Choose at least one valid option';
+  if (ENUM_SET_OPERATORS.has(filter.operator)) return 'Choose at least one valid option';
   if (filter.operator === 'between') return intrinsicRangeReason(filter.value);
   if (filter.operator === 'withinLast')
     return 'Duration needs a positive whole number of days, weeks, or months';

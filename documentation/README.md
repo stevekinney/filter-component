@@ -88,7 +88,7 @@ The component uses ordinary prop and function injection—there is no service co
 - Display labels
 - Field types
 - Optional per-field operator subsets and menu order
-- Enum options and their order
+- Enum option values, display labels, cardinality, and order
 
 The component knows how to edit the supported primitive field families, but it does not know what “Stage,” “Deal value,” or “Last emailed” mean to the product. That knowledge belongs to the parent.
 
@@ -163,17 +163,19 @@ import '@/components/filter/styles/filter-component.css';
 | ---------------------------- | --------------------------------------------------------------------------------- |
 | `FilterProps`                | Native form props plus the filter-specific injected contracts.                    |
 | `FilterFieldDefinition`      | Discriminated union for injected field definitions.                               |
-| `FilterFieldType`            | `'string'                                                                         | 'number' | 'boolean'  | 'enum' | 'date'`. |
+| `FilterEnumOption`           | String shorthand or strict `{ value, label }` descriptor for an enum option.      |
+| `FilterEnumValueCardinality` | Single-or-multiple record-value cardinality for enum fields.                      |
+| `FilterFieldType`            | Union of the five supported field type identifiers.                               |
 | `FilterOperatorsByFieldType` | Type-level source of truth for every allowed operator.                            |
 | `FilterOperator`             | Union of all operator identifiers.                                                |
 | `FilterCondition`            | Operator-aware condition union; narrowing the type or operator narrows the value. |
 | `FilterGroup`                | Recursive public group input and canonical output container.                      |
-| `FilterCombinator`           | `'and'                                                                            | 'or'`.   |
+| `FilterCombinator`           | Joiner identifier used by public groups.                                          |
 | `FilterList`                 | `readonly FilterCondition[]`; exported for consumers that need a flat leaf list.  |
 | `FilterScalarValue`          | Conditional scalar type: number, boolean, or string.                              |
 | `RangeValue`                 | Inclusive `{ from, to }` range.                                                   |
 | `WithinLastValue`            | `{ amount, unit }` for relative date conditions.                                  |
-| `WithinLastUnit`             | `'days'                                                                           | 'weeks'  | 'months'`. |
+| `WithinLastUnit`             | Day, week, or month unit identifier for relative dates.                           |
 | `SavedView`                  | Validated `{ name, group }` persistence shape.                                    |
 | `SavedViewsStorage`          | Two-method persistence boundary.                                                  |
 | `ChromeStorageArea`          | Structural Promise-based `get`/`set` contract used by the Chrome adapter.         |
@@ -268,9 +270,11 @@ The [TypeScript](https://www.typescriptlang.org/) model catches incorrect operat
 
 - `key` must be nonblank, already trimmed, and unique across fields.
 - `label` is optional. When present, it must be nonblank and already trimmed.
-- `operators` is optional. When present, it must contain at least one unique operator valid for the field type. Its order becomes menu order.
+- `operators` is optional. When present, it must contain at least one unique operator valid for the field type and enum cardinality. Its order becomes menu order.
 - `options` is required for enum fields and forbidden for other field types.
-- Enum options must be nonblank, already trimmed, unique, and nonempty as a list.
+- `valueCardinality` is optional on enum fields and forbidden on other field types. It accepts `'single'` or `'multiple'` and defaults to `'single'`.
+- Enum options may be strings or strict `{ value, label }` descriptors. Mixed lists are accepted.
+- Enum option values and labels must be nonblank and already trimmed. Values must be unique; labels may repeat.
 - Definition objects are strict; extra properties are rejected.
 
 If validation fails, registry creation throws a `TypeError` with Zod's formatted paths. After validation, the registry:
@@ -281,26 +285,104 @@ If validation fails, registry creation throws a `TypeError` with Zod's formatted
 
 The component treats `fields` as an immutable schema snapshot. A parent must provide a new array when any definition changes. The clone prevents later caller mutation from changing an existing registry behind its back, while the content signature lets editor and history state reconcile only when the replacement schema has meaningfully changed. Object keys are serialized in sorted order, while array order remains significant because field, operator, and enum menu order are product behavior.
 
+### Enum descriptors, normalization, and identity
+
+The public option type is:
+
+```ts
+type FilterEnumOption =
+  | string
+  | {
+      readonly value: string;
+      readonly label: string;
+    };
+```
+
+The registry normalizes every accepted option to `{ value, label }`. A string such as `'Negotiation'` becomes `{ value: 'Negotiation', label: 'Negotiation' }`; descriptor options keep their separate stable key and presentation text. This lets a field mix convenient string options with object-backed options without making the rest of the editor branch on two shapes.
+
+Option identity, selection reconciliation, and stale-option validation use `value`. The interface uses `label` in lists, token pills, previews, announcements, and accessible phrases. Therefore, replacing a schema with a new label for an existing value updates the presentation without invalidating or rewriting the condition. Removing the value makes a committed condition invalid; invalid messaging falls back to the stored value when no current label exists.
+
+The component does not accept arbitrary domain objects directly. Map any source schema into the descriptor at the boundary:
+
+```ts
+import type {
+  FilterEnumOption,
+  FilterFieldDefinition,
+} from '@/components/filter/index.ts';
+
+type Person = {
+  personId: string;
+  profile: {
+    displayName: string;
+  };
+  team: string;
+};
+
+const people: readonly Person[] = getPeople();
+
+const assigneeOptions = people.map((person) => ({
+  value: person.personId,
+  label: person.profile.displayName,
+})) satisfies readonly FilterEnumOption[];
+
+const assignedToField = {
+  key: 'assignedTo',
+  label: 'Assigned To',
+  type: 'enum',
+  valueCardinality: 'multiple',
+  options: assigneeOptions,
+} satisfies FilterFieldDefinition;
+```
+
+`valueCardinality` describes the logical record cardinality, not how many choices the editor may collect. A single-value field such as stage has one record value but may still offer `in` and `notIn`, whose conditions carry several candidate keys. A multiple-value field such as assignees has zero or more record values and uses the `contains*` operators. The parent owns the underlying record representation: it can compare primitive values directly or derive stable keys from source objects.
+
 ### Operators and values
 
-[`FilterOperatorsByFieldType`](../src/components/filter/types.ts) is the type-level source of truth. [`OPERATORS_BY_TYPE`](../src/components/filter/utilities/operators.ts) is the ordered runtime menu. A compile-time equality check fails if either gains or loses an operator without the other.
+[`FilterOperatorsByFieldType`](../src/components/filter/types.ts) is the type-level source of truth. [`OPERATORS_BY_TYPE`](../src/components/filter/utilities/operators.ts) provides the non-enum and single-value enum defaults, while `ENUM_OPERATORS_BY_VALUE_CARDINALITY` provides both enum menus. A compile-time equality check fails if the combined runtime catalogs gain or lose an operator without the type model changing with them.
 
-| Type      | Operators                                                                                 | Runtime value                                                                                          |
-| --------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `string`  | `equals`, `notEquals`, `contains`, `notContains`, `startsWith`, `endsWith`                | Nonblank string                                                                                        |
-| `string`  | `isEmpty`, `isNotEmpty`                                                                   | No `value` property                                                                                    |
-| `number`  | `equals`, `notEquals`, `greaterThan`, `greaterThanOrEqual`, `lessThan`, `lessThanOrEqual` | Finite number                                                                                          |
-| `number`  | `between`                                                                                 | Strict `{ from, to }` with finite numbers and `from <= to`                                             |
-| `number`  | `isEmpty`, `isNotEmpty`                                                                   | No `value` property                                                                                    |
-| `boolean` | `equals`                                                                                  | Boolean                                                                                                |
-| `boolean` | `isEmpty`, `isNotEmpty`                                                                   | No `value` property                                                                                    |
-| `enum`    | `equals`, `notEquals`                                                                     | Nonblank string that exists in the live field options                                                  |
-| `enum`    | `in`, `notIn`                                                                             | Nonempty unique string array; every member exists in the live options                                  |
-| `enum`    | `isEmpty`, `isNotEmpty`                                                                   | No `value` property                                                                                    |
-| `date`    | `on`, `notOn`, `before`, `onOrBefore`, `after`, `onOrAfter`                               | Real calendar date in `YYYY-MM-DD` form                                                                |
-| `date`    | `between`                                                                                 | Strict ordered `{ from, to }` date range                                                               |
-| `date`    | `withinLast`                                                                              | Strict `{ amount, unit }`, where amount is a positive integer and unit is `days`, `weeks`, or `months` |
-| `date`    | `isEmpty`, `isNotEmpty`                                                                   | No `value` property                                                                                    |
+| Type            | Operators                                                                                 | Runtime value                                                                                          |
+| --------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `string`        | `equals`, `notEquals`, `contains`, `notContains`, `startsWith`, `endsWith`                | Nonblank string                                                                                        |
+| `string`        | `isEmpty`, `isNotEmpty`                                                                   | No `value` property                                                                                    |
+| `number`        | `equals`, `notEquals`, `greaterThan`, `greaterThanOrEqual`, `lessThan`, `lessThanOrEqual` | Finite number                                                                                          |
+| `number`        | `between`                                                                                 | Strict `{ from, to }` with finite numbers and `from <= to`                                             |
+| `number`        | `isEmpty`, `isNotEmpty`                                                                   | No `value` property                                                                                    |
+| `boolean`       | `equals`                                                                                  | Boolean                                                                                                |
+| `boolean`       | `isEmpty`, `isNotEmpty`                                                                   | No `value` property                                                                                    |
+| `enum` single   | `equals`, `notEquals`                                                                     | Nonblank stable-value string that exists in the live options                                           |
+| `enum` single   | `in`, `notIn`                                                                             | Nonempty unique stable-value array; every member exists in the live options                            |
+| `enum` single   | `isEmpty`, `isNotEmpty`                                                                   | No `value` property                                                                                    |
+| `enum` multiple | `containsAny`, `containsAll`, `containsNone`                                              | Nonempty unique stable-value array; every member exists in the live options                            |
+| `enum` multiple | `isEmpty`, `isNotEmpty`                                                                   | No `value` property                                                                                    |
+| `date`          | `on`, `notOn`, `before`, `onOrBefore`, `after`, `onOrAfter`                               | Real calendar date in `YYYY-MM-DD` form                                                                |
+| `date`          | `between`                                                                                 | Strict ordered `{ from, to }` date range                                                               |
+| `date`          | `withinLast`                                                                              | Strict `{ amount, unit }`, where amount is a positive integer and unit is `days`, `weeks`, or `months` |
+| `date`          | `isEmpty`, `isNotEmpty`                                                                   | No `value` property                                                                                    |
+
+Custom `operators` are narrowed by cardinality in both TypeScript and runtime validation. A single-value enum cannot declare `containsAny`, and a multiple-value enum cannot declare `equals` or `in`.
+
+The component emits operator semantics rather than executing them. After mapping a record's values to their stable keys, a parent interpreting multiple-value enum conditions should apply these exact rules:
+
+| Operator       | Match rule for a record's value array                                   |
+| -------------- | ----------------------------------------------------------------------- |
+| `containsAny`  | At least one selected key occurs in the record.                         |
+| `containsAll`  | Every selected key occurs in the record.                                |
+| `containsNone` | None of the selected keys occurs in the record.                         |
+| `isEmpty`      | The record has no values, according to the parent's empty-value policy. |
+| `isNotEmpty`   | The record has at least one value, according to that same policy.       |
+
+Only stable strings enter conditions. For example, selecting Ada and Grace can emit:
+
+```json
+{
+  "fieldKey": "assignedTo",
+  "type": "enum",
+  "operator": "containsAny",
+  "value": ["person-123", "person-456"]
+}
+```
+
+The descriptor objects remain in the field schema; emitted groups, `initialFilters`, and persisted saved views contain only the selected `value` keys.
 
 The schemas are strict. A valueless operator must omit `value`; arbitrary extra keys and internal IDs are rejected. External nonblank string values may retain leading or trailing whitespace, while the component's own text editor trims before committing.
 
@@ -308,18 +390,18 @@ The schemas are strict. A valueless operator must omit `value`; arbitrary extra 
 
 `getValueEditorKind` turns a field/operator pair into one presentation shape:
 
-| Kind          | Used for                                                    |
-| ------------- | ----------------------------------------------------------- |
-| `none`        | `isEmpty`, `isNotEmpty`                                     |
-| `text`        | Valued string operators                                     |
-| `number`      | Scalar number comparisons                                   |
-| `numberRange` | Number `between`                                            |
-| `boolean`     | Boolean equality; UI collapses this with operator selection |
-| `enumSingle`  | Enum `equals`, `notEquals`                                  |
-| `enumMulti`   | Enum `in`, `notIn`                                          |
-| `date`        | Scalar date comparisons                                     |
-| `dateRange`   | Date `between`                                              |
-| `duration`    | Date `withinLast`                                           |
+| Kind          | Used for                                                         |
+| ------------- | ---------------------------------------------------------------- |
+| `none`        | `isEmpty`, `isNotEmpty`                                          |
+| `text`        | Valued string operators                                          |
+| `number`      | Scalar number comparisons                                        |
+| `numberRange` | Number `between`                                                 |
+| `boolean`     | Boolean equality; UI collapses this with operator selection      |
+| `enumSingle`  | Single-value enum `equals`, `notEquals`                          |
+| `enumMulti`   | Enum `in`, `notIn`, `containsAny`, `containsAll`, `containsNone` |
+| `date`        | Scalar date comparisons                                          |
+| `dateRange`   | Date `between`                                                   |
+| `duration`    | Date `withinLast`                                                |
 
 The mapping lives beside operator definitions so the editor does not rediscover field semantics in rendering code.
 
@@ -330,7 +412,7 @@ There are two related boundaries:
 - `validateDraft` turns text-shaped editor drafts into typed public values and returns a user-facing error instead of throwing.
 - `createFilterCondition` and `filterConditionSchema` verify the complete dynamic field/operator/value combination before history accepts it.
 
-Committed conditions are later checked against the _live_ registry by `getFilterValidationIssue`. That check catches schema drift rather than malformed editor input: missing fields, changed types, removed operators, and removed enum options.
+Committed conditions are later checked against the _live_ registry by `getFilterValidationIssue`. That check catches schema drift rather than malformed editor input: missing fields, changed types, changed enum cardinality, removed operators, and removed enum values.
 
 ## The composition root
 
@@ -418,7 +500,7 @@ type ValueDraft =
   | { kind: 'scalar'; input: string }
   | { kind: 'range'; fromInput: string; toInput: string }
   | { kind: 'duration'; amountInput: string; unit: WithinLastUnit }
-  | { kind: 'multiSelection'; selectedOptions: string[] };
+  | { kind: 'multiSelection'; selectedOptionValues: string[] };
 ```
 
 This avoids half-valid public values. A number editor can hold `'-'`; a range can hold one endpoint; a duration can hold an empty amount. None of those drafts has to masquerade as a `FilterCondition` before validation succeeds.
@@ -689,7 +771,7 @@ The incomplete chip shows field and operator context, offers resume and discard 
 - Field missing → `field` segment
 - Field type changed → `field` segment
 - Operator no longer allowed → `operator` segment
-- Enum option no longer present → `value` segment
+- Enum value no longer present → `value` segment
 - Intrinsic public schema failure → `value` segment
 
 The result includes a human-readable reason. The token:
@@ -729,8 +811,9 @@ sequenceDiagram
 - A missing field closes the editor.
 - A changed field type returns to field selection.
 - A removed active operator returns to operator selection.
+- A cardinality change that makes the active operator incompatible returns to operator selection.
 - A changed value-editor kind gets a compatible empty draft.
-- Removed enum options are pruned from scalar or multi-selection drafts.
+- Removed enum values are pruned from scalar or multi-selection drafts.
 - Compatible editor state preserves identity.
 
 Focus returns to the edited token or add input when reconciliation closes a stage. If reconciliation changes the stage, focus moves to the appropriate new autofocus target.
@@ -740,11 +823,14 @@ Focus returns to the edited token or add input when reconciliation closes a stag
 - A missing field discards the incomplete draft.
 - A changed type remains identifiable, then resumes at field selection.
 - A removed operator backs the draft up to operator selection.
-- Removed enum selections are pruned.
+- A cardinality change that makes the operator incompatible backs the draft up to operator selection.
+- Removed enum values are pruned.
 
 ### Committed projection reconciliation
 
 History does not mutate. The hook derives a new valid-only group against the new registry and compares its stable key with the last emitted group. It calls `onChange` only when that public projection changed.
+
+Enum labels are presentation data, so a label-only schema change keeps the committed condition valid and leaves its stable-key payload unchanged while the visible label updates. Removing a selected value invalidates the condition. Changing `valueCardinality` invalidates a condition whose operator is unavailable under the new cardinality; the chip stays visible for repair and is excluded from emitted groups until repaired.
 
 ## Saved views
 
@@ -770,6 +856,8 @@ Names are trimmed and nonblank. Groups use the strict public filter schema plus 
 - Unknown _field keys_ are allowed because field-registry validity can change independently from intrinsic group validity.
 
 There is no separate historical flat saved-view object. Current persisted entries are `{ name, group }`.
+
+Enum options are not copied into a saved view. Scalar enum conditions persist one stable string, and `in`, `notIn`, `containsAny`, `containsAll`, and `containsNone` persist nonempty unique string arrays. Reloading a view resolves those keys against the current field schema for labels, so renaming a label does not rewrite storage and removing a value produces the same repairable schema-drift state as a live committed condition.
 
 ### Canonical identity
 
@@ -1122,7 +1210,7 @@ The current browser test verifies component CSS fallback and inheritance inside 
 
 ### Field schema and records
 
-`records.ts` defines 12 deals, a checked stage union, the demonstration field definitions, and one initial `Active is true` condition. Compile-time checks keep the ordered `STAGES` list complete.
+`records.ts` defines 12 deals, a checked stage union, `PEOPLE` objects, the demonstration field definitions, and one initial `Active is true` condition. Stage remains a single-value enum. Each person has `{ id, firstName, lastName, role }`; “Assigned to” maps `person.id` to the descriptor value, uses the person's full name as its label, and declares `valueCardinality: 'multiple'`. Each deal keeps zero, one, or several source `Person` objects in `assignedTo`. Compile-time checks keep the ordered `STAGES` list complete.
 
 ### Applying public groups
 
@@ -1132,7 +1220,8 @@ The current browser test verifies component CSS fallback and inheritance inside 
 - Number and date ranges include both endpoints.
 - `YYYY-MM-DD` dates compare lexicographically.
 - `withinLast` compares against a supplied or current `Date`; the demonstration treats a month as 30 days.
-- Empty means `null`, `undefined`, or an empty string.
+- The assignee evaluator derives `person.id` from each record object. `containsAny` matches when at least one selected ID is present, `containsAll` requires every selected ID, and `containsNone` matches when none are present—including a deal with no assignees.
+- Empty means `null`, `undefined`, an empty string, or an empty array.
 - Nested groups recurse with `every` for `and` and `some` for `or`.
 - An empty group matches every record.
 
@@ -1188,15 +1277,16 @@ The shim implements toggle lifecycle and pointerdown-based auto-popover light di
 | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | `expression.test.ts`       | Canonical group conversion, every joiner pattern through six conditions, non-DNF reading order, removal, exclusion, and brackets |
 | `history.test.ts`          | Add/update/remove/clear/flip semantics, no-op identity, undo/redo, branch clearing, and replace                                  |
-| `filter-schema.test.ts`    | Every condition family, real dates, valueless strictness, recursive groups, and error paths                                      |
-| `field-registry.test.ts`   | Strict definition validation, cloning, content signatures, and duplicate keys                                                    |
-| `operators.test.ts`        | Default/narrowed operators, collapsed booleans, valueless detection, and editor-kind mapping                                     |
+| `filter-schema.test.ts`    | Every condition family, including multiple-value enum operators, real dates, valueless strictness, recursive groups, and errors  |
+| `field-registry.test.ts`   | Strict definitions, descriptor normalization, duplicate values, cardinality, cloning, signatures, and duplicate keys             |
+| `operators.test.ts`        | Cardinality-specific defaults/narrowing, collapsed booleans, valueless detection, and editor-kind mapping                        |
 | `value-drafts.test.ts`     | Empty draft creation, committed-value reconstruction, and shape conversion                                                       |
 | `validation.test.ts`       | Draft parsing/errors, dynamic condition construction, initial group parsing, and every schema-drift issue                        |
 | `saved-views.test.ts`      | Per-entry parsing, duplicate names, nested limits, canonical identity, and unknown fields                                        |
 | `stable-serialize.test.ts` | Key-order-independent objects, array order, scalars, null, and undefined                                                         |
 | `field-search.test.ts`     | Case-insensitive label/key ranking and stable order                                                                              |
-| `formatting.test.ts`       | Scalar/list/range/duration display and complete token phrases                                                                    |
+| `formatting.test.ts`       | Stable-value label resolution, scalar/list/range/duration display, and complete token phrases                                    |
+| `apply-filters.test.ts`    | Demonstration semantics for `containsAny`, `containsAll`, `containsNone`, empty arrays, and source person objects                |
 | `chrome-storage.test.ts`   | Whole-collection read/write, absent key, and failure propagation                                                                 |
 | `local-storage.test.ts`    | Empty state, JSON round-trip, corrupt JSON, and denied access                                                                    |
 
@@ -1220,8 +1310,8 @@ The shim implements toggle lifecycle and pointerdown-based auto-popover light di
 | `use-native-popover.test.tsx`              | Native lifecycle translation, autofocus, stable anchors, and reanchoring                                 |
 | `add-filter-combobox.test.tsx`             | Caret-sensitive token focus and blur branches                                                            |
 | `field-selection-stage.test.tsx`           | Memoized option-row rerender boundary                                                                    |
-| `single-choice-stage.test.tsx`             | Operator/boolean/enum selection, active state, and stale-choice guards                                   |
-| `multiple-choice-stage.test.tsx`           | Toggle/apply behavior through keyboard and pointer                                                       |
+| `single-choice-stage.test.tsx`             | Operator/boolean/enum labels, stable-value selection, active state, and stale-choice guards              |
+| `multiple-choice-stage.test.tsx`           | Label rendering plus stable-value toggle/apply behavior through keyboard and pointer                     |
 | `filter-saved-views.test.tsx`              | Trigger, save/naming, active summaries, load, remove, persistence failure, keyboard, and nested groups   |
 | `filter-saved-views-controls.test.tsx`     | Menu open/close/light-dismiss lifecycle and list memoization                                             |
 
@@ -1253,7 +1343,7 @@ Browser tests drive accessible roles and names through [`end-to-end/helpers.ts`]
 
 | Specification                           | Browser-owned behavior                                                                                                       |
 | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `composing.spec.ts`                     | Every field/editor family, validation recovery, joiners, narrow use, and post-commit focus                                   |
+| `composing.spec.ts`                     | Every field/editor family, object-backed assignees, validation recovery, joiners, narrow use, and post-commit focus          |
 | `editing.spec.ts`                       | Value reuse/conversion, boolean/multi-enum editing, pill deletion, truncation, and cancel                                    |
 | `keyboard.spec.ts`                      | Complete keyboard composition, add-input rules, token/joiner traversal, focus, and multi-select                              |
 | `history-and-incomplete-drafts.spec.ts` | Initial history, undo/redo/clear, light dismissal, resume, discard, and replacement                                          |
@@ -1523,8 +1613,8 @@ Neither imports anything filter-specific; they live under `src/utilities/hooks` 
 
 | File                                                              | Responsibility                                                                               |
 | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| [`src/example/records.ts`](../src/example/records.ts)             | Typed records, complete enum order, field definitions, and initial group                     |
-| [`src/example/apply-filters.ts`](../src/example/apply-filters.ts) | Parent-owned recursive interpreter for all public operators                                  |
+| [`src/example/records.ts`](../src/example/records.ts)             | Typed deals and people, enum descriptor mapping, field definitions, and initial group        |
+| [`src/example/apply-filters.ts`](../src/example/apply-filters.ts) | Parent-owned recursive interpreter, including multi-value object-to-key matching             |
 | [`src/example/application.tsx`](../src/example/application.tsx)   | Demonstration parent, disabled state, initial application, result table, JSON, and event log |
 | [`src/example/example.css`](../src/example/example.css)           | Demonstration-only shell/table/status styling                                                |
 | [`src/main.tsx`](../src/main.tsx)                                 | Strict Mode React mount                                                                      |

@@ -1,6 +1,6 @@
 import type { FilterEditorState } from '@filter/hooks/use-filter-editor/index.ts';
 import type { FilterFieldDefinition } from '@filter/types.ts';
-import { fieldLabel } from '@filter/utilities/formatting.ts';
+import { enumValueLabel, fieldLabel } from '@filter/utilities/formatting.ts';
 import { OPERATOR_LABELS } from '@filter/utilities/operators.ts';
 
 function isActiveDraft(editorState: FilterEditorState): boolean {
@@ -9,20 +9,22 @@ function isActiveDraft(editorState: FilterEditorState): boolean {
   );
 }
 
-function formatDraftPreview(state: FilterEditorState): string {
+function formatDraftPreview(state: FilterEditorState, field: FilterFieldDefinition): string {
   if (state.stage !== 'value') return '…';
 
   const { draft } = state;
 
   switch (draft.kind) {
     case 'scalar':
-      return draft.input || '…';
+      return draft.input ? enumValueLabel(field, draft.input) : '…';
     case 'range':
       return [draft.fromInput, draft.toInput].filter(Boolean).join(' and ') || '…';
     case 'duration':
       return draft.amountInput === '' ? '…' : `${draft.amountInput} ${draft.unit}`;
     case 'multiSelection':
-      return draft.selectedOptions.join(', ') || '…';
+      return (
+        draft.selectedOptionValues.map((value) => enumValueLabel(field, value)).join(', ') || '…'
+      );
   }
 }
 
@@ -44,7 +46,7 @@ export function FilterDraftPreview({
         {editorState.stage === 'value' ? OPERATOR_LABELS[editorState.operator] : '…'}
       </span>
       <span className="filter-draft-preview-divider" />
-      <span className="filter-draft-preview-value">{formatDraftPreview(editorState)}</span>
+      <span className="filter-draft-preview-value">{formatDraftPreview(editorState, field)}</span>
     </div>
   );
 }

@@ -111,6 +111,8 @@ It also exports these types:
 - `SavedViewsStorage`
 - `FilterCombinator`
 - `FilterCondition`
+- `FilterEnumOption`
+- `FilterEnumValueCardinality`
 - `FilterFieldDefinition`
 - `FilterFieldType`
 - `FilterGroup`
@@ -127,9 +129,37 @@ The [developer guide's public API section](documentation/README.md#the-public-ap
 
 ## Defining fields
 
-Every field needs a unique, trimmed `key` and one of the five supported `type` values. `label` is optional; the interface falls back to the key when it is absent. Enum fields must provide a nonempty, unique `options` list. Other field types must not provide one.
+Every field needs a unique, trimmed `key` and one of the five supported `type` values. `label` is optional; the interface falls back to the key when it is absent. Enum fields must provide a nonempty `options` list. An option can be a string or a strict `{ value, label }` descriptor; strings use the same text for both parts. Values and labels must be nonblank and already trimmed, and option values must be unique. Duplicate labels are allowed.
 
-The optional `operators` list narrows the defaults for that field. It cannot add an operator from another type, must not contain duplicates, and controls the order shown in the menu. Field and enum-option order are also preserved. The component validates the complete schema at runtime, rejects extra properties, and throws a path-specific `TypeError` when the contract is malformed.
+Use `valueCardinality: 'multiple'` when the logical field can contain more than one value, such as a deal with several assignees. The default is `'single'`, which describes fields such as deal stage where each record has at most one value. The parent still owns the record representation and can compare the emitted stable keys with primitive values or derive them from source objects. `valueCardinality` and `options` are forbidden on non-enum fields.
+
+The optional `operators` list narrows the defaults for that field. It cannot add an operator from another type or enum cardinality, must not contain duplicates, and controls the order shown in the menu. Field and enum-option order are also preserved. The component validates the complete schema at runtime, rejects extra properties, and throws a path-specific `TypeError` when the contract is malformed.
+
+Map any domain object into the small descriptor contract at the field boundary:
+
+```tsx
+type Person = {
+  id: string;
+  profile: { displayName: string };
+};
+
+const people: readonly Person[] = getPeople();
+
+const fields = [
+  {
+    key: 'assignedTo',
+    label: 'Assigned To',
+    type: 'enum',
+    valueCardinality: 'multiple',
+    options: people.map((person) => ({
+      value: person.id,
+      label: person.profile.displayName,
+    })),
+  },
+] as const satisfies readonly FilterFieldDefinition[];
+```
+
+The interface renders `label`, but `onChange`, `onSubmit`, `initialFilters`, and saved views use only the stable `value` strings. For example, choosing two people can emit `operator: 'containsAny'` with `value: ['person-123', 'person-456']`; no person object or option descriptor enters the filter group.
 
 ## The filter row
 
@@ -155,13 +185,14 @@ The operator menu is determined by the selected field type. A field can narrow i
 
 ![The string operator menu](end-to-end/visual.spec.ts-snapshots/popover-operator-list-chromium-darwin.png)
 
-| Field type | Default operators                                                                                                             | Value shape                                                                  |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `string`   | `equals`, `notEquals`, `contains`, `notContains`, `startsWith`, `endsWith`, `isEmpty`, `isNotEmpty`                           | Nonblank string, or no value for empty checks                                |
-| `number`   | `equals`, `notEquals`, `greaterThan`, `greaterThanOrEqual`, `lessThan`, `lessThanOrEqual`, `between`, `isEmpty`, `isNotEmpty` | Finite number or inclusive `{ from, to }` range                              |
-| `boolean`  | `equals`, `isEmpty`, `isNotEmpty`                                                                                             | Boolean, or no value for empty checks                                        |
-| `enum`     | `equals`, `notEquals`, `in`, `notIn`, `isEmpty`, `isNotEmpty`                                                                 | One listed string or a nonempty unique string array                          |
-| `date`     | `on`, `notOn`, `before`, `onOrBefore`, `after`, `onOrAfter`, `between`, `withinLast`, `isEmpty`, `isNotEmpty`                 | Real `YYYY-MM-DD` date, inclusive date range, or `{ amount, unit }` duration |
+| Field type      | Default operators                                                                                                             | Value shape                                                                  |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `string`        | `equals`, `notEquals`, `contains`, `notContains`, `startsWith`, `endsWith`, `isEmpty`, `isNotEmpty`                           | Nonblank string, or no value for empty checks                                |
+| `number`        | `equals`, `notEquals`, `greaterThan`, `greaterThanOrEqual`, `lessThan`, `lessThanOrEqual`, `between`, `isEmpty`, `isNotEmpty` | Finite number or inclusive `{ from, to }` range                              |
+| `boolean`       | `equals`, `isEmpty`, `isNotEmpty`                                                                                             | Boolean, or no value for empty checks                                        |
+| `enum` single   | `equals`, `notEquals`, `in`, `notIn`, `isEmpty`, `isNotEmpty`                                                                 | One stable value or a nonempty unique stable-value array                     |
+| `enum` multiple | `containsAny`, `containsAll`, `containsNone`, `isEmpty`, `isNotEmpty`                                                         | Nonempty unique stable-value array, or no value for empty checks             |
+| `date`          | `on`, `notOn`, `before`, `onOrBefore`, `after`, `onOrAfter`, `between`, `withinLast`, `isEmpty`, `isNotEmpty`                 | Real `YYYY-MM-DD` date, inclusive date range, or `{ amount, unit }` duration |
 
 The labels in the interface are deliberately human-readable: `greaterThan` is shown as “greater than,” `in` as “is any of,” and so on. The emitted payload keeps the stable operator identifier.
 
@@ -172,8 +203,8 @@ The value editor follows the operator:
 - Text, number, and date operators use one input.
 - `between` uses `From` and `To` inputs and includes both endpoints.
 - `withinLast` uses a positive whole-number amount and a `days`, `weeks`, or `months` unit.
-- `equals` and `notEquals` on an enum use a single-choice list.
-- `in` and `notIn` use a multi-select list. Space toggles the active option; Enter or the Apply button commits the whole selection.
+- `equals` and `notEquals` on a single-value enum use a single-choice list.
+- `in`, `notIn`, `containsAny`, `containsAll`, and `containsNone` use a multi-select list. Space toggles the active option; Enter or the Apply button commits the whole selection.
 - `isEmpty` and `isNotEmpty` commit immediately because there is no value to ask for.
 - Boolean fields collapse operator and value into one list: true, false, empty, or not empty. Narrowing a boolean field's operators narrows that list too.
 
@@ -189,7 +220,7 @@ The value editor follows the operator:
 
 ![A within-last duration editor](end-to-end/visual.spec.ts-snapshots/popover-duration-chromium-darwin.png)
 
-Invalid drafts stay in the editor and show a specific inline alert. Empty text, non-finite numbers, incomplete or inverted ranges, impossible calendar dates, empty enum selections, unknown enum options, and non-positive or fractional durations never reach history or `onChange`.
+Invalid drafts stay in the editor and show a specific inline alert. Empty text, non-finite numbers, incomplete or inverted ranges, impossible calendar dates, empty enum selections, unknown enum values, and non-positive or fractional durations never reach history or `onChange`.
 
 ![A value editor with inline validation](end-to-end/visual.spec.ts-snapshots/popover-value-error-chromium-darwin.png)
 
@@ -294,7 +325,8 @@ The component detects:
 - Removed fields
 - Field type changes
 - Operators removed from a field's allowed set
-- Enum options removed from the field
+- Enum values removed from the field
+- Enum cardinality changes that make the committed operator incompatible
 
 An invalid chip stays visible, is marked with its reason, remains in history, and can be saved in a view. It is excluded from the valid-only `onChange` payload. Activate its warning control to reopen the first broken segment and repair it. If a field-schema change alters the valid emitted group, the component reports the new group even though history itself did not change.
 

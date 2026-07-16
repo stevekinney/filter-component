@@ -4,6 +4,7 @@ import type { KeyboardEvent } from 'react';
 import { useActiveOptionScroll } from '@/utilities/hooks/use-active-option-scroll.ts';
 
 import type { FilterFieldDefinition } from '@filter/types.ts';
+import { enumOptionsForField } from '@filter/utilities/field-registry.ts';
 import type { FilterEntry } from '@filter/utilities/filter-entry.ts';
 import { clampIndex, stepIndex } from '@filter/utilities/list-navigation.ts';
 import {
@@ -63,11 +64,11 @@ export function SingleChoiceStage(
   const { state, field, heading, idPrefix, editingFilter, onChangeActiveIndex } = props;
 
   const options =
-    state.stage === 'value'
-      ? (field.options ?? []).map((option) => ({
-          value: option,
-          label: option,
-          selected: state.draft.kind === 'scalar' && state.draft.input === option,
+    state.stage === 'value' && field.type === 'enum'
+      ? enumOptionsForField(field).map((option) => ({
+          value: option.value,
+          label: option.label,
+          selected: state.draft.kind === 'scalar' && state.draft.input === option.value,
         }))
       : buildOperatorOrBooleanChoices(field, editingFilter);
 

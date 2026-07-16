@@ -24,7 +24,7 @@ describe('createEmptyValueDraft', () => {
     });
     expect(createEmptyValueDraft('enumMulti')).toEqual({
       kind: 'multiSelection',
-      selectedOptions: [],
+      selectedOptionValues: [],
     });
     expect(createEmptyValueDraft('none')).toEqual({
       kind: 'scalar',
@@ -52,11 +52,11 @@ describe('createValueDraftFromCommittedValue', () => {
   it('rebuilds multi-select drafts', () => {
     expect(createValueDraftFromCommittedValue(['Lead', 'Contacted'], 'enumMulti')).toEqual({
       kind: 'multiSelection',
-      selectedOptions: ['Lead', 'Contacted'],
+      selectedOptionValues: ['Lead', 'Contacted'],
     });
     expect(createValueDraftFromCommittedValue('Lead', 'enumMulti')).toEqual({
       kind: 'multiSelection',
-      selectedOptions: [],
+      selectedOptionValues: [],
     });
   });
 
@@ -98,7 +98,7 @@ describe('convertCommittedValueToDraft', () => {
   it('carries a single enum value into a multi selection (pre-checked)', () => {
     expect(convertCommittedValueToDraft('Lead', 'enumMulti')).toEqual({
       kind: 'multiSelection',
-      selectedOptions: ['Lead'],
+      selectedOptionValues: ['Lead'],
     });
   });
 

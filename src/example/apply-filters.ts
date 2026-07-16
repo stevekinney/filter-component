@@ -9,7 +9,12 @@ const UNIT_MILLISECONDS: Record<WithinLastUnit, number> = {
 };
 
 function isEmptyValue(value: unknown): boolean {
-  return value === null || value === undefined || value === '';
+  return (
+    value === null ||
+    value === undefined ||
+    value === '' ||
+    (Array.isArray(value) && value.length === 0)
+  );
 }
 
 function matchesString(
@@ -58,19 +63,44 @@ function matchesNumber(
 }
 
 function matchesEnum(
-  recorded: string,
+  recorded: string | readonly { id: string }[],
   filter: Exclude<FilterCondition<'enum'>, { operator: 'isEmpty' | 'isNotEmpty' }>,
 ): boolean {
   switch (filter.operator) {
     case 'equals':
-      return recorded === filter.value;
+      return typeof recorded === 'string' && recorded === filter.value;
     case 'notEquals':
-      return recorded !== filter.value;
+      return typeof recorded === 'string' && recorded !== filter.value;
     case 'in':
-      return filter.value.includes(recorded);
+      return typeof recorded === 'string' && filter.value.includes(recorded);
     case 'notIn':
-      return !filter.value.includes(recorded);
+      return typeof recorded === 'string' && !filter.value.includes(recorded);
+    case 'containsAny':
+      return (
+        typeof recorded !== 'string' &&
+        filter.value.some((value) => recorded.some((person) => person.id === value))
+      );
+    case 'containsAll':
+      return (
+        typeof recorded !== 'string' &&
+        filter.value.every((value) => recorded.some((person) => person.id === value))
+      );
+    case 'containsNone':
+      return (
+        typeof recorded !== 'string' &&
+        filter.value.every((value) => recorded.every((person) => person.id !== value))
+      );
   }
+}
+
+function isIdentifiableObjectArray(value: unknown): value is readonly { id: string }[] {
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (item) =>
+        typeof item === 'object' && item !== null && 'id' in item && typeof item.id === 'string',
+    )
+  );
 }
 
 /**
@@ -106,24 +136,32 @@ function matchesDate(
   }
 }
 
+function emptyRecordedValueMatches(recorded: unknown, filter: FilterCondition): boolean {
+  if (filter.operator === 'isEmpty') return true;
+
+  return filter.type === 'enum' && filter.operator === 'containsNone' && Array.isArray(recorded);
+}
+
 function matches(deal: Deal, filter: FilterCondition, now: Date): boolean {
   const recorded = deal[filter.fieldKey as keyof Deal];
 
-  if (filter.operator === 'isEmpty') return isEmptyValue(recorded);
-  if (filter.operator === 'isNotEmpty') return !isEmptyValue(recorded);
-  if (isEmptyValue(recorded)) return false;
+  if (isEmptyValue(recorded)) return emptyRecordedValueMatches(recorded, filter);
+  if (filter.operator === 'isEmpty') return false;
+  if (filter.operator === 'isNotEmpty') return true;
 
   switch (filter.type) {
     case 'string':
-      return matchesString(String(recorded), filter);
+      return typeof recorded === 'string' && matchesString(recorded, filter);
     case 'number':
       return matchesNumber(Number(recorded), filter);
     case 'boolean':
       return recorded === filter.value;
-    case 'enum':
-      return matchesEnum(String(recorded), filter);
+    case 'enum': {
+      if (typeof recorded !== 'string' && !isIdentifiableObjectArray(recorded)) return false;
+      return matchesEnum(recorded, filter);
+    }
     case 'date':
-      return matchesDate(String(recorded), filter, now);
+      return typeof recorded === 'string' && matchesDate(recorded, filter, now);
   }
 }
 

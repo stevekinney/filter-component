@@ -1,4 +1,36 @@
-import type { FilterFieldDefinition, FilterGroup } from '@/components/filter/index.ts';
+import type {
+  FilterEnumOption,
+  FilterFieldDefinition,
+  FilterGroup,
+} from '@/components/filter/index.ts';
+
+export const PEOPLE = [
+  {
+    id: 'person-ada',
+    firstName: 'Ada',
+    lastName: 'Lovelace',
+    role: 'Account executive',
+  },
+  {
+    id: 'person-grace',
+    firstName: 'Grace',
+    lastName: 'Hopper',
+    role: 'Solutions engineer',
+  },
+  {
+    id: 'person-katherine',
+    firstName: 'Katherine',
+    lastName: 'Johnson',
+    role: 'Account executive',
+  },
+] as const;
+
+export type Person = (typeof PEOPLE)[number];
+
+export const ASSIGNEE_OPTIONS = PEOPLE.map((person) => ({
+  value: person.id,
+  label: `${person.firstName} ${person.lastName}`,
+})) satisfies readonly FilterEnumOption[];
 
 /** Widened record contract checked against the literal fixture below. */
 type DealRecordShape = {
@@ -7,6 +39,7 @@ type DealRecordShape = {
   dealValue: number | null;
   active: boolean | null;
   stage: string | null;
+  assignedTo: readonly Person[];
   closeDate: string | null; // YYYY-MM-DD
   lastEmailed: string | null; // YYYY-MM-DD
 };
@@ -18,6 +51,7 @@ const DEAL_RECORDS = [
     dealValue: 42000,
     active: true,
     stage: 'Negotiation',
+    assignedTo: [PEOPLE[0], PEOPLE[1]],
     closeDate: '2026-07-24',
     lastEmailed: '2026-07-08',
   },
@@ -27,6 +61,7 @@ const DEAL_RECORDS = [
     dealValue: 8500,
     active: true,
     stage: 'Demo scheduled',
+    assignedTo: [PEOPLE[1]],
     closeDate: '2026-08-02',
     lastEmailed: '2026-07-09',
   },
@@ -36,6 +71,7 @@ const DEAL_RECORDS = [
     dealValue: 125000,
     active: true,
     stage: 'Contacted',
+    assignedTo: [PEOPLE[2]],
     closeDate: '2026-09-15',
     lastEmailed: '2026-06-28',
   },
@@ -45,6 +81,7 @@ const DEAL_RECORDS = [
     dealValue: null,
     active: true,
     stage: 'Lead',
+    assignedTo: [],
     closeDate: null,
     lastEmailed: null,
   },
@@ -54,6 +91,7 @@ const DEAL_RECORDS = [
     dealValue: 18000,
     active: false,
     stage: 'Closed won',
+    assignedTo: [PEOPLE[0]],
     closeDate: '2026-05-30',
     lastEmailed: '2026-05-28',
   },
@@ -63,6 +101,7 @@ const DEAL_RECORDS = [
     dealValue: 64000,
     active: false,
     stage: 'Closed lost',
+    assignedTo: [PEOPLE[1], PEOPLE[2]],
     closeDate: '2026-04-12',
     lastEmailed: '2026-04-10',
   },
@@ -72,6 +111,7 @@ const DEAL_RECORDS = [
     dealValue: 250000,
     active: true,
     stage: 'Negotiation',
+    assignedTo: [PEOPLE[0], PEOPLE[2]],
     closeDate: '2026-07-31',
     lastEmailed: '2026-07-10',
   },
@@ -81,6 +121,7 @@ const DEAL_RECORDS = [
     dealValue: 96000,
     active: true,
     stage: 'Contacted',
+    assignedTo: [PEOPLE[1]],
     closeDate: '2026-10-01',
     lastEmailed: '2026-07-01',
   },
@@ -90,6 +131,7 @@ const DEAL_RECORDS = [
     dealValue: 1200,
     active: true,
     stage: 'Lead',
+    assignedTo: [],
     closeDate: null,
     lastEmailed: '2026-07-05',
   },
@@ -99,6 +141,7 @@ const DEAL_RECORDS = [
     dealValue: 30500,
     active: null,
     stage: 'Demo scheduled',
+    assignedTo: [PEOPLE[0], PEOPLE[1], PEOPLE[2]],
     closeDate: '2026-08-20',
     lastEmailed: '2026-07-07',
   },
@@ -108,6 +151,7 @@ const DEAL_RECORDS = [
     dealValue: 7800,
     active: true,
     stage: null,
+    assignedTo: [PEOPLE[2]],
     closeDate: '2026-08-11',
     lastEmailed: '2026-07-02',
   },
@@ -117,6 +161,7 @@ const DEAL_RECORDS = [
     dealValue: 54000,
     active: false,
     stage: 'Closed lost',
+    assignedTo: [],
     closeDate: '2026-03-05',
     lastEmailed: null,
   },
@@ -150,6 +195,13 @@ export const DEAL_FILTER_FIELDS = [
   { key: 'dealValue', label: 'Deal value', type: 'number' },
   { key: 'active', label: 'Active', type: 'boolean' },
   { key: 'stage', label: 'Stage', type: 'enum', options: STAGES },
+  {
+    key: 'assignedTo',
+    label: 'Assigned To',
+    type: 'enum',
+    options: ASSIGNEE_OPTIONS,
+    valueCardinality: 'multiple',
+  },
   { key: 'closeDate', label: 'Close date', type: 'date' },
   { key: 'lastEmailed', label: 'Last emailed', type: 'date' },
 ] as const satisfies readonly FilterFieldDefinition[];

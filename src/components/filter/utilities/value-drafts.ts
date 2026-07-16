@@ -26,7 +26,7 @@ export type DurationValueDraft = {
 
 type MultiSelectionValueDraft = {
   kind: 'multiSelection';
-  selectedOptions: string[];
+  selectedOptionValues: string[];
 };
 
 /** Discriminated transient state that keeps incompatible editor value shapes separate. */
@@ -41,7 +41,7 @@ export function createEmptyValueDraft(kind: ValueEditorKind): ValueDraft {
     case 'duration':
       return { kind: 'duration', amountInput: '', unit: 'days' };
     case 'enumMulti':
-      return { kind: 'multiSelection', selectedOptions: [] };
+      return { kind: 'multiSelection', selectedOptionValues: [] };
     case 'none':
     case 'text':
     case 'number':
@@ -71,7 +71,7 @@ export function createValueDraftFromCommittedValue(
   if (emptyDraft.kind === 'multiSelection') {
     return {
       ...emptyDraft,
-      selectedOptions: Array.isArray(value) ? value.map(String) : [],
+      selectedOptionValues: Array.isArray(value) ? value.map(String) : [],
     };
   }
 
@@ -113,7 +113,7 @@ export function convertCommittedValueToDraft(
   switch (nextEditorKind) {
     case 'enumMulti':
       return typeof value === 'string'
-        ? { kind: 'multiSelection', selectedOptions: [value] }
+        ? { kind: 'multiSelection', selectedOptionValues: [value] }
         : emptyDraft;
     case 'enumSingle': {
       if (!Array.isArray(value)) return emptyDraft;

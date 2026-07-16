@@ -25,6 +25,24 @@ const valuedConditions: unknown[] = [
     value: ['Lead', 'Won'],
   },
   {
+    fieldKey: 'assignedTo',
+    type: 'enum',
+    operator: 'containsAny',
+    value: ['person-1', 'person-2'],
+  },
+  {
+    fieldKey: 'assignedTo',
+    type: 'enum',
+    operator: 'containsAll',
+    value: ['person-1', 'person-2'],
+  },
+  {
+    fieldKey: 'assignedTo',
+    type: 'enum',
+    operator: 'containsNone',
+    value: ['person-3'],
+  },
+  {
     fieldKey: 'closeDate',
     type: 'date',
     operator: 'on',
@@ -136,6 +154,24 @@ describe('filterConditionSchema', () => {
         type: 'enum',
         operator: 'in',
         value: ['Lead', 'Lead'],
+      },
+    },
+    {
+      label: 'object enum selections',
+      condition: {
+        fieldKey: 'assignedTo',
+        type: 'enum',
+        operator: 'containsAny',
+        value: [{ value: 'person-1', label: 'Alex Rivera' }],
+      },
+    },
+    {
+      label: 'scalar values for multiple-value enum operators',
+      condition: {
+        fieldKey: 'assignedTo',
+        type: 'enum',
+        operator: 'containsAll',
+        value: 'person-1',
       },
     },
     {

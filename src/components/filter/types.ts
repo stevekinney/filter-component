@@ -30,7 +30,16 @@ export type FilterOperatorsByFieldType = {
     | 'isEmpty'
     | 'isNotEmpty';
   boolean: 'equals' | 'isEmpty' | 'isNotEmpty';
-  enum: 'equals' | 'notEquals' | 'in' | 'notIn' | 'isEmpty' | 'isNotEmpty';
+  enum:
+    | 'equals'
+    | 'notEquals'
+    | 'in'
+    | 'notIn'
+    | 'containsAny'
+    | 'containsAll'
+    | 'containsNone'
+    | 'isEmpty'
+    | 'isNotEmpty';
   date:
     | 'on'
     | 'notOn'
@@ -49,6 +58,17 @@ export type FilterFieldType = keyof FilterOperatorsByFieldType;
 export type FilterOperator = FilterOperatorsByFieldType[FilterFieldType];
 
 export type WithinLastUnit = 'days' | 'weeks' | 'months';
+
+/** A displayable enum option. Committed conditions store only its string value. */
+export type FilterEnumOption =
+  | string
+  | {
+      readonly value: string;
+      readonly label: string;
+    };
+
+/** Whether one record exposes one enum value or an array of enum values. */
+export type FilterEnumValueCardinality = 'single' | 'multiple';
 
 /** Amount and unit used by the date `withinLast` operator. */
 export type WithinLastValue = {
@@ -75,7 +95,7 @@ export type FilterScalarValue<T extends FilterFieldType> = T extends 'number'
 /**
  * Value shape for a field type + operator pair: no value for
  * `isEmpty`/`isNotEmpty`, `{ from, to }` for `between`, `string[]` for
- * `in`/`notIn`, a structured duration for `withinLast`, and the type's
+ * enum set operators, a structured duration for `withinLast`, and the type's
  * scalar otherwise.
  */
 type FilterValue<
@@ -85,7 +105,7 @@ type FilterValue<
   ? undefined
   : O extends 'between'
     ? RangeValue<FilterScalarValue<T>>
-    : O extends 'in' | 'notIn'
+    : O extends 'in' | 'notIn' | 'containsAny' | 'containsAll' | 'containsNone'
       ? string[]
       : O extends 'withinLast'
         ? WithinLastValue
@@ -119,20 +139,45 @@ export type FilterCondition<T extends FilterFieldType = FilterFieldType> = T ext
   ? FilterConditionForOperator<T, FilterOperatorsByFieldType[T]>
   : never;
 
+type FilterFieldDefinitionBase<T extends FilterFieldType> = {
+  readonly key: string;
+  readonly label?: string;
+  readonly type: T;
+};
+
+type SingleValueEnumOperator = 'equals' | 'notEquals' | 'in' | 'notIn' | 'isEmpty' | 'isNotEmpty';
+
+type MultipleValueEnumOperator =
+  'containsAny' | 'containsAll' | 'containsNone' | 'isEmpty' | 'isNotEmpty';
+
+type EnumFieldDefinition = FilterFieldDefinitionBase<'enum'> &
+  (
+    | {
+        readonly valueCardinality?: 'single';
+        readonly operators?: readonly SingleValueEnumOperator[];
+        readonly options: readonly FilterEnumOption[];
+      }
+    | {
+        readonly valueCardinality: 'multiple';
+        readonly operators?: readonly MultipleValueEnumOperator[];
+        readonly options: readonly FilterEnumOption[];
+      }
+  );
+
 /**
- * A field the parent makes available for filtering. `operators` may narrow
- * the type's default operator set; enum fields must supply their options.
+ * A field the parent makes available for filtering. Enum definitions accept
+ * string options or `{ value, label }` descriptors and declare whether the
+ * corresponding record value is scalar or an array.
  */
 export type FilterFieldDefinition<T extends FilterFieldType = FilterFieldType> =
   T extends FilterFieldType
-    ? {
-        readonly key: string;
-        readonly label?: string;
-        readonly type: T;
-        readonly operators?: readonly FilterOperatorsByFieldType[T][];
-      } & (T extends 'enum'
-        ? { readonly options: readonly string[] }
-        : { readonly options?: never })
+    ? T extends 'enum'
+      ? EnumFieldDefinition
+      : FilterFieldDefinitionBase<T> & {
+          readonly operators?: readonly FilterOperatorsByFieldType[T][];
+          readonly options?: never;
+          readonly valueCardinality?: never;
+        }
     : never;
 
 export type FilterList = readonly FilterCondition[];

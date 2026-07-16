@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
-import type { FilterFieldDefinition } from '@filter/types.ts';
+import type { FilterEnumOption, FilterFieldDefinition } from '@filter/types.ts';
 
-import { OPERATORS_BY_TYPE } from './operators.ts';
+import { ENUM_OPERATORS_BY_VALUE_CARDINALITY, OPERATORS_BY_TYPE } from './operators.ts';
 import { stableSerialize } from './stable-serialize.ts';
 
 const key = z
@@ -18,10 +18,61 @@ const label = z
     'Expected a nonblank, trimmed label',
   )
   .optional();
+const optionLabel = z
+  .string()
+  .refine(
+    (value) => value.length > 0 && value === value.trim(),
+    'Expected a nonblank, trimmed label',
+  );
 const unique = <T>(values: readonly T[]) => new Set(values).size === values.length;
 const operators = <T extends readonly [string, ...string[]]>(values: T) =>
   z.array(z.enum(values)).min(1).refine(unique, 'Operators must be unique').optional();
-const options = z.array(key).min(1).refine(unique, 'Enum options must be unique');
+const enumOptionDescriptor = z.object({ value: key, label: optionLabel }).strict();
+const enumOption = z.union([key, enumOptionDescriptor]);
+const optionValue = (option: z.infer<typeof enumOption>) =>
+  typeof option === 'string' ? option : option.value;
+const options = z
+  .array(enumOption)
+  .min(1)
+  .refine((values) => unique(values.map(optionValue)), 'Enum option values must be unique');
+const enumOperators = [
+  'equals',
+  'notEquals',
+  'in',
+  'notIn',
+  'containsAny',
+  'containsAll',
+  'containsNone',
+  'isEmpty',
+  'isNotEmpty',
+] as const;
+const enumFieldDefinitionSchema = z
+  .object({
+    key,
+    label,
+    type: z.literal('enum'),
+    valueCardinality: z.enum(['single', 'multiple']).optional(),
+    operators: operators(enumOperators),
+    options,
+  })
+  .strict()
+  .superRefine((field, context) => {
+    if (!field.operators) return;
+
+    const allowedOperators = new Set<string>(
+      ENUM_OPERATORS_BY_VALUE_CARDINALITY[field.valueCardinality ?? 'single'],
+    );
+
+    for (const [index, operator] of field.operators.entries()) {
+      if (allowedOperators.has(operator)) continue;
+
+      context.addIssue({
+        code: 'custom',
+        message: `Operator "${operator}" is not valid for ${field.valueCardinality ?? 'single'}-value enum fields`,
+        path: ['operators', index],
+      });
+    }
+  });
 
 const fieldDefinitionSchema = z.discriminatedUnion('type', [
   z
@@ -48,15 +99,7 @@ const fieldDefinitionSchema = z.discriminatedUnion('type', [
       operators: operators(OPERATORS_BY_TYPE.boolean),
     })
     .strict(),
-  z
-    .object({
-      key,
-      label,
-      type: z.literal('enum'),
-      operators: operators(OPERATORS_BY_TYPE.enum),
-      options,
-    })
-    .strict(),
+  enumFieldDefinitionSchema,
   z
     .object({
       key,
@@ -66,6 +109,48 @@ const fieldDefinitionSchema = z.discriminatedUnion('type', [
     })
     .strict(),
 ]);
+
+export type NormalizedFilterEnumOption = Exclude<FilterEnumOption, string>;
+
+function optionsAreNormalized(
+  enumOptions: readonly FilterEnumOption[],
+): enumOptions is readonly NormalizedFilterEnumOption[] {
+  return enumOptions.every((option) => typeof option !== 'string');
+}
+
+/** Returns an enum field's options as stable value/display-label descriptors. */
+export function enumOptionsForField(
+  field: FilterFieldDefinition<'enum'>,
+): readonly NormalizedFilterEnumOption[] {
+  const enumOptions: readonly FilterEnumOption[] = field.options ?? [];
+
+  if (optionsAreNormalized(enumOptions)) return enumOptions;
+
+  return enumOptions.map((option) =>
+    typeof option === 'string' ? { value: option, label: option } : option,
+  );
+}
+
+function normalizeFieldDefinition(field: FilterFieldDefinition): FilterFieldDefinition {
+  const clonedField = structuredClone(field);
+
+  if (clonedField.type !== 'enum') return clonedField;
+  const normalizedOptions = enumOptionsForField(clonedField);
+
+  if (clonedField.valueCardinality === 'multiple') {
+    return {
+      ...clonedField,
+      valueCardinality: 'multiple',
+      options: normalizedOptions,
+    };
+  }
+
+  return {
+    ...clonedField,
+    valueCardinality: 'single',
+    options: normalizedOptions,
+  };
+}
 
 export type FilterFieldRegistry = {
   fields: readonly FilterFieldDefinition[];
@@ -83,7 +168,7 @@ export function createFilterFieldRegistry(
     throw new TypeError(`Invalid fields:\n${z.prettifyError(result.error)}`);
   }
 
-  const fields = structuredClone(value);
+  const fields = value.map(normalizeFieldDefinition);
   const byKey = new Map<string, FilterFieldDefinition>();
 
   for (const field of fields) {

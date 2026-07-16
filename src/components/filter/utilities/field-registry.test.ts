@@ -25,7 +25,17 @@ const validFields: readonly FilterFieldDefinition[] = [
     key: 'stage',
     type: 'enum',
     operators: ['in'],
-    options: ['Lead', 'Won'],
+    options: ['Lead', { value: 'won', label: 'Won' }],
+  },
+  {
+    key: 'assignedTo',
+    type: 'enum',
+    valueCardinality: 'multiple',
+    operators: ['containsAny'],
+    options: [
+      { value: 'person-1', label: 'Alex Rivera' },
+      { value: 'person-2', label: 'Sam Rivera' },
+    ],
   },
   {
     key: 'closeDate',
@@ -43,7 +53,19 @@ describe('createFilterFieldRegistry', () => {
     const registry = createFilterFieldRegistry(validFields);
 
     expect(registry.fields).not.toBe(validFields);
-    expect(registry.fields).toEqual(validFields);
+    expect(registry.fields).toEqual([
+      ...validFields.slice(0, 3),
+      {
+        ...validFields[3],
+        valueCardinality: 'single',
+        options: [
+          { value: 'Lead', label: 'Lead' },
+          { value: 'won', label: 'Won' },
+        ],
+      },
+      validFields[4],
+      validFields[5],
+    ]);
     expect(registry.byKey.get('stage')).toBe(registry.fields[3]);
     expect(registry.byKey.get('missing')).toBeUndefined();
     expect(registry.signature).toContain('closeDate');
@@ -53,6 +75,39 @@ describe('createFilterFieldRegistry', () => {
       field.key === 'name' ? { ...field, label: 'Account name' } : field,
     );
     expect(createFilterFieldRegistry(changed).signature).not.toBe(registry.signature);
+  });
+
+  it('gives equivalent scalar enum representations the same signature', () => {
+    const strings = createFilterFieldRegistry([{ key: 'stage', type: 'enum', options: ['Lead'] }]);
+    const descriptors = createFilterFieldRegistry([
+      {
+        key: 'stage',
+        type: 'enum',
+        valueCardinality: 'single',
+        options: [{ value: 'Lead', label: 'Lead' }],
+      },
+    ]);
+
+    expect(strings.signature).toBe(descriptors.signature);
+  });
+
+  it('allows duplicate enum labels when their stable values differ', () => {
+    const registry = createFilterFieldRegistry([
+      {
+        key: 'assignedTo',
+        type: 'enum',
+        valueCardinality: 'multiple',
+        options: [
+          { value: 'person-1', label: 'Alex Rivera' },
+          { value: 'person-2', label: 'Alex Rivera' },
+        ],
+      },
+    ]);
+
+    expect(registry.fields[0]?.options).toEqual([
+      { value: 'person-1', label: 'Alex Rivera' },
+      { value: 'person-2', label: 'Alex Rivera' },
+    ]);
   });
 
   it('snapshots definitions so later in-place mutations cannot alter a registry', () => {
@@ -119,9 +174,71 @@ describe('createFilterFieldRegistry', () => {
       path: '0.options',
     },
     {
+      label: 'duplicate enum option values across representations',
+      fields: [
+        {
+          key: 'stage',
+          type: 'enum',
+          options: ['Lead', { value: 'Lead', label: 'Prospect' }],
+        },
+      ],
+      path: '0.options',
+    },
+    {
       label: 'a blank enum option',
       fields: [{ key: 'stage', type: 'enum', options: [''] }],
       path: '0.options.0',
+    },
+    {
+      label: 'a blank enum descriptor value',
+      fields: [{ key: 'stage', type: 'enum', options: [{ value: '', label: 'Lead' }] }],
+      path: '0.options.0.value',
+    },
+    {
+      label: 'an untrimmed enum descriptor label',
+      fields: [{ key: 'stage', type: 'enum', options: [{ value: 'lead', label: ' Lead ' }] }],
+      path: '0.options.0.label',
+    },
+    {
+      label: 'an enum descriptor with extra properties',
+      fields: [
+        {
+          key: 'stage',
+          type: 'enum',
+          options: [{ value: 'lead', label: 'Lead', color: 'blue' }],
+        },
+      ],
+      path: '0.options.0',
+    },
+    {
+      label: 'a scalar enum operator on a multiple-value field',
+      fields: [
+        {
+          key: 'assignedTo',
+          type: 'enum',
+          valueCardinality: 'multiple',
+          operators: ['in'],
+          options: ['person-1'],
+        },
+      ],
+      path: '0.operators.0',
+    },
+    {
+      label: 'a multiple-value enum operator on a scalar field',
+      fields: [
+        {
+          key: 'stage',
+          type: 'enum',
+          operators: ['containsAny'],
+          options: ['Lead'],
+        },
+      ],
+      path: '0.operators.0',
+    },
+    {
+      label: 'enum cardinality on a non-enum field',
+      fields: [{ key: 'name', type: 'string', valueCardinality: 'multiple' }],
+      path: '0',
     },
     {
       label: 'an unknown field type',

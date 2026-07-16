@@ -23,6 +23,16 @@ const stageField: FilterFieldDefinition = {
   type: 'enum',
   options: ['Lead', 'Contacted', 'Closed won'],
 };
+const assignedToField: FilterFieldDefinition = {
+  key: 'assignedTo',
+  label: 'Assigned to',
+  type: 'enum',
+  valueCardinality: 'multiple',
+  options: [
+    { value: 'person-1', label: 'Alex Rivera' },
+    { value: 'person-2', label: 'Sam Rivera' },
+  ],
+};
 const closeDateField: FilterFieldDefinition = {
   key: 'closeDate',
   label: 'Close date',
@@ -40,9 +50,9 @@ const rangeDraft = (fromInput = '', toInput = ''): ValueDraft => ({
   fromInput,
   toInput,
 });
-const selectionDraft = (...selectedOptions: string[]): ValueDraft => ({
+const selectionDraft = (...selectedOptionValues: string[]): ValueDraft => ({
   kind: 'multiSelection',
-  selectedOptions,
+  selectedOptionValues,
 });
 const durationDraft = (amountInput: string): ValueDraft => ({
   kind: 'duration',
@@ -176,6 +186,25 @@ describe('validateDraft', () => {
 
   it('rejects unknown options in multi enum values', () => {
     expect(validateDraft(stageField, 'in', selectionDraft('Lead', 'Bogus'))).toEqual({
+      ok: false,
+      error: 'Choose listed options',
+    });
+  });
+
+  it.each(['containsAny', 'containsAll', 'containsNone'] as const)(
+    'commits stable option values for %s',
+    (operator) => {
+      expect(
+        validateDraft(assignedToField, operator, selectionDraft('person-1', 'person-2')),
+      ).toEqual({
+        ok: true,
+        value: ['person-1', 'person-2'],
+      });
+    },
+  );
+
+  it('rejects object payloads and unknown keys for multiple-value enum fields', () => {
+    expect(validateDraft(assignedToField, 'containsAny', selectionDraft('missing'))).toEqual({
       ok: false,
       error: 'Choose listed options',
     });
@@ -383,7 +412,7 @@ describe('parseFilterGroup', () => {
 });
 
 describe('getFilterValidationIssue', () => {
-  const fields = [nameField, valueField, stageField];
+  const fields = [nameField, valueField, stageField, assignedToField];
   const stageFilter: FilterEntry = {
     id: 's',
     fieldKey: 'stage',
@@ -428,6 +457,55 @@ describe('getFilterValidationIssue', () => {
       segment: 'operator',
       reason: 'This operator is no longer supported for Stage',
     });
+  });
+
+  it('flags operators from the wrong enum value cardinality', () => {
+    expect(
+      getFilterValidationIssue(
+        {
+          id: 'assigned',
+          fieldKey: 'assignedTo',
+          type: 'enum',
+          operator: 'in',
+          value: ['person-1'],
+        },
+        fields,
+      ),
+    ).toEqual({
+      segment: 'operator',
+      reason: 'This operator is no longer supported for Assigned to',
+    });
+    expect(
+      getFilterValidationIssue(
+        {
+          id: 'stage-multiple',
+          fieldKey: 'stage',
+          type: 'enum',
+          operator: 'containsAny',
+          value: ['Lead'],
+        },
+        fields,
+      ),
+    ).toEqual({
+      segment: 'operator',
+      reason: 'This operator is no longer supported for Stage',
+    });
+  });
+
+  it('keeps enum selections valid when only their labels change', () => {
+    const filter: FilterEntry = {
+      id: 'assigned',
+      fieldKey: 'assignedTo',
+      type: 'enum',
+      operator: 'containsAll',
+      value: ['person-1'],
+    };
+    const relabelled: FilterFieldDefinition = {
+      ...assignedToField,
+      options: [{ value: 'person-1', label: 'Alex Morgan' }],
+    };
+
+    expect(getFilterValidationIssue(filter, [relabelled])).toBeNull();
   });
 
   it('flags vanished enum options at the value segment', () => {
