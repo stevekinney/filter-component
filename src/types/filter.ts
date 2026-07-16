@@ -162,6 +162,8 @@ export type FilterProps = Omit<
   /** Immutable schema snapshot. Replace the array when any field definition changes. */
   fields: readonly FilterFieldDefinition[];
   onChange?: (filters: FilterGroup, abortController: AbortController) => void;
+  /** Called with the valid-only group when the form is submitted, e.g. via an external `<button type="submit" form="...">`. */
+  onSubmit?: (filters: FilterGroup) => void;
   disabled?: boolean;
   /** Initial value read once on mount; it is neither emitted nor added to history. */
   initialFilters?: FilterGroup;

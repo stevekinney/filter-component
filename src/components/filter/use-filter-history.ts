@@ -19,6 +19,7 @@ type UseFilterHistoryResult = {
   history: FilterHistory;
   getCurrentHistory: () => FilterHistory;
   applyFilterHistoryAction: (action: FilterHistoryAction) => boolean;
+  getCurrentValidGroup: () => FilterGroup;
 };
 
 function deriveValidGroup(
@@ -102,5 +103,6 @@ export function useFilterHistory(
     history,
     getCurrentHistory: () => historyRef.current,
     applyFilterHistoryAction,
+    getCurrentValidGroup: () => deriveValidGroup(historyRef.current.present, fieldsRef.current),
   };
 }

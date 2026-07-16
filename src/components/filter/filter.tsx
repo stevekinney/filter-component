@@ -96,6 +96,7 @@ export function Filter(properties: FilterProps) {
   const {
     fields,
     onChange,
+    onSubmit,
     disabled: disabledProperty,
     initialFilters,
     savedViewsStorage: savedViewsStorageProperty,
@@ -111,12 +112,8 @@ export function Filter(properties: FilterProps) {
   const createConditionId = () => `${idPrefix}-filter-${++filterIdCounterRef.current}`;
   const fieldRegistry = useMemo(() => createFilterFieldRegistry(fields), [fields]);
   const validatedFields = fieldRegistry.fields;
-  const { history, getCurrentHistory, applyFilterHistoryAction } = useFilterHistory(
-    fieldRegistry,
-    onChange,
-    initialFilters,
-    createConditionId,
-  );
+  const { history, getCurrentHistory, applyFilterHistoryAction, getCurrentValidGroup } =
+    useFilterHistory(fieldRegistry, onChange, initialFilters, createConditionId);
   const [liveRegionMessage, setLiveRegionMessage] = useState('');
 
   const filterFieldsetRef = useRef<HTMLFieldSetElement | null>(null);
@@ -255,7 +252,11 @@ export function Filter(properties: FilterProps) {
       {...formProps}
       className={clsx('filter', className)}
       aria-label={ariaLabel}
-      onSubmit={(event) => event.preventDefault()}
+      noValidate
+      onSubmit={(event) => {
+        event.preventDefault();
+        onSubmit?.(getCurrentValidGroup());
+      }}
     >
       {/* A natively disabled fieldset makes every control inside inert;
           aria-disabled is valid on its implicit group role. */}
