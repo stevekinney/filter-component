@@ -11,7 +11,8 @@ describe('onSubmit', () => {
 
     fireEvent.submit(screen.getByRole('form', { name: 'Filters' }));
 
-    expect(onSubmit).toHaveBeenCalledExactlyOnceWith({ combinator: 'and', conditions: [] });
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    expect(onSubmit).toHaveBeenLastCalledWith({ combinator: 'and', conditions: [] });
   });
 
   it('invokes onSubmit with the complete valid group for populated filters', async () => {
@@ -21,7 +22,8 @@ describe('onSubmit', () => {
 
     fireEvent.submit(screen.getByRole('form', { name: 'Filters' }));
 
-    expect(onSubmit).toHaveBeenCalledExactlyOnceWith({
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    expect(onSubmit).toHaveBeenLastCalledWith({
       combinator: 'and',
       conditions: [expect.objectContaining({ fieldKey: 'name', value: 'Maria' })],
     });
@@ -37,7 +39,8 @@ describe('onSubmit', () => {
 
     fireEvent.submit(screen.getByRole('form', { name: 'Filters' }));
 
-    expect(onSubmit).toHaveBeenCalledExactlyOnceWith({ combinator: 'and', conditions: [] });
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    expect(onSubmit).toHaveBeenLastCalledWith({ combinator: 'and', conditions: [] });
   });
 
   it('excludes a committed condition invalidated by a changed field schema, while it stays visible', async () => {
@@ -59,7 +62,8 @@ describe('onSubmit', () => {
 
     fireEvent.submit(screen.getByRole('form', { name: 'Filters' }));
 
-    expect(onSubmit).toHaveBeenCalledExactlyOnceWith({
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    expect(onSubmit).toHaveBeenLastCalledWith({
       combinator: 'and',
       conditions: [expect.objectContaining({ fieldKey: 'name' })],
     });
@@ -109,6 +113,7 @@ describe('onSubmit', () => {
 
     await user.click(screen.getByRole('button', { name: 'Apply filters' }));
 
-    expect(onSubmit).toHaveBeenCalledExactlyOnceWith({ combinator: 'and', conditions: [] });
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    expect(onSubmit).toHaveBeenLastCalledWith({ combinator: 'and', conditions: [] });
   });
 });

@@ -252,6 +252,7 @@ export function Filter(properties: FilterProps) {
       {...formProps}
       className={clsx('filter', className)}
       aria-label={ariaLabel}
+      noValidate
       onSubmit={(event) => {
         event.preventDefault();
         onSubmit?.(getCurrentValidGroup());

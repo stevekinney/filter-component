@@ -200,6 +200,8 @@ The root always prevents native submit. A consumer cannot supply `children`, a n
 
 The root `<form>`'s `onSubmit` handler calls `event.preventDefault()`, then derives the valid-only `FilterGroup` from the current committed expression and the current field registry via `useFilterHistory`'s `getCurrentValidGroup()` — the same projection `onChange` uses, read fresh instead of from a render closure. It invokes the `onSubmit` prop with that group, and does not touch history or call `onChange`. Because the root is a real `<form>`, an external control using the standard HTML `form` attribute (e.g. `<button type="submit" form="...">`) triggers submission without any imperative API on the component.
 
+The root also carries `noValidate`. Value editors render native inputs with their own constraints (e.g. the `withinLast` duration's `min={1}`); without `noValidate`, an external submit control could be blocked by the browser's own constraint validation on an open, uncommitted draft before this component's handler ever runs — invalid or incomplete drafts are already excluded from the emitted group by `getCurrentValidGroup()`, so native validation would only duplicate that exclusion while silently swallowing the submit.
+
 ### Uncontrolled initialization
 
 `initialFilters` is read inside the history state initializer:
