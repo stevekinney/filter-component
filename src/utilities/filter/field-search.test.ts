@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { searchFields } from './field-search.ts';
+
 import type { FilterFieldDefinition } from '@/types/filter.ts';
+
+import { searchFields } from './field-search.ts';
 
 const fields: FilterFieldDefinition[] = [
   { key: 'dealValue', label: 'Deal value', type: 'number' },

@@ -1,8 +1,10 @@
 import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { Filter } from '../filter.tsx';
-import { FIELDS, addStringFilter, queryTokens, setup } from './filter-test-setup.tsx';
+
 import type { FilterFieldDefinition } from '@/types/filter.ts';
+
+import { Filter } from '../filter.tsx';
+import { addStringFilter, FIELDS, queryTokens, setup } from './filter-test-setup.tsx';
 
 describe('field-definition changes and invalid tokens', () => {
   it('closes the editor when the field being edited disappears', async () => {

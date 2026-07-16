@@ -1,8 +1,10 @@
 import { z } from 'zod';
+
+import type { FilterGroup } from '@/types/filter.ts';
+
 import { fromFilterGroup, isFilterGroup, toFilterGroup } from './expression.ts';
 import { filterGroupSchema } from './filter-schema.ts';
 import { stableSerialize } from './stable-serialize.ts';
-import type { FilterGroup } from '@/types/filter.ts';
 
 export const SAVED_VIEWS_STORAGE_KEY = 'filter.saved-views';
 

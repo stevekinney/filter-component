@@ -1,5 +1,6 @@
-import { OPERATOR_LABELS } from './operators.ts';
 import type { FilterCondition, FilterFieldDefinition } from '@/types/filter.ts';
+
+import { OPERATOR_LABELS } from './operators.ts';
 
 export function fieldLabel(field: FilterFieldDefinition): string {
   return field.label ?? field.key;

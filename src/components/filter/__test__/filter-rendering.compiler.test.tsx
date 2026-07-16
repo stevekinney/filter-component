@@ -1,8 +1,11 @@
-import { StrictMode } from 'react';
-import type { ComponentProps } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { StrictMode } from 'react';
+import type { ComponentProps } from 'react';
 import { describe, expect, it, vi } from 'vitest';
+
+import { Filter } from '../filter.tsx';
+import { FIELDS } from './filter-test-setup.tsx';
 
 const renderProbes = vi.hoisted(() => ({
   fieldSearch: vi.fn(),
@@ -70,9 +73,6 @@ vi.mock('../filter-token-list.tsx', async (importOriginal) => {
 
   return { ...actual, FilterTokenList: FilterTokenListRenderProbe };
 });
-
-import { Filter } from '../filter.tsx';
-import { FIELDS } from './filter-test-setup.tsx';
 
 describe('compiled Filter render boundaries', () => {
   it('keeps committed tokens and row actions still while a value draft changes', async () => {

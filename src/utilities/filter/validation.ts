@@ -1,9 +1,5 @@
 import { z } from 'zod';
-import { getValueEditorKind, operatorsForField } from './operators.ts';
-import type { ValueEditorKind } from './operators.ts';
-import { filterConditionSchema } from './filter-schema.ts';
-import type { ValueDraft } from './value-drafts.ts';
-import type { FilterEntry } from './filter-entry.ts';
+
 import type {
   FilterCondition,
   FilterFieldDefinition,
@@ -11,6 +7,12 @@ import type {
   RangeValue,
   WithinLastUnit,
 } from '@/types/filter.ts';
+
+import type { FilterEntry } from './filter-entry.ts';
+import { filterConditionSchema } from './filter-schema.ts';
+import { getValueEditorKind, operatorsForField } from './operators.ts';
+import type { ValueEditorKind } from './operators.ts';
+import type { ValueDraft } from './value-drafts.ts';
 
 export const WITHIN_LAST_UNITS: WithinLastUnit[] = ['days', 'weeks', 'months'];
 

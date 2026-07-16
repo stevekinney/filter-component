@@ -1,10 +1,11 @@
-import type { ValueEditorKind } from './operators.ts';
 import type {
   FilterCondition,
   RangeValue,
   WithinLastUnit,
   WithinLastValue,
 } from '@/types/filter.ts';
+
+import type { ValueEditorKind } from './operators.ts';
 
 export type ScalarValueDraft = {
   kind: 'scalar';

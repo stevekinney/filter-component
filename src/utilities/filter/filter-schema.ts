@@ -1,4 +1,5 @@
 import { z } from 'zod';
+
 import type { FilterCondition, FilterGroup } from '@/types/filter.ts';
 
 const nonblankString = z

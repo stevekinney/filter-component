@@ -1,8 +1,13 @@
-import { IDLE_FILTER_EDITOR_STATE } from './filter-editor-state.ts';
-import type { FilterEditorState, IncompleteDraft } from './filter-editor-state.ts';
+import type { FilterCondition, FilterFieldDefinition, FilterOperator } from '@/types/filter.ts';
 import type { FilterFieldRegistry } from '@/utilities/filter/field-registry.ts';
 import { createFilterEntry } from '@/utilities/filter/filter-entry.ts';
 import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
+import {
+  booleanChoicesForField,
+  getValueEditorKind,
+  operatorsForField,
+} from '@/utilities/filter/operators.ts';
+import type { ValueEditorKind } from '@/utilities/filter/operators.ts';
 import { createFilterCondition, getFilterValidationIssue } from '@/utilities/filter/validation.ts';
 import type { TokenSegment } from '@/utilities/filter/validation.ts';
 import {
@@ -11,13 +16,9 @@ import {
   createValueDraftFromCommittedValue,
 } from '@/utilities/filter/value-drafts.ts';
 import type { ValueDraft } from '@/utilities/filter/value-drafts.ts';
-import {
-  booleanChoicesForField,
-  getValueEditorKind,
-  operatorsForField,
-} from '@/utilities/filter/operators.ts';
-import type { ValueEditorKind } from '@/utilities/filter/operators.ts';
-import type { FilterCondition, FilterFieldDefinition, FilterOperator } from '@/types/filter.ts';
+
+import { IDLE_FILTER_EDITOR_STATE } from './filter-editor-state.ts';
+import type { FilterEditorState, IncompleteDraft } from './filter-editor-state.ts';
 
 export function fieldActiveIndex(registry: FilterFieldRegistry, key: string): number {
   return Math.max(

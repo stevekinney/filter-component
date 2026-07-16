@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
+
+import type { FilterFieldDefinition } from '@/types/filter.ts';
+
 import {
-  OPERATORS_BY_TYPE,
   booleanChoicesForField,
   getValueEditorKind,
   isValuelessOperator,
+  OPERATORS_BY_TYPE,
   operatorsForField,
 } from './operators.ts';
-import type { FilterFieldDefinition } from '@/types/filter.ts';
 
 describe('operator helpers', () => {
   it('uses defaults or a field-specific narrowed operator set', () => {

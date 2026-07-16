@@ -1,6 +1,7 @@
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { FIELDS, addStringFilter, queryTokens, setup } from './filter-test-setup.tsx';
+
+import { addStringFilter, FIELDS, queryTokens, setup } from './filter-test-setup.tsx';
 
 describe('add-filter combobox', () => {
   it('shows the empty-state placeholder and does not open the dropdown on focus alone', async () => {

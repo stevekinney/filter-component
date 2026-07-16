@@ -1,15 +1,17 @@
 import { Check, X } from 'lucide-react';
 import type { KeyboardEvent } from 'react';
-import { WITHIN_LAST_UNITS } from '@/utilities/filter/validation.ts';
-import { PopoverValidationError } from './filter-popover-error.tsx';
+
 import type { ValueEditorKind } from '@/utilities/filter/operators.ts';
-import type { FilterEditorState } from './filter-editor-state.ts';
+import { WITHIN_LAST_UNITS } from '@/utilities/filter/validation.ts';
 import type {
   DurationValueDraft,
   RangeValueDraft,
   ScalarValueDraft,
   ValueDraft,
 } from '@/utilities/filter/value-drafts.ts';
+
+import type { FilterEditorState } from './filter-editor-state.ts';
+import { PopoverValidationError } from './filter-popover-error.tsx';
 
 type ValueEditorState = FilterEditorState & { stage: 'value' };
 type InputKeyDownHandler = (event: KeyboardEvent<HTMLElement>) => void;

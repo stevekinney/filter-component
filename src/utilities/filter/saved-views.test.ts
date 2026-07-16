@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
+
+import type { FilterGroup } from '@/types/filter.ts';
+
 import { parseSavedViews, savedViewKey } from './saved-views.ts';
 import type { SavedView } from './saved-views.ts';
-import type { FilterGroup } from '@/types/filter.ts';
 
 const GROUP: FilterGroup = {
   combinator: 'or',

@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
+
+import type { FilterCombinator, FilterGroup } from '@/types/filter.ts';
+
 import {
-  EMPTY_FILTER_EXPRESSION,
   describeAndRuns,
+  EMPTY_FILTER_EXPRESSION,
   filterExpression,
   fromFilterGroup,
   isFilterGroup,
@@ -11,7 +14,6 @@ import {
 import type { FilterExpression } from './expression.ts';
 import type { FilterEntry } from './filter-entry.ts';
 import { filterConditionSchema } from './filter-schema.ts';
-import type { FilterCombinator, FilterGroup } from '@/types/filter.ts';
 
 function condition(id: string): FilterEntry {
   return {

@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
+
 import { Filter } from '@/components/filter/index.ts';
 import type { FilterFieldDefinition, FilterGroup } from '@/components/filter/index.ts';
 import { applyFilters } from '@/example/apply-filters.ts';
-import { DEALS, DEAL_FILTER_FIELDS, INITIAL_FILTERS } from '@/example/records.ts';
+import { DEAL_FILTER_FIELDS, DEALS, INITIAL_FILTERS } from '@/example/records.ts';
 import type { Deal } from '@/example/records.ts';
+
 import '@/components/filter/styles/filter-component.css';
 import '@/example/example.css';
 

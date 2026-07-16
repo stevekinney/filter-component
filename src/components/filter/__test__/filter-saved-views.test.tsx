@@ -1,10 +1,12 @@
 import { screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { addStringFilter, setup } from './filter-test-setup.tsx';
+
+import type { FilterGroup } from '@/types/filter.ts';
 import { SAVED_VIEWS_STORAGE_KEY } from '@/utilities/filter/saved-views.ts';
 import type { SavedView } from '@/utilities/filter/saved-views.ts';
 import type { SavedViewsStorage } from '@/utilities/storage/saved-views-storage.ts';
-import type { FilterGroup } from '@/types/filter.ts';
+
+import { addStringFilter, setup } from './filter-test-setup.tsx';
 
 function storedViews(): SavedView[] {
   const raw = window.localStorage.getItem(SAVED_VIEWS_STORAGE_KEY);

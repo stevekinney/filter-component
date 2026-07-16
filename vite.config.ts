@@ -1,6 +1,6 @@
-import { URL, fileURLToPath } from 'node:url';
-import react, { reactCompilerPreset } from '@vitejs/plugin-react';
+import { fileURLToPath, URL } from 'node:url';
 import babel from '@rolldown/plugin-babel';
+import react, { reactCompilerPreset } from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
 export default defineConfig(({ mode }) => {

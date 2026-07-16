@@ -1,7 +1,8 @@
+import type { FilterCombinator, FilterCondition, FilterGroup } from '@/types/filter.ts';
+
 import { createFilterEntry } from './filter-entry.ts';
 import type { FilterEntry } from './filter-entry.ts';
 import { filterConditionSchema } from './filter-schema.ts';
-import type { FilterCombinator, FilterCondition, FilterGroup } from '@/types/filter.ts';
 
 /**
  * The smart-joiners expression model. The committed filter state is a flat
@@ -126,7 +127,9 @@ export function fromFilterGroup(
       }
       return;
     }
+
     if (conditions.length > 0) joiners.push(joiner);
+
     conditions.push(createFilterEntry(member, createConditionId()));
   };
 
@@ -194,6 +197,7 @@ export function describeAndRuns(expression: FilterExpression): AndRunMarker[] {
       inRun: false,
     }));
   }
+
   return andRuns(expression).flatMap((run) =>
     run.map((_, memberIndex) => ({
       opensRun: run.length > 1 && memberIndex === 0,

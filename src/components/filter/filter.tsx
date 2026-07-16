@@ -1,23 +1,25 @@
 import clsx from 'clsx';
 import { useId, useMemo, useRef, useState } from 'react';
-import { activeEditorSegment, findEditingFilter } from './filter-editor-state.ts';
-import type { FilterEditorState } from './filter-editor-state.ts';
+
+import type { FilterFieldDefinition, FilterProps } from '@/types/filter.ts';
+import { createFilterFieldRegistry } from '@/utilities/filter/field-registry.ts';
 import { searchFields } from '@/utilities/filter/field-search.ts';
-import { FilterDraftPreview, IncompleteDraftChip } from './filter-draft-chips.tsx';
-import { FilterRail } from './filter-action-rail.tsx';
-import { AddFilterCombobox } from './add-filter-combobox.tsx';
-import { FilterPopover } from './filter-popover.tsx';
-import { FilterTokenList } from './filter-token-list.tsx';
-import { useFilterHistory } from './use-filter-history.ts';
-import { useFilterEditor } from './use-filter-editor.ts';
-import { useSavedViews } from './use-saved-views.ts';
-import { clampIndex, stepIndex } from '@/utilities/list-navigation.ts';
 import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
 import type { TokenSegment } from '@/utilities/filter/validation.ts';
-import { createFilterFieldRegistry } from '@/utilities/filter/field-registry.ts';
-import { useFilterFocus } from './use-filter-focus.ts';
+import { clampIndex, stepIndex } from '@/utilities/list-navigation.ts';
 import { localSavedViewsStorage } from '@/utilities/storage/local-storage.ts';
-import type { FilterFieldDefinition, FilterProps } from '@/types/filter.ts';
+
+import { AddFilterCombobox } from './add-filter-combobox.tsx';
+import { FilterRail } from './filter-action-rail.tsx';
+import { FilterDraftPreview, IncompleteDraftChip } from './filter-draft-chips.tsx';
+import { activeEditorSegment, findEditingFilter } from './filter-editor-state.ts';
+import type { FilterEditorState } from './filter-editor-state.ts';
+import { FilterPopover } from './filter-popover.tsx';
+import { FilterTokenList } from './filter-token-list.tsx';
+import { useFilterEditor } from './use-filter-editor.ts';
+import { useFilterFocus } from './use-filter-focus.ts';
+import { useFilterHistory } from './use-filter-history.ts';
+import { useSavedViews } from './use-saved-views.ts';
 
 const NO_FIELD_RESULTS: readonly FilterFieldDefinition[] = [];
 
@@ -28,14 +30,17 @@ function useFilterFieldSelection(
   const isChoosingFilterField = editorState.stage === 'field';
   const isChoosingNewFilterField = isChoosingFilterField && editorState.filterId === null;
   const fieldQuery = isChoosingFilterField ? editorState.query : null;
+
   const fieldResults = useMemo(
     () => (fieldQuery === null ? NO_FIELD_RESULTS : searchFields(fields, fieldQuery)),
     [fieldQuery, fields],
   );
+
   const matchingFields = isChoosingNewFilterField ? fieldResults : NO_FIELD_RESULTS;
   const activeFieldIndex = isChoosingNewFilterField
     ? clampIndex(editorState.activeIndex, matchingFields.length)
     : 0;
+
   let inputQuery = '';
 
   if (isChoosingNewFilterField && editorState.stage === 'field') {
@@ -72,6 +77,7 @@ function getEditorPresentation(
       editingSegment: null,
     };
   }
+
   return {
     activeDraftField:
       editorState.stage === 'field' ? undefined : findFilterField(editorState.fieldKey),

@@ -1,4 +1,5 @@
 import { configDefaults, defineConfig, mergeConfig } from 'vitest/config';
+
 import viteConfiguration from './vite.config.ts';
 
 export default defineConfig((configurationEnvironment) => {

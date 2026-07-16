@@ -1,12 +1,13 @@
-import type { FocusTarget } from './use-filter-focus.ts';
+import type { FilterCondition, FilterOperator } from '@/types/filter.ts';
 import type { FilterFieldRegistry } from '@/utilities/filter/field-registry.ts';
 import { createFilterEntry } from '@/utilities/filter/filter-entry.ts';
 import { filterConditionSchema } from '@/utilities/filter/filter-schema.ts';
 import { fieldLabel, tokenPhrase } from '@/utilities/filter/formatting.ts';
+import type { FilterHistory, FilterHistoryAction } from '@/utilities/filter/history.ts';
 import { operatorsForField } from '@/utilities/filter/operators.ts';
 import { createFilterCondition, getFilterValidationIssue } from '@/utilities/filter/validation.ts';
-import type { FilterHistory, FilterHistoryAction } from '@/utilities/filter/history.ts';
-import type { FilterCondition, FilterOperator } from '@/types/filter.ts';
+
+import type { FocusTarget } from './use-filter-focus.ts';
 
 type FilterEditorCommittedCommandsOptions = {
   getFieldRegistry: () => FilterFieldRegistry;

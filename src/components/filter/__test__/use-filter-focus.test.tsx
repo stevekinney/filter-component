@@ -1,7 +1,8 @@
+import { act, renderHook } from '@testing-library/react';
 import { createRef } from 'react';
 import type { RefObject } from 'react';
-import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+
 import { useFilterFocus } from '../use-filter-focus.ts';
 import type { FocusTarget } from '../use-filter-focus.ts';
 

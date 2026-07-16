@@ -37,6 +37,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
     "@babel/core": "^8.0.1",
+    "@ianvs/prettier-plugin-sort-imports": "^4.7.1",
     "@playwright/test": "^1.61.1",
     "@rolldown/plugin-babel": "^0.2.3",
     "@testing-library/jest-dom": "^6.9.1",

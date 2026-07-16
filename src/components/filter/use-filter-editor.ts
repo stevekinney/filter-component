@@ -1,21 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
-import { IDLE_FILTER_EDITOR_STATE, activeEditorSegment } from './filter-editor-state.ts';
-import { filterEditorControllerReducer, incompleteFromEditor } from './filter-editor-reducer.ts';
-import type {
-  FilterEditorControllerAction,
-  FilterEditorControllerState,
-} from './filter-editor-reducer.ts';
-import { createFilterEditorCommittedCommands } from './filter-editor-committed-commands.ts';
-import {
-  editorForTokenSegment,
-  enumActiveIndex,
-  fieldActiveIndex,
-  reconcileFilterEditor,
-  reconcileIncompleteDraft,
-  resolveOperatorSelection,
-} from './filter-editor-reconciliation.ts';
-import type { FocusTarget } from './use-filter-focus.ts';
+
+import type { FilterCondition, FilterFieldDefinition, FilterOperator } from '@/types/filter.ts';
 import type { FilterFieldRegistry } from '@/utilities/filter/field-registry.ts';
 import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
 import type { FilterHistory, FilterHistoryAction } from '@/utilities/filter/history.ts';
@@ -28,7 +14,23 @@ import type { BooleanChoice } from '@/utilities/filter/operators.ts';
 import { validateDraft } from '@/utilities/filter/validation.ts';
 import type { TokenSegment } from '@/utilities/filter/validation.ts';
 import type { ValueDraft } from '@/utilities/filter/value-drafts.ts';
-import type { FilterCondition, FilterFieldDefinition, FilterOperator } from '@/types/filter.ts';
+
+import { createFilterEditorCommittedCommands } from './filter-editor-committed-commands.ts';
+import {
+  editorForTokenSegment,
+  enumActiveIndex,
+  fieldActiveIndex,
+  reconcileFilterEditor,
+  reconcileIncompleteDraft,
+  resolveOperatorSelection,
+} from './filter-editor-reconciliation.ts';
+import { filterEditorControllerReducer, incompleteFromEditor } from './filter-editor-reducer.ts';
+import type {
+  FilterEditorControllerAction,
+  FilterEditorControllerState,
+} from './filter-editor-reducer.ts';
+import { activeEditorSegment, IDLE_FILTER_EDITOR_STATE } from './filter-editor-state.ts';
+import type { FocusTarget } from './use-filter-focus.ts';
 
 type UseFilterEditorOptions = {
   fieldRegistry: FilterFieldRegistry;
@@ -199,24 +201,29 @@ export function useFilterEditor({
     const editor = stateRef.current.editor;
 
     if (editor.stage !== 'operator') return;
+
     const field = registryRef.current.byKey.get(editor.fieldKey);
 
     if (!field || field.type !== editor.fieldType || !operatorsForField(field).includes(operator)) {
       return;
     }
+
     if (isValuelessOperator(operator)) {
       commitFilter(field.key, operator, undefined, editor.filterId);
       return;
     }
+
     const token = getCurrentHistory().present.conditions.find(
       (candidate) => candidate.id === editor.filterId,
     );
+
     const resolution = resolveOperatorSelection(field, operator, token, registryRef.current.fields);
 
     if (resolution.type === 'commit') {
       commitFilter(field.key, operator, resolution.value, editor.filterId);
       return;
     }
+
     openValueStage(editor.filterId, field, operator, resolution.draft);
   };
 
@@ -230,6 +237,7 @@ export function useFilterEditor({
     const operator = choice === 'true' || choice === 'false' ? 'equals' : choice;
 
     if (!operatorsForField(field).includes(operator)) return;
+
     commitFilter(
       field.key,
       operator,
@@ -300,9 +308,13 @@ export function useFilterEditor({
           activeIndex: fieldActiveIndex(registryRef.current, incomplete.fieldKey),
         },
       });
+
       scheduleFocus({ type: 'addInput' });
+
       return;
-    } else if (
+    }
+
+    if (
       incomplete.stage === 'operator' ||
       !operatorsForField(field).includes(incomplete.operator)
     ) {

@@ -1,9 +1,12 @@
 import { render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { FilterEditorState } from '../filter-editor-state.ts';
-import type { FilterPopoverProps } from '../filter-popover.tsx';
-import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
+
 import type { FilterFieldDefinition } from '@/types/filter.ts';
+import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
+
+import type { FilterEditorState } from '../filter-editor-state.ts';
+import { FieldSelectionStage } from '../filter-popover-stages.tsx';
+import type { FilterPopoverProps } from '../filter-popover.tsx';
 
 const fieldOptionRenderProbe = vi.hoisted(() => vi.fn());
 
@@ -17,8 +20,6 @@ vi.mock('@/utilities/filter/formatting.ts', async (importOriginal) => {
     },
   };
 });
-
-import { FieldSelectionStage } from '../filter-popover-stages.tsx';
 
 const FIELDS = [
   { key: 'name', label: 'Name', type: 'string' },

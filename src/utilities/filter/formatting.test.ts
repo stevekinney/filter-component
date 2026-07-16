@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { fieldLabel, formatFilterValue, tokenPhrase } from './formatting.ts';
+
 import type { FilterCondition, FilterFieldDefinition } from '@/types/filter.ts';
+
+import { fieldLabel, formatFilterValue, tokenPhrase } from './formatting.ts';
 
 const nameField: FilterFieldDefinition = {
   key: 'name',

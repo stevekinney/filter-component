@@ -2,12 +2,14 @@ import clsx from 'clsx';
 import { Bookmark, Check, Plus, X } from 'lucide-react';
 import { useEffect, useId, useReducer, useRef } from 'react';
 import type { Dispatch, KeyboardEvent, ReactNode, RefObject } from 'react';
+
+import type { FilterFieldDefinition } from '@/types/filter.ts';
 import type { SavedView } from '@/utilities/filter/saved-views.ts';
 import { clampIndex } from '@/utilities/list-navigation.ts';
+
 import { PopoverValidationError } from './filter-popover-error.tsx';
 import { SavedViewsList } from './filter-saved-views-list.tsx';
 import { useNativePopover } from './use-native-popover.ts';
-import type { FilterFieldDefinition } from '@/types/filter.ts';
 
 function SavedViewsPopover({
   triggerRef,

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { RefObject } from 'react';
+
 import type { TokenSegment } from '@/utilities/filter/validation.ts';
 
 export type FocusTarget =

@@ -1,4 +1,5 @@
 import { SAVED_VIEWS_STORAGE_KEY } from '@/utilities/filter/saved-views.ts';
+
 import type { SavedViewsStorage } from './saved-views-storage.ts';
 
 /** Promise-based subset shared by Chrome's local, sync, and session areas. */

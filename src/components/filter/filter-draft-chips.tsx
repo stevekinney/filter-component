@@ -1,8 +1,10 @@
 import { CircleDashed, X } from 'lucide-react';
+
+import type { FilterFieldDefinition } from '@/types/filter.ts';
 import { fieldLabel } from '@/utilities/filter/formatting.ts';
 import { OPERATOR_LABELS } from '@/utilities/filter/operators.ts';
+
 import type { FilterEditorState, IncompleteDraft } from './filter-editor-state.ts';
-import type { FilterFieldDefinition } from '@/types/filter.ts';
 
 function isActiveDraft(editorState: FilterEditorState): boolean {
   return (

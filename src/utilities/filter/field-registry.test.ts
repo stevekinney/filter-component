@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { createFilterFieldRegistry } from './field-registry.ts';
+
 import type { FilterFieldDefinition } from '@/types/filter.ts';
+
+import { createFilterFieldRegistry } from './field-registry.ts';
 
 const validFields: readonly FilterFieldDefinition[] = [
   {

@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import type { ValueDraft } from './value-drafts.ts';
+
+import type { FilterFieldDefinition } from '@/types/filter.ts';
+
+import type { FilterEntry } from './filter-entry.ts';
 import { parseFilterGroup } from './filter-schema.ts';
 import { createFilterCondition, getFilterValidationIssue, validateDraft } from './validation.ts';
-import type { FilterEntry } from './filter-entry.ts';
-import type { FilterFieldDefinition } from '@/types/filter.ts';
+import type { ValueDraft } from './value-drafts.ts';
 
 const nameField: FilterFieldDefinition = {
   key: 'name',

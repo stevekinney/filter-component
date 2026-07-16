@@ -1,9 +1,11 @@
+import { fireEvent, render, screen } from '@testing-library/react';
 import { createRef } from 'react';
 import type { ComponentProps } from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { AddFilterCombobox } from '../add-filter-combobox.tsx';
+
 import type { FilterFieldDefinition } from '@/types/filter.ts';
+
+import { AddFilterCombobox } from '../add-filter-combobox.tsx';
 
 const STRING_FIELD = {
   key: 'name',

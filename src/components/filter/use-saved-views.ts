@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
-import type { FocusTarget } from './use-filter-focus.ts';
+
 import { fromFilterGroup, toFilterGroup } from '@/utilities/filter/expression.ts';
-import { parseSavedViews, savedViewKey } from '@/utilities/filter/saved-views.ts';
-import type { SavedView } from '@/utilities/filter/saved-views.ts';
 import type { FilterExpression } from '@/utilities/filter/expression.ts';
 import type { FilterHistoryAction } from '@/utilities/filter/history.ts';
+import { parseSavedViews, savedViewKey } from '@/utilities/filter/saved-views.ts';
+import type { SavedView } from '@/utilities/filter/saved-views.ts';
 import type { SavedViewsStorage } from '@/utilities/storage/saved-views-storage.ts';
+
+import type { FocusTarget } from './use-filter-focus.ts';
 
 type UseSavedViewsOptions = {
   expression: FilterExpression;

@@ -1,4 +1,5 @@
 import type { FilterCondition, FilterGroup, WithinLastUnit } from '@/components/filter/index.ts';
+
 import type { Deal } from './records.ts';
 
 const UNIT_MILLISECONDS: Record<WithinLastUnit, number> = {

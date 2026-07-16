@@ -1,6 +1,7 @@
+import type { ValueDraft } from '@/utilities/filter/value-drafts.ts';
+
 import { IDLE_FILTER_EDITOR_STATE } from './filter-editor-state.ts';
 import type { FilterEditorState, IncompleteDraft } from './filter-editor-state.ts';
-import type { ValueDraft } from '@/utilities/filter/value-drafts.ts';
 
 export type FilterEditorControllerState = {
   editor: FilterEditorState;

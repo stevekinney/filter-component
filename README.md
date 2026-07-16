@@ -20,6 +20,7 @@ import {
   type FilterFieldDefinition,
   type FilterGroup,
 } from '@/components/filter/index.ts';
+
 import '@/components/filter/styles/filter-component.css';
 
 const fields = [

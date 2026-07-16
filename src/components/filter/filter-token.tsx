@@ -1,11 +1,12 @@
 import clsx from 'clsx';
 import { TriangleAlert, X } from 'lucide-react';
 import type { KeyboardEvent } from 'react';
-import { fieldLabel, formatFilterValue, tokenPhrase } from '@/utilities/filter/formatting.ts';
-import { OPERATOR_LABELS, getValueEditorKind } from '@/utilities/filter/operators.ts';
-import type { FilterValidationIssue, TokenSegment } from '@/utilities/filter/validation.ts';
-import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
+
 import type { FilterFieldDefinition } from '@/types/filter.ts';
+import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
+import { fieldLabel, formatFilterValue, tokenPhrase } from '@/utilities/filter/formatting.ts';
+import { getValueEditorKind, OPERATOR_LABELS } from '@/utilities/filter/operators.ts';
+import type { FilterValidationIssue, TokenSegment } from '@/utilities/filter/validation.ts';
 
 type SegmentHandler = (segment: TokenSegment, anchor: HTMLElement) => void;
 

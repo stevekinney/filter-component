@@ -1,7 +1,9 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { queryTokens, setup as renderFilter } from './filter-test-setup.tsx';
+
 import type { FilterList } from '@/types/filter.ts';
+
+import { queryTokens, setup as renderFilter } from './filter-test-setup.tsx';
 
 const TWO_FILTERS: FilterList = [
   {

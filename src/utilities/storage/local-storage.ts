@@ -1,4 +1,5 @@
 import { SAVED_VIEWS_STORAGE_KEY } from '@/utilities/filter/saved-views.ts';
+
 import type { SavedViewsStorage } from './saved-views-storage.ts';
 
 /** Default saved-view persistence using the page's local storage. */

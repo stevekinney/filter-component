@@ -1,7 +1,9 @@
 import { z } from 'zod';
+
+import type { FilterFieldDefinition } from '@/types/filter.ts';
+
 import { OPERATORS_BY_TYPE } from './operators.ts';
 import { stableSerialize } from './stable-serialize.ts';
-import type { FilterFieldDefinition } from '@/types/filter.ts';
 
 const key = z
   .string()
@@ -88,6 +90,7 @@ export function createFilterFieldRegistry(
     if (byKey.has(field.key)) {
       throw new TypeError(`Invalid fields: duplicate field key "${field.key}"`);
     }
+
     byKey.set(field.key, field);
   }
 

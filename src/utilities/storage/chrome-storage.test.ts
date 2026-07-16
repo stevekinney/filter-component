@@ -1,8 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
+
 import { SAVED_VIEWS_STORAGE_KEY } from '@/utilities/filter/saved-views.ts';
+import type { SavedView } from '@/utilities/filter/saved-views.ts';
+
 import { createChromeSavedViewsStorage } from './chrome-storage.ts';
 import type { ChromeStorageArea } from './chrome-storage.ts';
-import type { SavedView } from '@/utilities/filter/saved-views.ts';
 
 const VIEW: SavedView = {
   name: 'Open deals',

@@ -1,7 +1,8 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+
 import { Filter } from '../filter.tsx';
-import { FIELDS, addStringFilter, queryTokens, setup } from './filter-test-setup.tsx';
+import { addStringFilter, FIELDS, queryTokens, setup } from './filter-test-setup.tsx';
 
 describe('incomplete drafts', () => {
   it('keeps an abandoned mid-composition draft as a resumable incomplete-draft chip', async () => {

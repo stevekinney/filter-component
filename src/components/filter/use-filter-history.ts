@@ -1,4 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+
+import type { FilterGroup } from '@/types/filter.ts';
 import {
   EMPTY_FILTER_EXPRESSION,
   filterExpression,
@@ -6,13 +8,12 @@ import {
   toFilterGroup,
 } from '@/utilities/filter/expression.ts';
 import type { FilterExpression } from '@/utilities/filter/expression.ts';
+import type { FilterFieldRegistry } from '@/utilities/filter/field-registry.ts';
+import { parseFilterGroup } from '@/utilities/filter/filter-schema.ts';
 import { filterHistoryReducer } from '@/utilities/filter/history.ts';
 import type { FilterHistory, FilterHistoryAction } from '@/utilities/filter/history.ts';
-import { parseFilterGroup } from '@/utilities/filter/filter-schema.ts';
 import { stableSerialize } from '@/utilities/filter/stable-serialize.ts';
 import { getFilterValidationIssue } from '@/utilities/filter/validation.ts';
-import type { FilterFieldRegistry } from '@/utilities/filter/field-registry.ts';
-import type { FilterGroup } from '@/types/filter.ts';
 
 type UseFilterHistoryResult = {
   history: FilterHistory;

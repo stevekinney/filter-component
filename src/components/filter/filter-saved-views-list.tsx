@@ -1,11 +1,12 @@
 import { Check, Trash2 } from 'lucide-react';
 import { memo } from 'react';
 import type { Dispatch, KeyboardEvent } from 'react';
+
+import type { FilterCondition, FilterFieldDefinition, FilterGroup } from '@/types/filter.ts';
 import { fieldLabel } from '@/utilities/filter/formatting.ts';
 import { savedViewKey } from '@/utilities/filter/saved-views.ts';
 import type { SavedView } from '@/utilities/filter/saved-views.ts';
 import { stepIndex } from '@/utilities/list-navigation.ts';
-import type { FilterCondition, FilterFieldDefinition, FilterGroup } from '@/types/filter.ts';
 
 function leafConditions(group: FilterGroup): FilterCondition[] {
   return group.conditions.flatMap((member) =>

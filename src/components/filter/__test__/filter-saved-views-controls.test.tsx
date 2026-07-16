@@ -1,6 +1,12 @@
-import type { ComponentProps } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
+import type { ComponentProps } from 'react';
 import { describe, expect, it, vi } from 'vitest';
+
+import type { FilterFieldDefinition } from '@/types/filter.ts';
+import { savedViewKey } from '@/utilities/filter/saved-views.ts';
+import type { SavedView } from '@/utilities/filter/saved-views.ts';
+
+import { SavedViewsControls } from '../filter-saved-views.tsx';
 
 const savedViewDerivationProbes = vi.hoisted(() => ({
   savedViewKey: vi.fn(),
@@ -16,11 +22,6 @@ vi.mock('@/utilities/filter/saved-views.ts', async (importOriginal) => {
     },
   };
 });
-
-import { SavedViewsControls } from '../filter-saved-views.tsx';
-import { savedViewKey } from '@/utilities/filter/saved-views.ts';
-import type { SavedView } from '@/utilities/filter/saved-views.ts';
-import type { FilterFieldDefinition } from '@/types/filter.ts';
 
 const FIELDS = [
   { key: 'name', label: 'Name', type: 'string' },

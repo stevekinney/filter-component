@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
+
+import type { FilterCombinator } from '@/types/filter.ts';
+
+import type { FilterExpression } from './expression.ts';
+import type { FilterEntry } from './filter-entry.ts';
 import { filterHistoryReducer } from './history.ts';
 import type { FilterHistory } from './history.ts';
-import type { FilterEntry } from './filter-entry.ts';
-import type { FilterExpression } from './expression.ts';
-import type { FilterCombinator } from '@/types/filter.ts';
 
 const nameFilter: FilterEntry = {
   id: 'a',

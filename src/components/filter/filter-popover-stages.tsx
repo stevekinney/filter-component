@@ -1,17 +1,19 @@
 import { Check, Square, SquareCheck, X } from 'lucide-react';
 import { memo } from 'react';
 import type { KeyboardEvent } from 'react';
+
+import type { FilterFieldDefinition } from '@/types/filter.ts';
+import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
 import { fieldLabel } from '@/utilities/filter/formatting.ts';
 import {
-  OPERATOR_LABELS,
   booleanChoicesForField,
+  OPERATOR_LABELS,
   operatorsForField,
 } from '@/utilities/filter/operators.ts';
 import { clampIndex, stepIndex } from '@/utilities/list-navigation.ts';
+
 import { PopoverValidationError } from './filter-popover-error.tsx';
 import type { ActiveFilterEditorState, FilterPopoverProps } from './filter-popover.tsx';
-import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
-import type { FilterFieldDefinition } from '@/types/filter.ts';
 import { useActiveOptionScroll } from './use-active-option-scroll.ts';
 
 function buildOperatorOrBooleanChoices(

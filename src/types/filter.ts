@@ -1,4 +1,5 @@
 import type { ComponentPropsWithRef } from 'react';
+
 import type { SavedViewsStorage } from '@/utilities/storage/saved-views-storage.ts';
 
 /**

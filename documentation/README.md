@@ -145,6 +145,7 @@ import {
   type FilterFieldDefinition,
   type FilterGroup,
 } from '@/components/filter/index.ts';
+
 import '@/components/filter/styles/filter-component.css';
 ```
 
@@ -1066,6 +1067,7 @@ Import the stylesheet once in the document that renders the component:
 
 ```tsx
 import { Filter } from '@/components/filter/index.ts';
+
 import '@/components/filter/styles/filter-component.css';
 ```
 
@@ -1079,6 +1081,7 @@ In this Vite project, `?url` provides the built stylesheet URL:
 
 ```tsx
 import { createRoot } from 'react-dom/client';
+
 import { Filter } from '@/components/filter/index.ts';
 import filterStylesheetUrl from '@/components/filter/styles/filter-component.css?url';
 

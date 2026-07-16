@@ -1,5 +1,6 @@
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+
 import { addStringFilter, queryTokens, setup } from './filter-test-setup.tsx';
 
 describe('undo and redo', () => {

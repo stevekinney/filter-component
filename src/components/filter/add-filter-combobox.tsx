@@ -1,4 +1,5 @@
 import type { ChangeEvent, KeyboardEvent, RefObject } from 'react';
+
 import type { FilterFieldDefinition } from '@/types/filter.ts';
 
 type AddFilterComboboxProps = {

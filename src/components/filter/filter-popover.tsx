@@ -1,18 +1,20 @@
 import type { ReactNode } from 'react';
+
+import type { FilterFieldDefinition, FilterOperator } from '@/types/filter.ts';
+import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
 import { fieldLabel } from '@/utilities/filter/formatting.ts';
-import { OPERATOR_LABELS, getValueEditorKind } from '@/utilities/filter/operators.ts';
+import { getValueEditorKind, OPERATOR_LABELS } from '@/utilities/filter/operators.ts';
 import type { BooleanChoice } from '@/utilities/filter/operators.ts';
-import { FilterValueEditor } from './filter-value-editor.tsx';
+import type { ValueDraft } from '@/utilities/filter/value-drafts.ts';
+
+import { activeEditorSegment } from './filter-editor-state.ts';
+import type { FilterEditorState } from './filter-editor-state.ts';
 import {
   FieldSelectionStage,
   MultipleChoiceStage,
   SingleChoiceStage,
 } from './filter-popover-stages.tsx';
-import { activeEditorSegment } from './filter-editor-state.ts';
-import type { FilterEditorState } from './filter-editor-state.ts';
-import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
-import type { ValueDraft } from '@/utilities/filter/value-drafts.ts';
-import type { FilterFieldDefinition, FilterOperator } from '@/types/filter.ts';
+import { FilterValueEditor } from './filter-value-editor.tsx';
 import { useNativePopover } from './use-native-popover.ts';
 
 export type ActiveFilterEditorState = Exclude<FilterEditorState, { stage: 'idle' }>;

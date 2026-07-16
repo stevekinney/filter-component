@@ -1,12 +1,14 @@
 import { memo } from 'react';
+
+import type { FilterFieldDefinition } from '@/types/filter.ts';
 import { describeAndRuns } from '@/utilities/filter/expression.ts';
+import type { FilterExpression } from '@/utilities/filter/expression.ts';
+import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
 import { getFilterValidationIssue } from '@/utilities/filter/validation.ts';
+import type { TokenSegment } from '@/utilities/filter/validation.ts';
+
 import { FilterBracket, FilterJoiner } from './filter-expression-controls.tsx';
 import { FilterToken } from './filter-token.tsx';
-import type { TokenSegment } from '@/utilities/filter/validation.ts';
-import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
-import type { FilterExpression } from '@/utilities/filter/expression.ts';
-import type { FilterFieldDefinition } from '@/types/filter.ts';
 
 type FilterTokenListProps = {
   expression: FilterExpression;

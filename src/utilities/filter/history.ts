@@ -1,7 +1,7 @@
 import { EMPTY_FILTER_EXPRESSION, removeConditionAt } from './expression.ts';
-import { stableSerialize } from './stable-serialize.ts';
-import type { FilterEntry } from './filter-entry.ts';
 import type { FilterExpression } from './expression.ts';
+import type { FilterEntry } from './filter-entry.ts';
+import { stableSerialize } from './stable-serialize.ts';
 
 type FilterAction =
   | { type: 'add'; filter: FilterEntry }
@@ -42,6 +42,7 @@ function filterExpressionReducer(
       const index = expression.conditions.findIndex((filter) => filter.id === action.id);
 
       if (index === -1) return expression;
+
       if (filtersEqual(expression.conditions[index], action.filter)) {
         return expression;
       }
@@ -116,6 +117,7 @@ export function filterHistoryReducer(
       const present = filterExpressionReducer(history.present, action);
 
       if (present === history.present) return history;
+
       return {
         past: [...history.past, history.present],
         present,

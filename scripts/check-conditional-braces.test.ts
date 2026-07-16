@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { findConditionalBraceViolations } from './check-conditional-braces.ts';
 
 describe('findConditionalBraceViolations', () => {
