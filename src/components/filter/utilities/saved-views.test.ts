@@ -71,6 +71,43 @@ describe('parseSavedViews', () => {
     };
     expect(parseSavedViews([view])).toEqual([view]);
   });
+
+  it('round-trips stable values for multiple-value enum conditions', () => {
+    const view: SavedView = {
+      name: 'Assigned deals',
+      group: {
+        combinator: 'and',
+        conditions: [
+          {
+            fieldKey: 'assignedTo',
+            type: 'enum',
+            operator: 'containsAll',
+            value: ['person-1', 'person-2'],
+          },
+        ],
+      },
+    };
+
+    expect(parseSavedViews([view])).toEqual([view]);
+    expect(
+      parseSavedViews([
+        {
+          ...view,
+          group: {
+            combinator: 'and',
+            conditions: [
+              {
+                fieldKey: 'assignedTo',
+                type: 'enum',
+                operator: 'containsAll',
+                value: [{ value: 'person-1', label: 'Ada Lovelace' }],
+              },
+            ],
+          },
+        },
+      ]),
+    ).toEqual([]);
+  });
 });
 
 describe('nested groups', () => {

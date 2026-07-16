@@ -2,7 +2,7 @@ import type { FilterCondition, FilterOperator } from '@filter/types.ts';
 import type { FilterFieldRegistry } from '@filter/utilities/field-registry.ts';
 import { createFilterEntry } from '@filter/utilities/filter-entry.ts';
 import { filterConditionSchema } from '@filter/utilities/filter-schema.ts';
-import { fieldLabel, tokenPhrase } from '@filter/utilities/formatting.ts';
+import { enumValueLabel, fieldLabel, tokenPhrase } from '@filter/utilities/formatting.ts';
 import type { FilterHistory, FilterHistoryAction } from '@filter/utilities/history.ts';
 import { operatorsForField } from '@filter/utilities/operators.ts';
 import { createFilterCondition, getFilterValidationIssue } from '@filter/utilities/validation.ts';
@@ -128,7 +128,7 @@ export function createFilterEditorCommittedCommands({
         filter: candidate,
       })
     ) {
-      announce(`${value} removed from ${fieldLabel(field)} filter`);
+      announce(`${enumValueLabel(field, value)} removed from ${fieldLabel(field)} filter`);
     }
   };
 

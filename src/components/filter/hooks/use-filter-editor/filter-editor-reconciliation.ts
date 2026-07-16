@@ -1,5 +1,6 @@
 import type { FilterCondition, FilterFieldDefinition, FilterOperator } from '@filter/types.ts';
 import type { FilterFieldRegistry } from '@filter/utilities/field-registry.ts';
+import { enumOptionsForField } from '@filter/utilities/field-registry.ts';
 import { createFilterEntry } from '@filter/utilities/filter-entry.ts';
 import type { FilterEntry } from '@filter/utilities/filter-entry.ts';
 import {
@@ -28,12 +29,15 @@ export function fieldActiveIndex(registry: FilterFieldRegistry, key: string): nu
 }
 
 export function enumActiveIndex(
-  options: readonly string[] | undefined,
+  field: FilterFieldDefinition,
   draft: ValueDraft,
   kind: ValueEditorKind,
 ): number {
-  return kind === 'enumSingle' && draft.kind === 'scalar'
-    ? Math.max(0, (options ?? []).indexOf(draft.input))
+  return field.type === 'enum' && kind === 'enumSingle' && draft.kind === 'scalar'
+    ? Math.max(
+        0,
+        enumOptionsForField(field).findIndex((option) => option.value === draft.input),
+      )
     : 0;
 }
 
@@ -59,15 +63,19 @@ function draftMatchesKind(draft: ValueDraft, kind: ValueEditorKind): boolean {
   return draft.kind === 'scalar';
 }
 
-function reconcileEnumDraft(draft: ValueDraft, options: readonly string[]): ValueDraft {
-  if (draft.kind === 'multiSelection') {
-    const selectedOptions = draft.selectedOptions.filter((option) => options.includes(option));
+function reconcileEnumDraft(draft: ValueDraft, field: FilterFieldDefinition<'enum'>): ValueDraft {
+  const optionValues = new Set(enumOptionsForField(field).map((option) => option.value));
 
-    return selectedOptions.length === draft.selectedOptions.length
+  if (draft.kind === 'multiSelection') {
+    const selectedOptionValues = draft.selectedOptionValues.filter((option) =>
+      optionValues.has(option),
+    );
+
+    return selectedOptionValues.length === draft.selectedOptionValues.length
       ? draft
-      : { ...draft, selectedOptions };
+      : { ...draft, selectedOptionValues };
   }
-  if (draft.kind === 'scalar' && draft.input !== '' && !options.includes(draft.input)) {
+  if (draft.kind === 'scalar' && draft.input !== '' && !optionValues.has(draft.input)) {
     return { ...draft, input: '' };
   }
   return draft;
@@ -75,7 +83,7 @@ function reconcileEnumDraft(draft: ValueDraft, options: readonly string[]): Valu
 
 /** Preserves enum selections that still exist after field definitions change. */
 function reconcileValueDraftForField(draft: ValueDraft, field: FilterFieldDefinition): ValueDraft {
-  return field.type === 'enum' ? reconcileEnumDraft(draft, field.options) : draft;
+  return field.type === 'enum' ? reconcileEnumDraft(draft, field) : draft;
 }
 
 type OperatorSelectionResolution =
@@ -173,7 +181,7 @@ function valueEditorForToken(
     operator: token.operator,
     draft: reconciledDraft,
     error: null,
-    activeIndex: enumActiveIndex(field.options, reconciledDraft, kind),
+    activeIndex: enumActiveIndex(field, reconciledDraft, kind),
   };
 }
 

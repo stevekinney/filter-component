@@ -25,6 +25,36 @@ describe('operator helpers', () => {
     expect(operatorsForField(narrowedField)).toBe(narrowedField.operators);
   });
 
+  it('uses cardinality-specific enum operator sets', () => {
+    const scalarField: FilterFieldDefinition<'enum'> = {
+      key: 'stage',
+      type: 'enum',
+      options: ['Lead'],
+    };
+    const multipleField: FilterFieldDefinition<'enum'> = {
+      key: 'assignedTo',
+      type: 'enum',
+      valueCardinality: 'multiple',
+      options: [{ value: 'person-1', label: 'Alex Rivera' }],
+    };
+
+    expect(operatorsForField(scalarField)).toEqual([
+      'equals',
+      'notEquals',
+      'in',
+      'notIn',
+      'isEmpty',
+      'isNotEmpty',
+    ]);
+    expect(operatorsForField(multipleField)).toEqual([
+      'containsAny',
+      'containsAll',
+      'containsNone',
+      'isEmpty',
+      'isNotEmpty',
+    ]);
+  });
+
   it('filters collapsed boolean choices through the allowed operators', () => {
     const allChoices = [
       { value: 'true', label: 'is true' },
@@ -65,6 +95,9 @@ describe('getValueEditorKind', () => {
     ['enum', 'equals', 'enumSingle'],
     ['enum', 'in', 'enumMulti'],
     ['enum', 'notIn', 'enumMulti'],
+    ['enum', 'containsAny', 'enumMulti'],
+    ['enum', 'containsAll', 'enumMulti'],
+    ['enum', 'containsNone', 'enumMulti'],
     ['date', 'on', 'date'],
     ['date', 'between', 'dateRange'],
     ['date', 'withinLast', 'duration'],

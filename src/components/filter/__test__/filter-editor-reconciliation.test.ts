@@ -107,7 +107,7 @@ describe('reconcileFilterEditor', () => {
           fieldKey: 'stage',
           fieldType: 'enum',
           operator: 'notIn',
-          draft: { kind: 'multiSelection', selectedOptions: ['Lead'] },
+          draft: { kind: 'multiSelection', selectedOptionValues: ['Lead'] },
         }),
         registry,
       ),
@@ -146,7 +146,7 @@ describe('reconcileFilterEditor', () => {
         fieldType: 'enum',
         operator: 'in',
       }),
-      { kind: 'multiSelection', selectedOptions: [] },
+      { kind: 'multiSelection', selectedOptionValues: [] },
     ],
     [
       'scalar',
@@ -174,11 +174,11 @@ describe('reconcileFilterEditor', () => {
       operator: 'in',
       draft: {
         kind: 'multiSelection',
-        selectedOptions: ['Lead', 'Removed'],
+        selectedOptionValues: ['Lead', 'Removed'],
       },
     });
     expect(reconcileFilterEditor(multi, registry)).toMatchObject({
-      draft: { kind: 'multiSelection', selectedOptions: ['Lead'] },
+      draft: { kind: 'multiSelection', selectedOptionValues: ['Lead'] },
       error: null,
       activeIndex: 0,
     });
@@ -202,6 +202,55 @@ describe('reconcileFilterEditor', () => {
       activeIndex: 0,
     });
     expect(reconcileFilterEditor(empty, registry)).toBe(empty);
+  });
+
+  it('preserves enum selections by value when labels change', () => {
+    const relabelledRegistry = createFilterFieldRegistry([
+      {
+        key: 'stage',
+        type: 'enum',
+        operators: ['in'],
+        options: [
+          { value: 'Lead', label: 'Qualified lead' },
+          { value: 'Won', label: 'Closed won' },
+        ],
+      },
+    ]);
+    const editor = valueEditor({
+      fieldKey: 'stage',
+      fieldType: 'enum',
+      operator: 'in',
+      draft: { kind: 'multiSelection', selectedOptionValues: ['Lead'] },
+      error: null,
+      activeIndex: 0,
+    });
+
+    expect(reconcileFilterEditor(editor, relabelledRegistry)).toBe(editor);
+  });
+
+  it('returns to operator selection when enum cardinality changes', () => {
+    const multipleRegistry = createFilterFieldRegistry([
+      {
+        key: 'stage',
+        type: 'enum',
+        valueCardinality: 'multiple',
+        options: [{ value: 'Lead', label: 'Lead' }],
+      },
+    ]);
+    const editor = valueEditor({
+      fieldKey: 'stage',
+      fieldType: 'enum',
+      operator: 'in',
+      draft: { kind: 'multiSelection', selectedOptionValues: ['Lead'] },
+    });
+
+    expect(reconcileFilterEditor(editor, multipleRegistry)).toEqual({
+      stage: 'operator',
+      filterId: null,
+      fieldKey: 'stage',
+      fieldType: 'enum',
+      activeIndex: 0,
+    });
   });
 });
 
@@ -244,7 +293,7 @@ describe('reconcileIncompleteDraft', () => {
           fieldKey: 'stage',
           fieldType: 'enum',
           operator: 'notIn',
-          draft: { kind: 'multiSelection', selectedOptions: ['Lead'] },
+          draft: { kind: 'multiSelection', selectedOptionValues: ['Lead'] },
         },
         registry,
       ),
@@ -263,12 +312,12 @@ describe('reconcileIncompleteDraft', () => {
       operator: 'in',
       draft: {
         kind: 'multiSelection',
-        selectedOptions: ['Lead', 'Removed'],
+        selectedOptionValues: ['Lead', 'Removed'],
       },
     };
     expect(reconcileIncompleteDraft(pruned, registry)).toEqual({
       ...pruned,
-      draft: { kind: 'multiSelection', selectedOptions: ['Lead'] },
+      draft: { kind: 'multiSelection', selectedOptionValues: ['Lead'] },
     });
 
     const stringDraft: IncompleteDraft = {

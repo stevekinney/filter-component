@@ -116,7 +116,7 @@ export const filterConditionSchema: z.ZodType<FilterCondition> = z.union([
     .object({
       fieldKey: nonblankString,
       type: z.literal('enum'),
-      operator: z.enum(['in', 'notIn']),
+      operator: z.enum(['in', 'notIn', 'containsAny', 'containsAll', 'containsNone']),
       value: enumValues,
     })
     .strict(),

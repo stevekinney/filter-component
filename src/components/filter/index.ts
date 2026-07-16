@@ -7,6 +7,8 @@ export type { SavedViewsStorage } from '@filter/utilities/storage/saved-views-st
 export type {
   FilterCombinator,
   FilterCondition,
+  FilterEnumOption,
+  FilterEnumValueCardinality,
   FilterFieldDefinition,
   FilterFieldType,
   FilterGroup,

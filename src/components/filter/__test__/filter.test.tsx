@@ -348,6 +348,69 @@ describe('editing tokens', () => {
 });
 
 describe('enum pills', () => {
+  it('renders descriptor labels in drafts, pills, and accessible names while emitting values', async () => {
+    const { onChange, user, addFilterInput } = setup({
+      fields: [
+        {
+          key: 'assignee',
+          label: 'Assigned to',
+          type: 'enum',
+          valueCardinality: 'multiple',
+          options: [
+            { value: 'person-1', label: 'Ada Lovelace' },
+            { value: 'person-2', label: 'Grace Hopper' },
+          ],
+        },
+      ],
+    });
+    await user.click(addFilterInput);
+    await user.keyboard('ass{Enter}');
+    await user.click(screen.getByRole('option', { name: 'contains any of' }));
+    await user.click(screen.getByRole('option', { name: 'Ada Lovelace' }));
+    await user.click(screen.getByRole('option', { name: 'Grace Hopper' }));
+    expect(
+      screen.getByText('Ada Lovelace, Grace Hopper', {
+        selector: '.filter-draft-preview-value',
+      }),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Apply' }));
+
+    const token = screen.getByRole('group', {
+      name: 'Assigned to contains any of Ada Lovelace, Grace Hopper',
+    });
+    expect(
+      within(token).getByRole('button', { name: 'Remove Ada Lovelace from Assigned to filter' }),
+    ).toBeInTheDocument();
+    expect(onChange).toHaveBeenLastCalledWith(
+      {
+        combinator: 'and',
+        conditions: [
+          expect.objectContaining({
+            operator: 'containsAny',
+            value: ['person-1', 'person-2'],
+          }),
+        ],
+      },
+      expect.any(AbortController),
+    );
+
+    await user.click(
+      within(token).getByRole('button', {
+        name: 'Remove Ada Lovelace from Assigned to filter',
+      }),
+    );
+    expect(
+      screen.getByRole('group', { name: 'Assigned to contains any of Grace Hopper' }),
+    ).toBeInTheDocument();
+    expect(onChange).toHaveBeenLastCalledWith(
+      {
+        combinator: 'and',
+        conditions: [expect.objectContaining({ value: ['person-2'] })],
+      },
+      expect.any(AbortController),
+    );
+  });
+
   it('renders one pill per value with individual removal', async () => {
     const { onChange, user, addFilterInput } = setup();
     await user.click(addFilterInput);

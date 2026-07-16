@@ -4,6 +4,7 @@ import type { KeyboardEvent } from 'react';
 import { useActiveOptionScroll } from '@/utilities/hooks/use-active-option-scroll.ts';
 
 import type { FilterFieldDefinition } from '@filter/types.ts';
+import { enumOptionsForField } from '@filter/utilities/field-registry.ts';
 import { clampIndex, stepIndex } from '@filter/utilities/list-navigation.ts';
 
 import { PopoverValidationError } from './filter-popover-error.tsx';
@@ -32,25 +33,26 @@ export function MultipleChoiceStage(
     onCommitValue,
     onCancel,
   } = props;
-  const options = field.options ?? [];
-  const selectedOptions = state.draft.kind === 'multiSelection' ? state.draft.selectedOptions : [];
+  const options = field.type === 'enum' ? enumOptionsForField(field) : [];
+  const selectedOptionValues =
+    state.draft.kind === 'multiSelection' ? state.draft.selectedOptionValues : [];
   const activeIndex = clampIndex(state.activeIndex, options.length);
-  const activeOptionKey = options[activeIndex];
+  const activeOptionKey = options[activeIndex]?.value;
   const listRef = useActiveOptionScroll(activeIndex, activeOptionKey);
   const errorId = `${idPrefix}-error`;
   const describedBy = state.error ? errorId : undefined;
 
-  const toggleChoice = (option: string) => {
-    const nextSelectedOptions = selectedOptions.includes(option)
-      ? selectedOptions.filter((candidate) => candidate !== option)
-      : [...selectedOptions, option];
+  const toggleChoice = (optionValue: string) => {
+    const nextSelectedOptionValues = selectedOptionValues.includes(optionValue)
+      ? selectedOptionValues.filter((candidate) => candidate !== optionValue)
+      : [...selectedOptionValues, optionValue];
 
     onChangeDraft({
       kind: 'multiSelection',
-      selectedOptions: nextSelectedOptions,
+      selectedOptionValues: nextSelectedOptionValues,
     });
 
-    onChangeActiveIndex(options.indexOf(option));
+    onChangeActiveIndex(options.findIndex((option) => option.value === optionValue));
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -68,7 +70,7 @@ export function MultipleChoiceStage(
       event.preventDefault();
       const active = options[activeIndex];
 
-      if (active !== undefined) toggleChoice(active);
+      if (active !== undefined) toggleChoice(active.value);
       return;
     }
 
@@ -101,17 +103,17 @@ export function MultipleChoiceStage(
       >
         {options.map((option, index) => (
           <div
-            key={option}
+            key={option.value}
             id={`${idPrefix}-option-${index}`}
             role="option"
-            aria-selected={selectedOptions.includes(option)}
+            aria-selected={selectedOptionValues.includes(option.value)}
             data-active={index === activeIndex ? '' : undefined}
             className="filter-popover-option"
-            onClick={() => toggleChoice(option)}
+            onClick={() => toggleChoice(option.value)}
             onMouseEnter={() => onChangeActiveIndex(index)}
           >
-            <ChoiceCheckbox checked={selectedOptions.includes(option)} />
-            <span className="filter-popover-option-label">{option}</span>
+            <ChoiceCheckbox checked={selectedOptionValues.includes(option.value)} />
+            <span className="filter-popover-option-label">{option.label}</span>
           </div>
         ))}
       </div>

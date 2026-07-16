@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Filter } from '@/components/filter/index.ts';
 import type { FilterFieldDefinition, FilterGroup } from '@/components/filter/index.ts';
 import { applyFilters } from '@/example/apply-filters.ts';
-import { DEAL_FILTER_FIELDS, DEALS, INITIAL_FILTERS } from '@/example/records.ts';
+import { ASSIGNEE_OPTIONS, DEAL_FILTER_FIELDS, DEALS, INITIAL_FILTERS } from '@/example/records.ts';
 import type { Deal } from '@/example/records.ts';
 
 import '@/components/filter/styles/filter-component.css';
@@ -93,6 +93,15 @@ function ActiveCell({ active }: { active: boolean | null }) {
   );
 }
 
+const ASSIGNEE_LABELS = new Map(
+  ASSIGNEE_OPTIONS.map((option) => [option.value, option.label] as const),
+);
+
+function AssignedToCell({ assignedTo }: { assignedTo: Deal['assignedTo'] }) {
+  if (assignedTo.length === 0) return <span className="example-muted">—</span>;
+  return assignedTo.map((person) => ASSIGNEE_LABELS.get(person.id) ?? person.id).join(', ');
+}
+
 function DealsTable({ filteredDeals }: { filteredDeals: Deal[] | null }) {
   if (!filteredDeals) return null;
   return (
@@ -104,6 +113,7 @@ function DealsTable({ filteredDeals }: { filteredDeals: Deal[] | null }) {
             <th>Deal value</th>
             <th>Active</th>
             <th>Stage</th>
+            <th>Assigned To</th>
             <th>Close date</th>
             <th>Last emailed</th>
           </tr>
@@ -124,6 +134,9 @@ function DealsTable({ filteredDeals }: { filteredDeals: Deal[] | null }) {
               </td>
               <td>
                 <StageBadge stage={deal.stage} />
+              </td>
+              <td>
+                <AssignedToCell assignedTo={deal.assignedTo} />
               </td>
               <td>{deal.closeDate ?? <span className="example-muted">—</span>}</td>
               <td>{deal.lastEmailed ?? <span className="example-muted">—</span>}</td>

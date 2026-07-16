@@ -4,7 +4,12 @@ import type { KeyboardEvent } from 'react';
 
 import type { FilterFieldDefinition } from '@filter/types.ts';
 import type { FilterEntry } from '@filter/utilities/filter-entry.ts';
-import { fieldLabel, formatFilterValue, tokenPhrase } from '@filter/utilities/formatting.ts';
+import {
+  enumValueLabel,
+  fieldLabel,
+  formatFilterValue,
+  tokenPhrase,
+} from '@filter/utilities/formatting.ts';
 import { getValueEditorKind, OPERATOR_LABELS } from '@filter/utilities/operators.ts';
 import type { FilterValidationIssue, TokenSegment } from '@filter/utilities/validation.ts';
 
@@ -123,6 +128,7 @@ function ValidationWarningButton({
 
 function EnumValuePills({
   values,
+  field,
   fieldLabelText,
   segmentClassName,
   disabled,
@@ -130,6 +136,7 @@ function EnumValuePills({
   onRemoveEnumValue,
 }: {
   values: string[];
+  field: FilterFieldDefinition | undefined;
   fieldLabelText: string;
   segmentClassName: string;
   disabled: boolean;
@@ -138,31 +145,35 @@ function EnumValuePills({
 }) {
   return (
     <span className={clsx(segmentClassName, 'filter-token-pills')}>
-      {values.map((value, index) => (
-        <span key={value} className="filter-token-pill">
-          <button
-            type="button"
-            tabIndex={-1}
-            disabled={disabled}
-            className="filter-token-pill-label"
-            data-token-segment={index === 0 ? 'value' : undefined}
-            title="Change values"
-            onClick={(event) => onOpenSegment('value', event.currentTarget)}
-          >
-            {value}
-          </button>
-          <button
-            type="button"
-            tabIndex={-1}
-            disabled={disabled}
-            className="filter-token-pill-remove"
-            aria-label={`Remove ${value} from ${fieldLabelText} filter`}
-            onClick={() => onRemoveEnumValue(value)}
-          >
-            <X aria-hidden="true" size={11} />
-          </button>
-        </span>
-      ))}
+      {values.map((value, index) => {
+        const label = enumValueLabel(field, value);
+
+        return (
+          <span key={value} className="filter-token-pill">
+            <button
+              type="button"
+              tabIndex={-1}
+              disabled={disabled}
+              className="filter-token-pill-label"
+              data-token-segment={index === 0 ? 'value' : undefined}
+              title="Change values"
+              onClick={(event) => onOpenSegment('value', event.currentTarget)}
+            >
+              {label}
+            </button>
+            <button
+              type="button"
+              tabIndex={-1}
+              disabled={disabled}
+              className="filter-token-pill-remove"
+              aria-label={`Remove ${label} from ${fieldLabelText} filter`}
+              onClick={() => onRemoveEnumValue(value)}
+            >
+              <X aria-hidden="true" size={11} />
+            </button>
+          </span>
+        );
+      })}
     </span>
   );
 }
@@ -188,10 +199,7 @@ function TokenValueSegment({
 
   if (!hasValue) return null;
 
-  const enumValues =
-    (filter.operator === 'in' || filter.operator === 'notIn') && Array.isArray(filter.value)
-      ? filter.value
-      : null;
+  const enumValues = filter.type === 'enum' && Array.isArray(filter.value) ? filter.value : null;
 
   return (
     <>
@@ -199,6 +207,7 @@ function TokenValueSegment({
       {enumValues ? (
         <EnumValuePills
           values={enumValues}
+          field={field}
           fieldLabelText={fieldLabelText}
           segmentClassName={segmentClassName}
           disabled={disabled}
@@ -215,7 +224,7 @@ function TokenValueSegment({
           title="Change value"
           onClick={(event) => onOpenSegment('value', event.currentTarget)}
         >
-          {formatFilterValue(filter) || '…'}
+          {formatFilterValue(filter, field) || '…'}
         </button>
       )}
     </>

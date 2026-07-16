@@ -26,6 +26,16 @@ const ENUM_FIELD = {
   options: ['Lead', 'Won'],
 } as const satisfies FilterFieldDefinition;
 
+const DESCRIPTOR_ENUM_FIELD = {
+  key: 'assignee',
+  label: 'Assigned to',
+  type: 'enum',
+  options: [
+    { value: 'person-1', label: 'Ada Lovelace' },
+    { value: 'person-2', label: 'Grace Hopper' },
+  ],
+} as const satisfies FilterFieldDefinition;
+
 const STRING_ENTRY: FilterEntry = {
   id: 'condition-1',
   fieldKey: 'name',
@@ -75,6 +85,39 @@ function popoverProps(
 }
 
 describe('SingleChoiceStage', () => {
+  it('renders descriptor labels while selecting their stable values', () => {
+    const state: Extract<FilterEditorState, { stage: 'value' }> = {
+      stage: 'value',
+      filterId: null,
+      fieldKey: DESCRIPTOR_ENUM_FIELD.key,
+      fieldType: 'enum',
+      operator: 'equals',
+      draft: { kind: 'scalar', input: 'person-1' },
+      error: null,
+      activeIndex: 1,
+    };
+    const props = popoverProps(state);
+    render(
+      <SingleChoiceStage
+        {...props}
+        state={state}
+        heading="Assigned to is"
+        field={DESCRIPTOR_ENUM_FIELD}
+      />,
+    );
+
+    const list = screen.getByRole('listbox', { name: 'Assigned to is' });
+    expect(within(list).getByRole('option', { name: 'Ada Lovelace' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    fireEvent.keyDown(list, { key: 'Enter' });
+    fireEvent.click(within(list).getByRole('option', { name: 'Ada Lovelace' }));
+
+    expect(props.onPickSingleValue).toHaveBeenNthCalledWith(1, 'person-2');
+    expect(props.onPickSingleValue).toHaveBeenNthCalledWith(2, 'person-1');
+  });
+
   it('renders normal operators, marks the committed choice, and navigates/selects', () => {
     const props = popoverProps(operatorState(STRING_FIELD));
     render(

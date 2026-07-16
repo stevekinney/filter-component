@@ -5,6 +5,11 @@ import type {
   FilterOperatorsByFieldType,
 } from '@filter/types.ts';
 
+export const ENUM_OPERATORS_BY_VALUE_CARDINALITY = {
+  single: ['equals', 'notEquals', 'in', 'notIn', 'isEmpty', 'isNotEmpty'],
+  multiple: ['containsAny', 'containsAll', 'containsNone', 'isEmpty', 'isNotEmpty'],
+} as const;
+
 /** Default operator set per field type, in menu order. */
 export const OPERATORS_BY_TYPE = {
   string: [
@@ -29,7 +34,7 @@ export const OPERATORS_BY_TYPE = {
     'isNotEmpty',
   ],
   boolean: ['equals', 'isEmpty', 'isNotEmpty'],
-  enum: ['equals', 'notEquals', 'in', 'notIn', 'isEmpty', 'isNotEmpty'],
+  enum: ENUM_OPERATORS_BY_VALUE_CARDINALITY.single,
   date: [
     'on',
     'notOn',
@@ -48,16 +53,17 @@ export const OPERATORS_BY_TYPE = {
 
 type Equal<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
 
+type OperatorMenuValue<T extends FilterFieldType> = T extends 'enum'
+  ? (typeof ENUM_OPERATORS_BY_VALUE_CARDINALITY)[keyof typeof ENUM_OPERATORS_BY_VALUE_CARDINALITY][number]
+  : (typeof OPERATORS_BY_TYPE)[T][number];
+
 // Element typing alone catches an extra operator in a menu above but not a
 // missing one, so this set-equality check closes that gap: it fails to
 // compile — naming the drifted field type — the moment a menu and
 // `FilterOperatorsByFieldType` disagree on the exact operator set.
 type MISSING_OR_EXTRA_OPERATOR_FOR<
   Completeness extends Record<FilterFieldType, true> = {
-    [T in FilterFieldType]: Equal<
-      (typeof OPERATORS_BY_TYPE)[T][number],
-      FilterOperatorsByFieldType[T]
-    >;
+    [T in FilterFieldType]: Equal<OperatorMenuValue<T>, FilterOperatorsByFieldType[T]>;
   },
 > = Completeness;
 
@@ -79,6 +85,9 @@ export const OPERATOR_LABELS: Record<FilterOperator, string> = {
   between: 'between',
   in: 'is any of',
   notIn: 'is none of',
+  containsAny: 'contains any of',
+  containsAll: 'contains all of',
+  containsNone: 'contains none of',
   on: 'is on',
   notOn: 'is not on',
   before: 'is before',
@@ -117,6 +126,10 @@ export function isValuelessOperator(
 }
 
 export function operatorsForField(field: FilterFieldDefinition): readonly FilterOperator[] {
+  if (field.type === 'enum' && field.operators === undefined) {
+    return ENUM_OPERATORS_BY_VALUE_CARDINALITY[field.valueCardinality ?? 'single'];
+  }
+
   return field.operators ?? OPERATORS_BY_TYPE[field.type];
 }
 
@@ -147,7 +160,7 @@ export function getValueEditorKind(
     case 'boolean':
       return 'boolean';
     case 'enum':
-      return operator === 'in' || operator === 'notIn' ? 'enumMulti' : 'enumSingle';
+      return operator === 'equals' || operator === 'notEquals' ? 'enumSingle' : 'enumMulti';
     case 'date':
       if (operator === 'withinLast') return 'duration';
       return operator === 'between' ? 'dateRange' : 'date';

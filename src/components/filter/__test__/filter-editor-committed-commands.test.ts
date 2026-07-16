@@ -152,6 +152,38 @@ describe('createFilterEditorCommittedCommands', () => {
     expect(announce).toHaveBeenCalledWith('Lead removed from Stage filter');
   });
 
+  it('announces an enum option label while removing its stable value', () => {
+    currentFieldRegistry = createFilterFieldRegistry([
+      {
+        key: 'assignedTo',
+        label: 'Assigned to',
+        type: 'enum',
+        valueCardinality: 'multiple',
+        options: [
+          { value: 'person-1', label: 'Ada Lovelace' },
+          { value: 'person-2', label: 'Grace Hopper' },
+        ],
+      },
+    ]);
+    history = {
+      past: [],
+      present: expression([
+        {
+          id: 'assigned',
+          fieldKey: 'assignedTo',
+          type: 'enum',
+          operator: 'containsAny',
+          value: ['person-1', 'person-2'],
+        },
+      ]),
+      future: [],
+    };
+
+    commands().removeEnumValue('assigned', 'person-1');
+
+    expect(announce).toHaveBeenCalledWith('Ada Lovelace removed from Assigned to filter');
+  });
+
   it('guards non-enum and rejected enum updates', () => {
     history = { past: [], present: expression([name]), future: [] };
     commands().removeEnumValue('missing', 'Lead');

@@ -138,6 +138,58 @@ test.describe('composing new filters', () => {
     await expect(popover(page).getByRole('alert')).toHaveText('Choose at least one option');
   });
 
+  test('multiple-value enum: contains any selected assignee', async ({ page }) => {
+    await pickField(page, 'Assigned To');
+    await pickOption(page, 'contains any of');
+    await pickOption(page, 'Ada Lovelace');
+    await pickOption(page, 'Grace Hopper');
+    await applyValue(page);
+    await expect(
+      filterToken(page, 'Assigned To contains any of Ada Lovelace, Grace Hopper'),
+    ).toBeVisible();
+    await expect(resultCount(page)).toHaveText('7 of 12 deals');
+    await expect(onChangePayloadPane(page)).toContainText('"person-ada"');
+    await expect(onChangePayloadPane(page)).not.toContainText('"firstName"');
+  });
+
+  test('multiple-value enum: contains all selected assignees', async ({ page }) => {
+    await pickField(page, 'Assigned To');
+    await pickOption(page, 'contains all of');
+    await pickOption(page, 'Ada Lovelace');
+    await pickOption(page, 'Grace Hopper');
+    await applyValue(page);
+    await expect(
+      filterToken(page, 'Assigned To contains all of Ada Lovelace, Grace Hopper'),
+    ).toBeVisible();
+    await expect(resultCount(page)).toHaveText('2 of 12 deals');
+    await expect(
+      page.getByRole('cell', { name: 'Ada Lovelace, Grace Hopper', exact: true }),
+    ).toBeVisible();
+    await expect(page.locator('.example-table tbody tr')).toHaveText([
+      /Acme Corp renewal/,
+      /Umbrella Health trial/,
+    ]);
+  });
+
+  test('multiple-value enum: contains none includes deals with no assignees', async ({ page }) => {
+    await pickField(page, 'Assigned To');
+    await pickOption(page, 'contains none of');
+    await pickOption(page, 'Ada Lovelace');
+    await pickOption(page, 'Grace Hopper');
+    await applyValue(page);
+    await expect(
+      filterToken(page, 'Assigned To contains none of Ada Lovelace, Grace Hopper'),
+    ).toBeVisible();
+    await expect(resultCount(page)).toHaveText('5 of 12 deals');
+  });
+
+  test('multiple-value enum: an empty assignment array is empty', async ({ page }) => {
+    await pickField(page, 'Assigned To');
+    await pickOption(page, 'is empty');
+    await expect(filterToken(page, 'Assigned To is empty')).toBeVisible();
+    await expect(resultCount(page)).toHaveText('3 of 12 deals');
+  });
+
   test('date: before a chosen day', async ({ page }) => {
     await pickField(page, 'Close date');
     await pickOption(page, 'is before');

@@ -168,7 +168,7 @@ export function useFilterEditor({
         operator,
         draft,
         error: null,
-        activeIndex: enumActiveIndex(field.options, draft, kind),
+        activeIndex: enumActiveIndex(field, draft, kind),
       },
     });
     scheduleFocus({ type: 'autofocus' });

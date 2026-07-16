@@ -21,6 +21,17 @@ const ENUM_FIELD = {
   options: ['Lead', 'Won'],
 } as const satisfies FilterFieldDefinition;
 
+const DESCRIPTOR_ENUM_FIELD = {
+  key: 'assignee',
+  label: 'Assigned to',
+  type: 'enum',
+  valueCardinality: 'multiple',
+  options: [
+    { value: 'person-1', label: 'Ada Lovelace' },
+    { value: 'person-2', label: 'Grace Hopper' },
+  ],
+} as const satisfies FilterFieldDefinition;
+
 const STRING_ENTRY: FilterEntry = {
   id: 'condition-1',
   fieldKey: 'name',
@@ -74,7 +85,7 @@ describe('MultipleChoiceStage', () => {
   function renderMultiple(
     state = valueState(ENUM_FIELD, 'in', {
       kind: 'multiSelection',
-      selectedOptions: ['Lead'],
+      selectedOptionValues: ['Lead'],
     }),
   ) {
     const props = popoverProps(state);
@@ -103,11 +114,11 @@ describe('MultipleChoiceStage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(props.onChangeDraft).toHaveBeenCalledWith({
       kind: 'multiSelection',
-      selectedOptions: [],
+      selectedOptionValues: [],
     });
     expect(props.onChangeDraft).toHaveBeenCalledWith({
       kind: 'multiSelection',
-      selectedOptions: ['Lead', 'Won'],
+      selectedOptionValues: ['Lead', 'Won'],
     });
     expect(props.onCommitValue).toHaveBeenCalledTimes(2);
     expect(props.onCancel).toHaveBeenCalledOnce();
@@ -117,7 +128,7 @@ describe('MultipleChoiceStage', () => {
     const state = valueState(
       ENUM_FIELD,
       'in',
-      { kind: 'multiSelection', selectedOptions: [] },
+      { kind: 'multiSelection', selectedOptionValues: [] },
       { error: 'Select at least one option' },
     );
     renderMultiple(state);
@@ -125,5 +136,39 @@ describe('MultipleChoiceStage', () => {
     const describedBy = list.getAttribute('aria-describedby');
     expect(describedBy).toBeTruthy();
     expect(screen.getByRole('alert')).toHaveAttribute('id', describedBy);
+  });
+
+  it('renders descriptor labels while toggling stable values', () => {
+    const state = valueState(DESCRIPTOR_ENUM_FIELD, 'containsAny', {
+      kind: 'multiSelection',
+      selectedOptionValues: ['person-1'],
+    });
+    const props = popoverProps(state);
+    render(
+      <MultipleChoiceStage
+        {...props}
+        state={state}
+        heading="Assigned to contains any of"
+        field={DESCRIPTOR_ENUM_FIELD}
+      />,
+    );
+
+    const list = screen.getByRole('listbox', { name: 'Assigned to contains any of' });
+    const ada = screen.getByRole('option', { name: 'Ada Lovelace' });
+    const grace = screen.getByRole('option', { name: 'Grace Hopper' });
+    expect(ada).toHaveAttribute('aria-selected', 'true');
+    expect(grace).toHaveAttribute('aria-selected', 'false');
+
+    fireEvent.click(grace);
+    fireEvent.keyDown(list, { key: ' ' });
+
+    expect(props.onChangeDraft).toHaveBeenNthCalledWith(1, {
+      kind: 'multiSelection',
+      selectedOptionValues: ['person-1', 'person-2'],
+    });
+    expect(props.onChangeDraft).toHaveBeenNthCalledWith(2, {
+      kind: 'multiSelection',
+      selectedOptionValues: [],
+    });
   });
 });
