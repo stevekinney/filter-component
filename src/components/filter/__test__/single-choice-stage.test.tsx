@@ -58,6 +58,7 @@ function popoverProps(
     fieldResults: [STRING_FIELD, BOOLEAN_FIELD, ENUM_FIELD],
     editingFilter: STRING_ENTRY,
     idPrefix: 'popover',
+    anchorInvocation: 0,
     resolveAnchor: () => document.body,
     onBrowserDismiss: vi.fn(),
     onChangeQuery: vi.fn(),
@@ -196,5 +197,54 @@ describe('SingleChoiceStage', () => {
     stringOperators.splice(0);
     fireEvent.click(equalsOption);
     expect(stringProps.onSelectOperator).not.toHaveBeenCalled();
+  });
+
+  it('ignores a stale boolean selection left over from a different field', () => {
+    const staleEntry: FilterEntry = {
+      id: 'condition-1',
+      fieldKey: 'other-boolean',
+      type: 'boolean',
+      operator: 'equals',
+      value: false,
+    };
+    const props = popoverProps(operatorState(BOOLEAN_FIELD), {
+      editingFilter: staleEntry,
+    });
+    render(
+      <SingleChoiceStage
+        {...props}
+        state={operatorState(BOOLEAN_FIELD)}
+        heading="Active"
+        field={BOOLEAN_FIELD}
+      />,
+    );
+    expect(screen.getByRole('option', { name: 'is false' })).toHaveAttribute(
+      'aria-selected',
+      'false',
+    );
+  });
+
+  it('ignores a stale operator left over from a field whose type has changed', () => {
+    const staleEntry: FilterEntry = {
+      id: 'condition-1',
+      fieldKey: ENUM_FIELD.key,
+      type: 'string',
+      operator: 'isEmpty',
+    };
+    const props = popoverProps(operatorState(ENUM_FIELD), {
+      editingFilter: staleEntry,
+    });
+    render(
+      <SingleChoiceStage
+        {...props}
+        state={operatorState(ENUM_FIELD)}
+        heading="Stage"
+        field={ENUM_FIELD}
+      />,
+    );
+    expect(screen.getByRole('option', { name: 'is empty' })).toHaveAttribute(
+      'aria-selected',
+      'false',
+    );
   });
 });

@@ -17,6 +17,9 @@ export default defineConfig((configurationEnvironment) => {
         // run only through `test:compiler`, never through coverage.
         exclude: [
           ...configDefaults.exclude,
+          // Claude Code creates scratch git worktrees under `.claude/worktrees`;
+          // their duplicated `src` trees must never be collected as tests.
+          '.claude/**',
           'end-to-end/**',
           ...(isCompilerTest ? [] : ['src/**/*.compiler.test.tsx']),
         ],

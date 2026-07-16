@@ -209,4 +209,32 @@ describe('focus restoration', () => {
       showPopover.mockRestore();
     }
   });
+
+  it('reanchors when a different pill on the same value segment is clicked', async () => {
+    const STAGE_FILTER: FilterList = [
+      {
+        fieldKey: 'stage',
+        type: 'enum',
+        operator: 'in',
+        value: ['Lead', 'Contacted'],
+      },
+    ];
+    const showPopover = vi.spyOn(HTMLElement.prototype, 'showPopover');
+
+    try {
+      const { user } = setup(STAGE_FILTER);
+      const leadPill = screen.getByRole('button', { name: 'Lead' });
+      const contactedPill = screen.getByRole('button', { name: 'Contacted' });
+
+      await user.click(leadPill);
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(showPopover).toHaveBeenLastCalledWith({ source: leadPill });
+
+      fireEvent.click(contactedPill);
+      expect(screen.getAllByRole('dialog')).toHaveLength(1);
+      expect(showPopover).toHaveBeenLastCalledWith({ source: contactedPill });
+    } finally {
+      showPopover.mockRestore();
+    }
+  });
 });

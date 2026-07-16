@@ -55,6 +55,7 @@ function popoverProps(state: FilterEditorState): FilterPopoverProps {
     fieldResults: [STRING_FIELD, ENUM_FIELD],
     editingFilter: STRING_ENTRY,
     idPrefix: 'popover',
+    anchorInvocation: 0,
     resolveAnchor: () => document.body,
     onBrowserDismiss: vi.fn(),
     onChangeQuery: vi.fn(),
@@ -110,5 +111,19 @@ describe('MultipleChoiceStage', () => {
     });
     expect(props.onCommitValue).toHaveBeenCalledTimes(2);
     expect(props.onCancel).toHaveBeenCalledOnce();
+  });
+
+  it('links the listbox to the validation error message', () => {
+    const state = valueState(
+      ENUM_FIELD,
+      'in',
+      { kind: 'multiSelection', selectedOptions: [] },
+      { error: 'Select at least one option' },
+    );
+    renderMultiple(state);
+    const list = screen.getByRole('listbox', { name: 'Stage is any of' });
+    const describedBy = list.getAttribute('aria-describedby');
+    expect(describedBy).toBeTruthy();
+    expect(screen.getByRole('alert')).toHaveAttribute('id', describedBy);
   });
 });

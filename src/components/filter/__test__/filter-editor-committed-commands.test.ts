@@ -137,6 +137,21 @@ describe('createFilterEditorCommittedCommands', () => {
     });
   });
 
+  it('allows removing one stale enum value while another stale value remains', () => {
+    history = {
+      past: [],
+      present: expression([{ ...stage, value: ['Lead', 'Removed'] }]),
+      future: [],
+    };
+    commands().removeEnumValue('stage', 'Lead');
+    expect(applyFilterHistoryAction).toHaveBeenCalledWith({
+      type: 'update',
+      id: 'stage',
+      filter: expect.objectContaining({ value: ['Removed'], id: 'stage' }),
+    });
+    expect(announce).toHaveBeenCalledWith('Lead removed from Stage filter');
+  });
+
   it('guards non-enum and rejected enum updates', () => {
     history = { past: [], present: expression([name]), future: [] };
     commands().removeEnumValue('missing', 'Lead');
@@ -146,14 +161,6 @@ describe('createFilterEditorCommittedCommands', () => {
     history = {
       past: [],
       present: expression([{ ...stage, fieldKey: 'removed-stage' }]),
-      future: [],
-    };
-    commands().removeEnumValue('stage', 'Lead');
-    expect(applyFilterHistoryAction).not.toHaveBeenCalled();
-
-    history = {
-      past: [],
-      present: expression([{ ...stage, value: ['Lead', 'Removed'] }]),
       future: [],
     };
     commands().removeEnumValue('stage', 'Lead');
