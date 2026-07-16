@@ -16,7 +16,7 @@
     "lint:css": "stylelint \"src/**/*.css\"",
     "lint:css:fix": "stylelint \"src/**/*.css\" --fix",
     "preview": "vite preview",
-    "prepare": "lefthook install",
+    "prepare": "[ -d .git ] && lefthook install || exit 0",
     "test": "vitest run",
     "test:compiler": "vitest run --mode compiler-test",
     "test:coverage": "vitest run --coverage",
@@ -32,6 +32,7 @@
     "lucide-react": "^1.24.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
+    "vercel": "^56.3.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
