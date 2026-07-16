@@ -180,12 +180,13 @@ import '@/components/filter/styles/filter-component.css';
 
 ### `FilterProps`
 
-[`FilterProps`](../src/types/filter.ts) starts with `ComponentPropsWithRef<'form'>`, then removes `children`, native `onChange`, and `onSubmit`.
+[`FilterProps`](../src/types/filter.ts) starts with `ComponentPropsWithRef<'form'>`, then removes `children`, native `onChange`, and native `onSubmit`.
 
 | Prop                           | Contract                                                                                                   |
 | ------------------------------ | ---------------------------------------------------------------------------------------------------------- |
 | `fields`                       | Required immutable `readonly FilterFieldDefinition[]` snapshot; replace the array when definitions change. |
 | `onChange`                     | Optional `(filters, abortController) => void`. The return value is ignored.                                |
+| `onSubmit`                     | Optional `(filters: FilterGroup) => void`. Domain-level callback, not the native `SubmitEvent` handler.    |
 | `disabled`                     | Optional boolean; defaults to `false`.                                                                     |
 | `initialFilters`               | Optional one-time `FilterGroup` seed.                                                                      |
 | `savedViewsStorage`            | Optional mount-captured persistence adapter; defaults to local storage.                                    |
@@ -193,7 +194,11 @@ import '@/components/filter/styles/filter-component.css';
 | `className`                    | Merged with the mandatory `filter` class.                                                                  |
 | Remaining form props and `ref` | Forwarded to the root `<form>`.                                                                            |
 
-The root always prevents native submit. A consumer cannot supply `children`, a native form `onChange`, or an `onSubmit` because those would conflict with the component's controlled DOM structure and semantic callback.
+The root always prevents native submit. A consumer cannot supply `children`, a native form `onChange`, or the native `onSubmit` because those would conflict with the component's controlled DOM structure and semantic callbacks.
+
+### Submission
+
+The root `<form>`'s `onSubmit` handler calls `event.preventDefault()`, then derives the valid-only `FilterGroup` from the current committed expression and the current field registry via `useFilterHistory`'s `getCurrentValidGroup()` — the same projection `onChange` uses, read fresh instead of from a render closure. It invokes the `onSubmit` prop with that group, and does not touch history or call `onChange`. Because the root is a real `<form>`, an external control using the standard HTML `form` attribute (e.g. `<button type="submit" form="...">`) triggers submission without any imperative API on the component.
 
 ### Uncontrolled initialization
 

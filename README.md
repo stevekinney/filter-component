@@ -72,14 +72,25 @@ export function DealFilters() {
 
 Each real commit calls `onChange` with the entire valid group and a fresh [`AbortController`](https://developer.mozilla.org/en-US/docs/Web/API/AbortController). Before the next callback, the component aborts the previous controller. It also aborts the latest controller on unmount. Pass the signal to asynchronous work and you get latest-request cancellation without teaching the filter component anything about your data layer.
 
+`onChange` fires after every committed edit — building a chip, removing one, undo, redo. `onSubmit` fires only when the form is submitted, and receives the same valid-only `FilterGroup` `onChange` would report for the current state, without an `AbortController`. Native submission is always prevented, so `onSubmit` is a domain callback rather than a `SubmitEvent` handler. Because the root is a real `<form>`, an external control can trigger it with the standard HTML [`form`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/button#form) attribute:
+
+```tsx
+<Filter id="deal-filters" fields={fields} onSubmit={(filters) => runSearch(filters)} />
+
+<button type="submit" form="deal-filters">
+  Apply filters
+</button>
+```
+
 ## Public component props
 
-`FilterProps` extends native `<form>` props, with `children`, native `onChange`, and `onSubmit` reserved by the component.
+`FilterProps` extends native `<form>` props, with `children`, native `onChange`, and native `onSubmit` reserved by the component. `onSubmit` is repurposed as a domain-level callback rather than the native `SubmitEvent` handler.
 
 | Prop                | Type                                                               | Behavior                                                                                                                                        |
 | ------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | `fields`            | `readonly FilterFieldDefinition[]`                                 | Required immutable field-schema snapshot. Replace the array when definitions change; values are validated and copied into an internal registry. |
 | `onChange`          | `(filters: FilterGroup, abortController: AbortController) => void` | Receives the complete valid-only group after each committed edit. Optional.                                                                     |
+| `onSubmit`          | `(filters: FilterGroup) => void`                                   | Receives the complete valid-only group when the form is submitted. Optional.                                                                    |
 | `initialFilters`    | `FilterGroup`                                                      | One-time mount seed. It is silent and not undoable. Recursive groups are accepted, then normalized into the component's joiner model.           |
 | `disabled`          | `boolean`                                                          | Disables the whole fieldset, removes chip roots from the tab order, and closes any open editor. Defaults to `false`.                            |
 | `savedViewsStorage` | `SavedViewsStorage`                                                | One-time persistence dependency. Defaults to browser [`localStorage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage).    |
