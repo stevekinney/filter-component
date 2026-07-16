@@ -135,7 +135,7 @@ Consumers cannot inject custom operators, custom value editors, render slots, fo
 
 ## The public API
 
-The repository is private and has no `exports`, `main`, or library-build entry. The public _source_ entrypoint is [`src/components/filter/index.ts`](../src/components/filter/index.ts). The project's `@/` alias is configured in both [`tsconfig.app.json`](../tsconfig.app.json) and its [Vite](https://vite.dev/) configuration in [`vite.config.ts`](../vite.config.ts); it is not an npm package name.
+The repository is private and has no `exports`, `main`, or library-build entry. The public _source_ entrypoint is [`src/components/filter/index.ts`](../src/components/filter/index.ts). Two aliases are configured in both [`tsconfig.app.json`](../tsconfig.app.json) and the [Vite](https://vite.dev/) configuration in [`vite.config.ts`](../vite.config.ts): `@/` maps to `src/`, and `@filter/` maps to `src/components/filter/` for the component's internal modules. Neither is an npm package name. Consumers import through `@/components/filter/index.ts`; `@filter/` is the convention _inside_ the component tree, where deep paths such as `@filter/utilities/operators.ts` would otherwise repeat `@/components/filter/` in nearly every file.
 
 Import the component and types from that entrypoint, then import the component stylesheet separately:
 
@@ -180,7 +180,7 @@ import '@/components/filter/styles/filter-component.css';
 
 ### `FilterProps`
 
-[`FilterProps`](../src/types/filter.ts) starts with `ComponentPropsWithRef<'form'>`, then removes `children`, native `onChange`, and native `onSubmit`.
+[`FilterProps`](../src/components/filter/types.ts) starts with `ComponentPropsWithRef<'form'>`, then removes `children`, native `onChange`, and native `onSubmit`.
 
 | Prop                           | Contract                                                                                                   |
 | ------------------------------ | ---------------------------------------------------------------------------------------------------------- |
@@ -283,7 +283,7 @@ The component treats `fields` as an immutable schema snapshot. A parent must pro
 
 ### Operators and values
 
-[`FilterOperatorsByFieldType`](../src/types/filter.ts) is the type-level source of truth. [`OPERATORS_BY_TYPE`](../src/utilities/filter/operators.ts) is the ordered runtime menu. A compile-time equality check fails if either gains or loses an operator without the other.
+[`FilterOperatorsByFieldType`](../src/components/filter/types.ts) is the type-level source of truth. [`OPERATORS_BY_TYPE`](../src/components/filter/utilities/operators.ts) is the ordered runtime menu. A compile-time equality check fails if either gains or loses an operator without the other.
 
 | Type      | Operators                                                                                 | Runtime value                                                                                          |
 | --------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
@@ -376,7 +376,7 @@ The token list uses `display: contents`: it keeps correct list/listitem semantic
 
 ## Transient editor state
 
-The editor is a discriminated union in [`filter-editor-state.ts`](../src/components/filter/filter-editor-state.ts):
+The editor is a discriminated union in [`filter-editor-state.ts`](../src/components/filter/hooks/use-filter-editor/filter-editor-state.ts):
 
 ```ts
 type FilterEditorState =
@@ -1404,71 +1404,106 @@ The hook does not run coverage, typecheck, strict React Compiler checks, compile
 
 This is the file-by-file tour. Start at the narrowest owner of the behavior you intend to change.
 
+The directory layout mirrors the ownership boundaries:
+
+```text
+src/
+├── components/filter/     Everything filter-specific
+│   ├── index.ts           Public barrel
+│   ├── types.ts           Public types
+│   ├── filter.tsx         Composition root (plus row-level chips and rail)
+│   ├── hooks/             Filter-specific controller hooks
+│   │   └── use-filter-editor/   The editor hook and its state modules
+│   ├── popover/           Popover shell, stages, and value editors
+│   ├── saved-views/       Saved-view trigger, menu, and list
+│   ├── tokens/            Committed tokens, joiners, and brackets
+│   ├── utilities/         Pure filter domain modules (plus storage/)
+│   └── styles/            Component CSS
+└── utilities/hooks/       General-purpose React hooks
+```
+
+Grouped directories export their outward-facing surface from an `index.ts`; anything imported from a deeper path is an internal contract of that group.
+
 ### Public contract
 
 | File                                                                                                        | Responsibility                                                                           |
 | ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
 | [`src/components/filter/index.ts`](../src/components/filter/index.ts)                                       | Sole public source barrel for component, storage adapters, and public types              |
-| [`src/types/filter.ts`](../src/types/filter.ts)                                                             | Operator map, public discriminated condition union, field definitions, groups, and props |
+| [`src/components/filter/types.ts`](../src/components/filter/types.ts)                                       | Operator map, public discriminated condition union, field definitions, groups, and props |
 | [`src/components/filter/styles/filter-component.css`](../src/components/filter/styles/filter-component.css) | Single deterministic component stylesheet entrypoint                                     |
 
-### Composition and controllers
+### Composition root and filter hooks
 
-| File                                                                                                  | Responsibility                                                                                                  |
-| ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| [`filter.tsx`](../src/components/filter/filter.tsx)                                                   | Composition root, identity-based field registry, refs, controller wiring, row, popover, and live region         |
-| [`filter-editor-state.ts`](../src/components/filter/filter-editor-state.ts)                           | Active editor and incomplete-draft types plus segment/editing selectors                                         |
-| [`filter-editor-reducer.ts`](../src/components/filter/filter-editor-reducer.ts)                       | Pure transient editor/incomplete-draft reducer                                                                  |
-| [`use-filter-editor.ts`](../src/components/filter/use-filter-editor.ts)                               | Stage orchestration, synchronous command state, draft preservation, schema/disabled effects, and command facade |
-| [`filter-editor-committed-commands.ts`](../src/components/filter/filter-editor-committed-commands.ts) | Live-registry-safe add/update/remove/pill/clear/history/joiner commits plus focus and announcements             |
-| [`filter-editor-reconciliation.ts`](../src/components/filter/filter-editor-reconciliation.ts)         | Editor construction for token segments, active indexes, compatible value reuse, and live-schema repair          |
-| [`use-filter-history.ts`](../src/components/filter/use-filter-history.ts)                             | Mount initialization, history state/ref, valid-only projection, callback cancellation, and schema re-emission   |
-| [`use-saved-views.ts`](../src/components/filter/use-saved-views.ts)                                   | Saved data, mount read, optimistic serialized writes, failure notice, active identity, and undoable load        |
-| [`use-filter-focus.ts`](../src/components/filter/use-filter-focus.ts)                                 | Semantic focus target resolution and post-commit scheduling                                                     |
-| [`use-native-popover.ts`](../src/components/filter/use-native-popover.ts)                             | Native show/hide/reanchor lifecycle and semantic Escape/light-dismiss translation                               |
+| File                                                                                                                                                  | Responsibility                                                                                                  |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| [`filter.tsx`](../src/components/filter/filter.tsx)                                                                                                   | Composition root, identity-based field registry, refs, controller wiring, row, popover, and live region         |
+| [`hooks/use-filter-editor/use-filter-editor.ts`](../src/components/filter/hooks/use-filter-editor/use-filter-editor.ts)                               | Stage orchestration, synchronous command state, draft preservation, schema/disabled effects, and command facade |
+| [`hooks/use-filter-editor/filter-editor-state.ts`](../src/components/filter/hooks/use-filter-editor/filter-editor-state.ts)                           | Active editor and incomplete-draft types plus segment/editing selectors                                         |
+| [`hooks/use-filter-editor/filter-editor-reducer.ts`](../src/components/filter/hooks/use-filter-editor/filter-editor-reducer.ts)                       | Pure transient editor/incomplete-draft reducer                                                                  |
+| [`hooks/use-filter-editor/filter-editor-committed-commands.ts`](../src/components/filter/hooks/use-filter-editor/filter-editor-committed-commands.ts) | Live-registry-safe add/update/remove/pill/clear/history/joiner commits plus focus and announcements             |
+| [`hooks/use-filter-editor/filter-editor-reconciliation.ts`](../src/components/filter/hooks/use-filter-editor/filter-editor-reconciliation.ts)         | Editor construction for token segments, active indexes, compatible value reuse, and live-schema repair          |
+| [`hooks/use-filter-field-selection.ts`](../src/components/filter/hooks/use-filter-field-selection.ts)                                                 | Memoized field search results, clamped active index, and combobox-versus-popover menu ownership                 |
+| [`hooks/use-filter-history.ts`](../src/components/filter/hooks/use-filter-history.ts)                                                                 | Mount initialization, history state/ref, valid-only projection, callback cancellation, and schema re-emission   |
+| [`hooks/use-saved-views.ts`](../src/components/filter/hooks/use-saved-views.ts)                                                                       | Saved data, mount read, optimistic serialized writes, failure notice, active identity, and undoable load        |
+| [`hooks/use-filter-focus.ts`](../src/components/filter/hooks/use-filter-focus.ts)                                                                     | Semantic focus target resolution and post-commit scheduling                                                     |
+
+The `use-filter-editor` directory groups the hook with the state modules that exist solely for it; its [`index.ts`](../src/components/filter/hooks/use-filter-editor/index.ts) exports the hook plus the `FilterEditorState`/`IncompleteDraft` types and selectors that other components consume.
+
+### General-purpose hooks
+
+| File                                                                                | Responsibility                                                                    |
+| ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| [`use-native-popover.ts`](../src/utilities/hooks/use-native-popover.ts)             | Native show/hide/reanchor lifecycle and semantic Escape/light-dismiss translation |
+| [`use-active-option-scroll.ts`](../src/utilities/hooks/use-active-option-scroll.ts) | Scrolls a virtual-focus listbox's active option into view                         |
+
+Neither imports anything filter-specific; they live under `src/utilities/hooks` so other components can reuse them.
 
 ### Presentation
 
-| File                                                                                        | Responsibility                                                                                                 |
-| ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| [`add-filter-combobox.tsx`](../src/components/filter/add-filter-combobox.tsx)               | External field combobox, query lifecycle, active descendant, keyboard acceptance, and token handoff            |
-| [`filter-token-list.tsx`](../src/components/filter/filter-token-list.tsx)                   | List semantics, memoized items, validation lookup, joiners, and derived bracket placement                      |
-| [`filter-token.tsx`](../src/components/filter/filter-token.tsx)                             | One condition's segments, enum pills, invalid repair, removal, accessible phrase, and composite keyboard model |
-| [`filter-expression-controls.tsx`](../src/components/filter/filter-expression-controls.tsx) | Flippable joiner buttons and read-only bracket glyphs                                                          |
-| [`filter-draft-chips.tsx`](../src/components/filter/filter-draft-chips.tsx)                 | Aria-hidden active preview plus resumable/discardable incomplete chip                                          |
-| [`filter-popover.tsx`](../src/components/filter/filter-popover.tsx)                         | Active-stage router and one native auto popover                                                                |
-| [`filter-popover-stages.tsx`](../src/components/filter/filter-popover-stages.tsx)           | Field search, memoized field rows, single-choice, boolean, enum single, and enum multi stages                  |
-| [`filter-value-editor.tsx`](../src/components/filter/filter-value-editor.tsx)               | Scalar, range, and duration inputs plus Apply/Cancel and connected errors                                      |
-| [`filter-popover-error.tsx`](../src/components/filter/filter-popover-error.tsx)             | Shared role-alert error rendering                                                                              |
-| [`filter-action-rail.tsx`](../src/components/filter/filter-action-rail.tsx)                 | Conditional saved/history/clear clusters and dividers                                                          |
-| [`filter-saved-views.tsx`](../src/components/filter/filter-saved-views.tsx)                 | Bookmark trigger, native dialog, closed/list/naming reducer, save form, and menu lifecycle                     |
-| [`filter-saved-views-list.tsx`](../src/components/filter/filter-saved-views-list.tsx)       | Active view, summaries, load/remove rows, memoization, and complete keyboard navigation                        |
+| File                                                                                                          | Responsibility                                                                                                 |
+| ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| [`add-filter-combobox.tsx`](../src/components/filter/add-filter-combobox.tsx)                                 | External field combobox, query lifecycle, active descendant, keyboard acceptance, and token handoff            |
+| [`filter-draft-preview.tsx`](../src/components/filter/filter-draft-preview.tsx)                               | Aria-hidden active-draft preview that anchors the popover while composing                                      |
+| [`filter-incomplete-draft-chip.tsx`](../src/components/filter/filter-incomplete-draft-chip.tsx)               | Resumable/discardable incomplete-draft chip                                                                    |
+| [`filter-action-rail.tsx`](../src/components/filter/filter-action-rail.tsx)                                   | Conditional saved/history/clear clusters and dividers                                                          |
+| [`tokens/filter-token-list.tsx`](../src/components/filter/tokens/filter-token-list.tsx)                       | List semantics, memoized items, validation lookup, joiners, and derived bracket placement                      |
+| [`tokens/filter-token.tsx`](../src/components/filter/tokens/filter-token.tsx)                                 | One condition's segments, enum pills, invalid repair, removal, accessible phrase, and composite keyboard model |
+| [`tokens/filter-expression-controls.tsx`](../src/components/filter/tokens/filter-expression-controls.tsx)     | Flippable joiner buttons and read-only bracket glyphs                                                          |
+| [`popover/filter-popover.tsx`](../src/components/filter/popover/filter-popover.tsx)                           | Active-stage router and one native auto popover                                                                |
+| [`popover/field-selection-stage.tsx`](../src/components/filter/popover/field-selection-stage.tsx)             | Field search input and memoized field option rows                                                              |
+| [`popover/single-choice-stage.tsx`](../src/components/filter/popover/single-choice-stage.tsx)                 | Operator, collapsed boolean, and enum single listboxes                                                         |
+| [`popover/multiple-choice-stage.tsx`](../src/components/filter/popover/multiple-choice-stage.tsx)             | Enum multi-select listbox with toggle/apply behavior                                                           |
+| [`popover/filter-value-editor.tsx`](../src/components/filter/popover/filter-value-editor.tsx)                 | Scalar, range, and duration inputs plus Apply/Cancel and connected errors                                      |
+| [`popover/filter-popover-error.tsx`](../src/components/filter/popover/filter-popover-error.tsx)               | Shared role-alert error rendering                                                                              |
+| [`saved-views/filter-saved-views.tsx`](../src/components/filter/saved-views/filter-saved-views.tsx)           | Bookmark trigger, native dialog, save form, and menu lifecycle                                                 |
+| [`saved-views/filter-saved-views-menu.ts`](../src/components/filter/saved-views/filter-saved-views-menu.ts)   | Closed/list/naming menu reducer and its action types                                                           |
+| [`saved-views/filter-saved-views-list.tsx`](../src/components/filter/saved-views/filter-saved-views-list.tsx) | Active view, summaries, load/remove rows, memoization, and complete keyboard navigation                        |
 
 ### Domain utilities
 
-| File                                                                 | Responsibility                                                                                                            |
-| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| [`filter-entry.ts`](../src/utilities/filter/filter-entry.ts)         | Adds internal rendering/focus/history identity to a public condition                                                      |
-| [`field-registry.ts`](../src/utilities/filter/field-registry.ts)     | Strict field schema, cloning, duplicate detection, signature, and key lookup                                              |
-| [`operators.ts`](../src/utilities/filter/operators.ts)               | Ordered defaults, compile-time completeness check, labels, booleans, narrowing, and editor kinds                          |
-| [`expression.ts`](../src/utilities/filter/expression.ts)             | Flat expression, canonical public conversion, recursive input linearization, removal/exclusion adjacency, and run markers |
-| [`history.ts`](../src/utilities/filter/history.ts)                   | Committed expression reducer and undo/redo wrapper                                                                        |
-| [`filter-schema.ts`](../src/utilities/filter/filter-schema.ts)       | Strict runtime schemas for every condition/value family and recursive public groups                                       |
-| [`validation.ts`](../src/utilities/filter/validation.ts)             | Draft parsing, dynamic condition creation, live-schema validation, and repair reasons                                     |
-| [`value-drafts.ts`](../src/utilities/filter/value-drafts.ts)         | Draft union, empty construction, committed reconstruction, and compatible conversion                                      |
-| [`saved-views.ts`](../src/utilities/filter/saved-views.ts)           | Stored view schema, per-entry parsing, representability checks, and canonical identity                                    |
-| [`stable-serialize.ts`](../src/utilities/filter/stable-serialize.ts) | Small key-order-independent JSON-like serialization                                                                       |
-| [`field-search.ts`](../src/utilities/filter/field-search.ts)         | Label/key search with prefix-first stable ranking                                                                         |
-| [`formatting.ts`](../src/utilities/filter/formatting.ts)             | Field fallback, scalar/list/range/duration display, and full accessible phrases                                           |
-| [`list-navigation.ts`](../src/utilities/list-navigation.ts)          | Index clamping and wraparound stepping shared by listboxes and saved views                                                |
+| File                                                                            | Responsibility                                                                                                            |
+| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| [`filter-entry.ts`](../src/components/filter/utilities/filter-entry.ts)         | Adds internal rendering/focus/history identity to a public condition                                                      |
+| [`field-registry.ts`](../src/components/filter/utilities/field-registry.ts)     | Strict field schema, cloning, duplicate detection, signature, and key lookup                                              |
+| [`operators.ts`](../src/components/filter/utilities/operators.ts)               | Ordered defaults, compile-time completeness check, labels, booleans, narrowing, and editor kinds                          |
+| [`expression.ts`](../src/components/filter/utilities/expression.ts)             | Flat expression, canonical public conversion, recursive input linearization, removal/exclusion adjacency, and run markers |
+| [`history.ts`](../src/components/filter/utilities/history.ts)                   | Committed expression reducer and undo/redo wrapper                                                                        |
+| [`filter-schema.ts`](../src/components/filter/utilities/filter-schema.ts)       | Strict runtime schemas for every condition/value family and recursive public groups                                       |
+| [`validation.ts`](../src/components/filter/utilities/validation.ts)             | Draft parsing, dynamic condition creation, live-schema validation, and repair reasons                                     |
+| [`value-drafts.ts`](../src/components/filter/utilities/value-drafts.ts)         | Draft union, empty construction, committed reconstruction, and compatible conversion                                      |
+| [`saved-views.ts`](../src/components/filter/utilities/saved-views.ts)           | Stored view schema, per-entry parsing, representability checks, and canonical identity                                    |
+| [`stable-serialize.ts`](../src/components/filter/utilities/stable-serialize.ts) | Small key-order-independent JSON-like serialization                                                                       |
+| [`field-search.ts`](../src/components/filter/utilities/field-search.ts)         | Label/key search with prefix-first stable ranking                                                                         |
+| [`formatting.ts`](../src/components/filter/utilities/formatting.ts)             | Field fallback, scalar/list/range/duration display, and full accessible phrases                                           |
+| [`list-navigation.ts`](../src/components/filter/utilities/list-navigation.ts)   | Index clamping and wraparound stepping shared by listboxes and saved views                                                |
 
 ### Storage
 
-| File                                                                        | Responsibility                                           |
-| --------------------------------------------------------------------------- | -------------------------------------------------------- |
-| [`saved-views-storage.ts`](../src/utilities/storage/saved-views-storage.ts) | Persistence port and untrusted read contract             |
-| [`local-storage.ts`](../src/utilities/storage/local-storage.ts)             | Default JSON adapter under `filter.saved-views`          |
-| [`chrome-storage.ts`](../src/utilities/storage/chrome-storage.ts)           | Promise-based Chrome storage structural type and adapter |
+| File                                                                                          | Responsibility                                           |
+| --------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| [`saved-views-storage.ts`](../src/components/filter/utilities/storage/saved-views-storage.ts) | Persistence port and untrusted read contract             |
+| [`local-storage.ts`](../src/components/filter/utilities/storage/local-storage.ts)             | Default JSON adapter under `filter.saved-views`          |
+| [`chrome-storage.ts`](../src/components/filter/utilities/storage/chrome-storage.ts)           | Promise-based Chrome storage structural type and adapter |
 
 ### Styles
 

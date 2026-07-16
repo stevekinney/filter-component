@@ -1,11 +1,11 @@
 import { act, renderHook, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { createFilterFieldRegistry } from '@/utilities/filter/field-registry.ts';
-import { createFilterEntry } from '@/utilities/filter/filter-entry.ts';
+import { useFilterHistory } from '@filter/hooks/use-filter-history.ts';
+import { createFilterFieldRegistry } from '@filter/utilities/field-registry.ts';
+import { createFilterEntry } from '@filter/utilities/filter-entry.ts';
 
 import { Filter } from '../filter.tsx';
-import { useFilterHistory } from '../use-filter-history.ts';
 import { addStringFilter, FIELDS, setup } from './filter-test-setup.tsx';
 
 describe('onChange cancellation', () => {

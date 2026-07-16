@@ -3,8 +3,8 @@ import { createRef } from 'react';
 import type { RefObject } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { useFilterFocus } from '../use-filter-focus.ts';
-import type { FocusTarget } from '../use-filter-focus.ts';
+import { useFilterFocus } from '@filter/hooks/use-filter-focus.ts';
+import type { FocusTarget } from '@filter/hooks/use-filter-focus.ts';
 
 function createFocusRoot(): HTMLFieldSetElement {
   const root = document.createElement('fieldset');

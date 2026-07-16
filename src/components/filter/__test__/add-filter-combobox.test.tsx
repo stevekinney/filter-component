@@ -3,7 +3,7 @@ import { createRef } from 'react';
 import type { ComponentProps } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { FilterFieldDefinition } from '@/types/filter.ts';
+import type { FilterFieldDefinition } from '@filter/types.ts';
 
 import { AddFilterCombobox } from '../add-filter-combobox.tsx';
 

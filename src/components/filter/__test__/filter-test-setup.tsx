@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 
-import type { FilterFieldDefinition } from '@/types/filter.ts';
+import type { FilterFieldDefinition } from '@filter/types.ts';
 
 import { Filter } from '../filter.tsx';
 

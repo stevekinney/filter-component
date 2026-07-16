@@ -1,14 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
-import type { FilterFieldDefinition } from '@/types/filter.ts';
-import { createFilterFieldRegistry } from '@/utilities/filter/field-registry.ts';
-
 import {
   booleanActiveIndex,
   reconcileFilterEditor,
   reconcileIncompleteDraft,
-} from '../filter-editor-reconciliation.ts';
-import type { FilterEditorState, IncompleteDraft } from '../filter-editor-state.ts';
+} from '@filter/hooks/use-filter-editor/filter-editor-reconciliation.ts';
+import type {
+  FilterEditorState,
+  IncompleteDraft,
+} from '@filter/hooks/use-filter-editor/filter-editor-state.ts';
+import type { FilterFieldDefinition } from '@filter/types.ts';
+import { createFilterFieldRegistry } from '@filter/utilities/field-registry.ts';
 
 const FIELDS: readonly FilterFieldDefinition[] = [
   { key: 'name', type: 'string' },

@@ -1,17 +1,16 @@
 import { render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { FilterFieldDefinition } from '@/types/filter.ts';
-import type { FilterEntry } from '@/utilities/filter/filter-entry.ts';
-
-import type { FilterEditorState } from '../filter-editor-state.ts';
-import { FieldSelectionStage } from '../filter-popover-stages.tsx';
-import type { FilterPopoverProps } from '../filter-popover.tsx';
+import type { FilterEditorState } from '@filter/hooks/use-filter-editor/filter-editor-state.ts';
+import { FieldSelectionStage } from '@filter/popover/field-selection-stage.tsx';
+import type { FilterPopoverProps } from '@filter/popover/filter-popover.tsx';
+import type { FilterFieldDefinition } from '@filter/types.ts';
+import type { FilterEntry } from '@filter/utilities/filter-entry.ts';
 
 const fieldOptionRenderProbe = vi.hoisted(() => vi.fn());
 
-vi.mock('@/utilities/filter/formatting.ts', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/utilities/filter/formatting.ts')>();
+vi.mock('@filter/utilities/formatting.ts', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@filter/utilities/formatting.ts')>();
   return {
     ...actual,
     fieldLabel: (...arguments_: Parameters<typeof actual.fieldLabel>) => {

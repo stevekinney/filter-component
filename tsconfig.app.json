@@ -8,7 +8,8 @@
     "allowArbitraryExtensions": true,
     "moduleResolution": "bundler",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@filter/*": ["./src/components/filter/*"]
     },
     "jsx": "react-jsx"
   },

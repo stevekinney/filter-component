@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { StrictMode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { FilterFieldDefinition } from '@/types/filter.ts';
+import type { FilterFieldDefinition } from '@filter/types.ts';
 
 import { Filter } from '../filter.tsx';
 import { addStringFilter, FIELDS, setup } from './filter-test-setup.tsx';
