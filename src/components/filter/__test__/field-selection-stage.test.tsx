@@ -58,6 +58,7 @@ function popoverProps(
     fieldResults,
     editingFilter: STRING_ENTRY,
     idPrefix: 'popover',
+    anchorInvocation: 0,
     resolveAnchor: () => document.body,
     onBrowserDismiss: vi.fn(),
     onChangeQuery: vi.fn(),

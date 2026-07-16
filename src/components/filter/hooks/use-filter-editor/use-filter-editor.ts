@@ -62,6 +62,10 @@ export function useFilterEditor({
   const registryRef = useRef(fieldRegistry);
   const scheduleFocusRef = useRef(scheduleFocus);
   const announceRef = useRef(announce);
+  // Bumped whenever the captured invoker changes, so the popover can tell two
+  // opens of the same filter/segment (different pills) apart even though the
+  // stage, filterId, and segment are otherwise identical.
+  const [anchorInvocation, setAnchorInvocation] = useState(0);
 
   useLayoutEffect(() => {
     stateRef.current = controllerState;
@@ -282,6 +286,7 @@ export function useFilterEditor({
   const openTokenSegment = (token: FilterEntry, segment: TokenSegment, invoker: HTMLElement) => {
     const preserved = preserveCurrent();
 
+    if (popoverAnchorRef.current !== invoker) setAnchorInvocation((count) => count + 1);
     popoverAnchorRef.current = invoker;
 
     const editor = editorForTokenSegment(token, segment, registryRef.current);
@@ -406,6 +411,7 @@ export function useFilterEditor({
   return {
     editorState: controllerState.editor,
     incompleteDraft: controllerState.incompleteDraft,
+    anchorInvocation,
     resetEditor,
     cancel,
     browserDismiss,

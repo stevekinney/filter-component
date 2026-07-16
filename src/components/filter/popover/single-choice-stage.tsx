@@ -19,10 +19,17 @@ function buildOperatorOrBooleanChoices(
   editingFilter: FilterEntry | null,
 ): { value: string; label: string; selected: boolean }[] {
   if (field.type === 'boolean') {
-    const selected =
-      editingFilter?.operator === 'equals'
-        ? String(editingFilter.value)
-        : (editingFilter?.operator ?? null);
+    const activeFilter =
+      editingFilter?.fieldKey === field.key && editingFilter.type === field.type
+        ? editingFilter
+        : null;
+
+    let selected: string | null = null;
+
+    if (activeFilter) {
+      selected =
+        activeFilter.operator === 'equals' ? String(activeFilter.value) : activeFilter.operator;
+    }
 
     return booleanChoicesForField(field).map((choice) => ({
       ...choice,
@@ -33,7 +40,10 @@ function buildOperatorOrBooleanChoices(
   return operatorsForField(field).map((operator) => ({
     value: operator,
     label: OPERATOR_LABELS[operator],
-    selected: editingFilter?.operator === operator && editingFilter.fieldKey === field.key,
+    selected:
+      editingFilter?.operator === operator &&
+      editingFilter.fieldKey === field.key &&
+      editingFilter.type === field.type,
   }));
 }
 

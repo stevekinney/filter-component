@@ -24,6 +24,9 @@ export type FilterPopoverProps = {
   fieldResults: readonly FilterFieldDefinition[];
   editingFilter: FilterEntry | null;
   idPrefix: string;
+  /** Bumped whenever the captured invoker element changes, so a different
+   * pill on the same filter/segment forces the popover to re-anchor. */
+  anchorInvocation: number;
   resolveAnchor: () => HTMLElement | null;
   /** Called only for browser light dismissal, not commit or semantic cancellation. */
   onBrowserDismiss: () => void;
@@ -52,9 +55,9 @@ export function FilterPopover(props: FilterPopoverProps) {
 }
 
 function OpenFilterPopover(props: OpenFilterPopoverProps) {
-  const { state, resolveAnchor, onBrowserDismiss, onCancel } = props;
+  const { state, anchorInvocation, resolveAnchor, onBrowserDismiss, onCancel } = props;
   const { popoverRef, handleBeforeToggle, handleKeyDown } = useNativePopover({
-    anchorKey: `${state.filterId ?? 'new-filter'}:${activeEditorSegment(state)}`,
+    anchorKey: `${state.filterId ?? 'new-filter'}:${activeEditorSegment(state)}:${anchorInvocation}`,
     resolveAnchor,
     onBrowserDismiss,
     onEscape: onCancel,

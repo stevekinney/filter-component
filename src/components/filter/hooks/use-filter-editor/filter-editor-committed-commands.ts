@@ -103,17 +103,21 @@ export function createFilterEditorCommittedCommands({
     }
 
     const { id: _id, ...publicCondition } = token;
-    const condition = filterConditionSchema.parse({
+    const parsedCondition = filterConditionSchema.safeParse({
       ...publicCondition,
       value: remaining,
     });
-    const candidate = createFilterEntry(condition, id);
+
+    if (!parsedCondition.success) return;
+
     const fieldRegistry = getFieldRegistry();
     const field = fieldRegistry.byKey.get(token.fieldKey);
 
-    if (!field || getFilterValidationIssue(candidate, fieldRegistry.fields) !== null) {
+    if (!field || field.type !== token.type || !operatorsForField(field).includes(token.operator)) {
       return;
     }
+
+    const candidate = createFilterEntry(parsedCondition.data, id);
 
     scheduleFocus({ type: 'token', id });
 

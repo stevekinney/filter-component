@@ -103,6 +103,7 @@ export function Filter(properties: FilterProps) {
   const {
     editorState,
     incompleteDraft,
+    anchorInvocation,
     resetEditor,
     cancel,
     browserDismiss,
@@ -309,6 +310,7 @@ export function Filter(properties: FilterProps) {
           fieldResults={fieldResults}
           editingFilter={editingFilter}
           idPrefix={idPrefix}
+          anchorInvocation={anchorInvocation}
           resolveAnchor={resolvePopoverAnchor}
           onBrowserDismiss={browserDismiss}
           onChangeQuery={changeQuery}

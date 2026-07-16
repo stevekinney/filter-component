@@ -37,6 +37,8 @@ export function MultipleChoiceStage(
   const activeIndex = clampIndex(state.activeIndex, options.length);
   const activeOptionKey = options[activeIndex];
   const listRef = useActiveOptionScroll(activeIndex, activeOptionKey);
+  const errorId = `${idPrefix}-error`;
+  const describedBy = state.error ? errorId : undefined;
 
   const toggleChoice = (option: string) => {
     const nextSelectedOptions = selectedOptions.includes(option)
@@ -92,6 +94,7 @@ export function MultipleChoiceStage(
         aria-multiselectable="true"
         aria-label={heading}
         aria-activedescendant={options.length > 0 ? `${idPrefix}-option-${activeIndex}` : undefined}
+        aria-describedby={describedBy}
         className="filter-popover-list"
         onKeyDown={handleKeyDown}
         onMouseDown={(event) => event.preventDefault()}
@@ -123,7 +126,7 @@ export function MultipleChoiceStage(
           <Check aria-hidden="true" size={14} />
         </button>
       </div>
-      <PopoverValidationError error={state.error} />
+      <PopoverValidationError error={state.error} id={errorId} />
     </>
   );
 }
