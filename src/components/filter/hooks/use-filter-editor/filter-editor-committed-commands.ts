@@ -113,7 +113,7 @@ export function createFilterEditorCommittedCommands({
     const fieldRegistry = getFieldRegistry();
     const field = fieldRegistry.byKey.get(token.fieldKey);
 
-    if (!field || field.type !== token.type || !operatorsForField(field).includes(token.operator)) {
+    if (!field || field.type !== token.type) {
       return;
     }
 

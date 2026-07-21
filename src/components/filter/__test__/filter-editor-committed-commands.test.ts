@@ -208,11 +208,16 @@ describe('createFilterEditorCommittedCommands', () => {
     ]);
     history = { past: [], present: expression([stage]), future: [] };
     commands().removeEnumValue('stage', 'Lead');
-    expect(applyFilterHistoryAction).not.toHaveBeenCalled();
+    expect(applyFilterHistoryAction).toHaveBeenCalledWith({
+      type: 'update',
+      id: 'stage',
+      filter: expect.objectContaining({ value: ['Won'], id: 'stage' }),
+    });
 
     currentFieldRegistry = fieldRegistry;
     history = { past: [], present: expression([stage]), future: [] };
     applyFilterHistoryAction.mockReturnValue(false);
+    announce.mockClear();
     commands().removeEnumValue('stage', 'Lead');
     expect(announce).not.toHaveBeenCalled();
   });

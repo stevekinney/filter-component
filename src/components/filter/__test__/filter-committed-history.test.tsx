@@ -171,7 +171,7 @@ describe('smart joiners', () => {
     );
   });
 
-  it('deleting a chip collapses its leading joiner and announces the grouping change', async () => {
+  it('preserves the run opener when deleting a chip and announces the grouping change', async () => {
     const { onChange, user, addFilterInput, view } = setup();
     await addStringFilter(user, addFilterInput, 'Maria');
     await addStringFilter(user, addFilterInput, 'Nadia');
@@ -185,7 +185,7 @@ describe('smart joiners', () => {
     );
     expect(onChange).toHaveBeenLastCalledWith(
       {
-        combinator: 'and',
+        combinator: 'or',
         conditions: [
           expect.objectContaining({ value: 'Maria' }),
           expect.objectContaining({ value: 'Cora' }),

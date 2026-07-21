@@ -139,17 +139,22 @@ export function fromFilterGroup(
 }
 
 /**
- * Removes the condition at `index` along with its leading joiner
- * (`joiners[index - 1]`; for the first condition, `joiners[0]`) — the rule
- * shared by chip deletion and invalid-condition exclusion. Grouping
- * re-derives; no other joiner changes. Out-of-range indexes return the
- * input unchanged.
+ * Removes the condition at `index` along with the adjacent `and` joiner when
+ * one side is an `or`; this preserves the `or` whether the condition opens or
+ * closes an `and` run. With no adjacent `or`, the preceding joiner is removed
+ * (or the following joiner for the first condition). Grouping re-derives; no
+ * other joiner changes. Out-of-range indexes return the input unchanged.
  */
 export function removeConditionAt(expression: FilterExpression, index: number): FilterExpression {
   if (index < 0 || index >= expression.conditions.length) return expression;
 
   const conditions = expression.conditions.toSpliced(index, 1);
-  const joiners = expression.joiners.toSpliced(Math.max(0, index - 1), 1);
+  const previousJoiner = expression.joiners[index - 1];
+  const joinerIndex =
+    previousJoiner === 'or'
+      ? Math.min(index, expression.joiners.length - 1)
+      : Math.max(0, index - 1);
+  const joiners = expression.joiners.toSpliced(joinerIndex, 1);
 
   return { conditions, joiners };
 }

@@ -246,7 +246,13 @@ describe('round-trip', () => {
 });
 
 describe('removeConditionAt', () => {
-  it('removes a condition together with its leading joiner', () => {
+  it('preserves the joiner after a removed condition when it keeps the run meaning', () => {
+    expect(removeConditionAt(expression([a, b, c], ['or', 'and']), 1)).toEqual(
+      expression([a, c], ['or']),
+    );
+  });
+
+  it('preserves an or joiner when removing the end of an and-run', () => {
     expect(removeConditionAt(expression([a, b, c], ['and', 'or']), 1)).toEqual(
       expression([a, c], ['or']),
     );
@@ -280,18 +286,21 @@ describe('removeConditionAt', () => {
 
 describe('filterExpression', () => {
   it('drops rejected conditions along with their adjacent joiners', () => {
-    expect(filterExpression(expression([a, b, c], ['and', 'or']), (x) => x !== b)).toEqual(
-      expression([a, c], ['or']),
-    );
+    const filtered = filterExpression(expression([a, b, c], ['or', 'and']), (x) => x !== b);
+
+    expect(filtered).toEqual(expression([a, c], ['or']));
+    expect(toFilterGroup(filtered)).toEqual({
+      combinator: 'or',
+      conditions: [externalMember(a), externalMember(c)],
+    });
   });
 
   it('drops several rejected conditions independently', () => {
-    // Each exclusion consumes its own leading joiner: dropping `a` takes the
-    // first 'and', dropping `c` takes the 'or' that led into it, so `b` and
-    // `d` are left joined by the 'and' that sat between `c` and `d`.
+    // Removing `a` and `c` preserves the surviving joiners, so the remaining
+    // expression still reads as `b or d`.
     expect(
       filterExpression(expression([a, b, c, d], ['and', 'or', 'and']), (x) => x === b || x === d),
-    ).toEqual(expression([b, d], ['and']));
+    ).toEqual(expression([b, d], ['or']));
   });
 
   it('returns the input unchanged when everything is kept', () => {

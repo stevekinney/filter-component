@@ -103,7 +103,7 @@ describe('committed filter actions', () => {
     ).toBe(filters);
   });
 
-  it('removes a filter together with its leading joiner', () => {
+  it('preserves the joiner after a removed filter when it keeps the run meaning', () => {
     expect(
       reduceExpression(expression([nameFilter, valueFilter, activeFilter], ['and', 'or']), {
         type: 'remove',
