@@ -1,0 +1,119 @@
+.filter-saved-views-popover {
+  min-width: min(232px, calc(100vi - 16px));
+  max-width: min(320px, calc(100vi - 16px));
+}
+
+.filter-popover-divider {
+  height: 1px;
+  margin-block: 4px;
+  background: var(--filter-resolved-color-border-primary);
+}
+
+.filter-saved-views-save {
+  padding-block: 2px 4px;
+  padding-inline: 8px;
+}
+
+.filter-saved-views-save-action {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: var(--filter-radius-control);
+  font-weight: 500;
+  color: var(--filter-resolved-color-text-action);
+
+  &:hover {
+    background: var(--filter-resolved-color-background-action-subtle);
+  }
+}
+
+.filter-saved-views-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.filter-saved-views-item {
+  display: flex;
+  align-items: stretch;
+
+  &:has(.filter-saved-views-load:focus-visible) {
+    outline: var(--filter-focus-ring);
+    outline-offset: -2px;
+  }
+
+  /* The active view (its group matches the current one) is tinted; the check
+     in the load button carries the same state without relying on color. */
+  &.is-active {
+    background: var(--filter-resolved-color-background-selected);
+  }
+}
+
+.filter-saved-views-load {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  padding: 6px 12px;
+  text-align: start;
+
+  &:hover {
+    background: var(--filter-resolved-color-background-hover);
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+.filter-saved-views-check {
+  display: flex;
+  flex: none;
+  width: 16px;
+  color: var(--filter-resolved-color-text-action);
+}
+
+.filter-saved-views-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.filter-saved-views-name {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.filter-saved-views-summary {
+  font-size: 11px;
+  color: var(--filter-resolved-color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.filter-saved-views-remove {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  width: 28px;
+  height: 28px;
+  margin-inline: 4px;
+  padding: 0;
+  border-radius: 50%;
+  color: var(--filter-resolved-color-text-secondary);
+
+  &:hover {
+    background: var(--filter-resolved-color-background-danger-hover);
+    color: var(--filter-resolved-color-text-danger);
+  }
+}

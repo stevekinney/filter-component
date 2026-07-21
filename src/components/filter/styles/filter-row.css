@@ -1,0 +1,115 @@
+/* The joiner word between two chips — the smart-joiners model's only
+   structural control. Dotted underline signals "flippable text", and the
+   hover/focus accent tint promises the flip without moving anything. */
+.filter-joiner {
+  padding: 3px 6px;
+  border-radius: var(--filter-radius-control);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--filter-resolved-color-text-secondary);
+  text-decoration: underline dotted var(--filter-resolved-color-icon-secondary);
+  text-underline-offset: 3px;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--filter-resolved-color-background-action-subtle);
+    color: var(--filter-resolved-color-text-action-strong);
+  }
+
+  &:focus-visible {
+    outline: var(--filter-focus-ring);
+    outline-offset: 1px;
+  }
+}
+
+.filter-bracket {
+  margin: 0 -2px;
+  font-size: 22px;
+  font-weight: 300;
+  line-height: 26px;
+  color: var(--filter-resolved-color-icon-secondary);
+  user-select: none;
+}
+
+.filter-draft-preview {
+  max-width: 100%;
+  border: 1px dashed var(--filter-resolved-color-border-editing);
+  background: var(--filter-resolved-color-background-editing);
+
+  > span {
+    display: flex;
+    flex: 0 1 auto;
+    align-items: center;
+    min-width: 0;
+    padding: 4px 10px;
+  }
+
+  .filter-draft-preview-divider {
+    width: 1px;
+    padding: 0;
+    background: color-mix(in oklch, var(--filter-resolved-color-border-editing) 24%, transparent);
+  }
+}
+
+.filter-draft-preview-field {
+  font-weight: 500;
+}
+
+.filter-draft-preview-field,
+.filter-draft-preview-operator {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.filter-draft-preview-operator {
+  color: var(--filter-resolved-color-text-secondary);
+}
+
+.filter-draft-preview-value {
+  color: var(--filter-resolved-color-text-action-strong);
+  max-width: 160px;
+}
+
+.filter-incomplete-draft-chip {
+  max-width: 100%;
+  border: 1px dashed var(--filter-resolved-color-border-warning);
+  background: var(--filter-resolved-color-background-warning);
+}
+
+.filter-incomplete-draft-resume {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+  padding-block: 0;
+  padding-inline: 8px 4px;
+  color: var(--filter-resolved-color-text-warning);
+
+  &:hover {
+    background: var(--filter-resolved-color-background-warning-hover);
+  }
+}
+
+.filter-incomplete-draft-field {
+  font-weight: 500;
+  color: var(--filter-resolved-color-text-primary);
+}
+
+.filter-incomplete-draft-operator {
+  color: var(--filter-resolved-color-text-secondary);
+}
+
+.filter-incomplete-draft-discard {
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  color: var(--filter-resolved-color-text-secondary);
+
+  &:hover {
+    background: var(--filter-resolved-color-background-danger-hover);
+    color: var(--filter-resolved-color-text-danger);
+  }
+}

@@ -1,0 +1,293 @@
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+
+import type { FilterEditorState } from '@filter/hooks/use-filter-editor/filter-editor-state.ts';
+import type { FilterPopoverProps } from '@filter/popover/filter-popover.tsx';
+import { SingleChoiceStage } from '@filter/popover/single-choice-stage.tsx';
+import type { FilterFieldDefinition } from '@filter/types.ts';
+import type { FilterEntry } from '@filter/utilities/filter-entry.ts';
+
+const STRING_FIELD = {
+  key: 'name',
+  label: 'Name',
+  type: 'string',
+} as const satisfies FilterFieldDefinition;
+
+const BOOLEAN_FIELD = {
+  key: 'active',
+  label: 'Active',
+  type: 'boolean',
+} as const satisfies FilterFieldDefinition;
+
+const ENUM_FIELD = {
+  key: 'stage',
+  label: 'Stage',
+  type: 'enum',
+  options: ['Lead', 'Won'],
+} as const satisfies FilterFieldDefinition;
+
+const DESCRIPTOR_ENUM_FIELD = {
+  key: 'assignee',
+  label: 'Assigned to',
+  type: 'enum',
+  options: [
+    { value: 'person-1', label: 'Ada Lovelace' },
+    { value: 'person-2', label: 'Grace Hopper' },
+  ],
+} as const satisfies FilterFieldDefinition;
+
+const STRING_ENTRY: FilterEntry = {
+  id: 'condition-1',
+  fieldKey: 'name',
+  type: 'string',
+  operator: 'equals',
+  value: 'Maria',
+};
+
+function operatorState(
+  field: FilterFieldDefinition,
+  overrides: Partial<Extract<FilterEditorState, { stage: 'operator' }>> = {},
+): Extract<FilterEditorState, { stage: 'operator' }> {
+  return {
+    stage: 'operator',
+    filterId: 'condition-1',
+    fieldKey: field.key,
+    fieldType: field.type,
+    activeIndex: 0,
+    ...overrides,
+  };
+}
+
+function popoverProps(
+  state: FilterEditorState,
+  overrides: Partial<FilterPopoverProps> = {},
+): FilterPopoverProps {
+  return {
+    state,
+    fields: [STRING_FIELD, BOOLEAN_FIELD, ENUM_FIELD],
+    fieldResults: [STRING_FIELD, BOOLEAN_FIELD, ENUM_FIELD],
+    editingFilter: STRING_ENTRY,
+    idPrefix: 'popover',
+    anchorInvocation: 0,
+    resolveAnchor: () => document.body,
+    onBrowserDismiss: vi.fn(),
+    onChangeQuery: vi.fn(),
+    onChangeActiveIndex: vi.fn(),
+    onChangeDraft: vi.fn(),
+    onSelectField: vi.fn(),
+    onSelectOperator: vi.fn(),
+    onPickBoolean: vi.fn(),
+    onPickSingleValue: vi.fn(),
+    onCommitValue: vi.fn(),
+    onCancel: vi.fn(),
+    ...overrides,
+  };
+}
+
+describe('SingleChoiceStage', () => {
+  it('renders descriptor labels while selecting their stable values', () => {
+    const state: Extract<FilterEditorState, { stage: 'value' }> = {
+      stage: 'value',
+      filterId: null,
+      fieldKey: DESCRIPTOR_ENUM_FIELD.key,
+      fieldType: 'enum',
+      operator: 'equals',
+      draft: { kind: 'scalar', input: 'person-1' },
+      error: null,
+      activeIndex: 1,
+    };
+    const props = popoverProps(state);
+    render(
+      <SingleChoiceStage
+        {...props}
+        state={state}
+        heading="Assigned to is"
+        field={DESCRIPTOR_ENUM_FIELD}
+      />,
+    );
+
+    const list = screen.getByRole('listbox', { name: 'Assigned to is' });
+    expect(within(list).getByRole('option', { name: 'Ada Lovelace' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    fireEvent.keyDown(list, { key: 'Enter' });
+    fireEvent.click(within(list).getByRole('option', { name: 'Ada Lovelace' }));
+
+    expect(props.onPickSingleValue).toHaveBeenNthCalledWith(1, 'person-2');
+    expect(props.onPickSingleValue).toHaveBeenNthCalledWith(2, 'person-1');
+  });
+
+  it('renders normal operators, marks the committed choice, and navigates/selects', () => {
+    const props = popoverProps(operatorState(STRING_FIELD));
+    render(
+      <SingleChoiceStage
+        {...props}
+        state={operatorState(STRING_FIELD)}
+        heading="Name"
+        field={STRING_FIELD}
+      />,
+    );
+    const list = screen.getByRole('listbox', { name: 'Name' });
+    expect(within(list).getByRole('option', { name: 'is' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    fireEvent.mouseDown(list);
+    fireEvent.keyDown(list, { key: 'ArrowDown' });
+    fireEvent.keyDown(list, { key: 'ArrowUp' });
+    fireEvent.keyDown(list, { key: 'Enter' });
+    fireEvent.keyDown(list, { key: ' ' });
+    fireEvent.keyDown(list, { key: 'Escape' });
+    const contains = within(list).getByRole('option', { name: 'contains' });
+    fireEvent.mouseEnter(contains);
+    fireEvent.click(contains);
+    expect(props.onChangeActiveIndex).toHaveBeenCalledTimes(3);
+    expect(props.onSelectOperator).toHaveBeenCalledTimes(3);
+  });
+
+  it('renders narrowed boolean choices and both committed selection shapes', () => {
+    const narrowed = {
+      ...BOOLEAN_FIELD,
+      operators: ['equals', 'isEmpty'] as const,
+    } satisfies FilterFieldDefinition<'boolean'>;
+    const trueEntry: FilterEntry = {
+      id: 'boolean',
+      fieldKey: 'active',
+      type: 'boolean',
+      operator: 'equals',
+      value: true,
+    };
+    const props = popoverProps(operatorState(narrowed), {
+      editingFilter: trueEntry,
+    });
+    const view = render(
+      <SingleChoiceStage
+        {...props}
+        state={operatorState(narrowed)}
+        heading="Active"
+        field={narrowed}
+      />,
+    );
+    expect(screen.getByRole('option', { name: 'is true' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    expect(screen.queryByRole('option', { name: 'is not empty' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('option', { name: 'is empty' }));
+    expect(props.onPickBoolean).toHaveBeenCalledWith('isEmpty');
+
+    const emptyEntry: FilterEntry = {
+      id: 'boolean-empty',
+      fieldKey: 'active',
+      type: 'boolean',
+      operator: 'isEmpty',
+    };
+    const emptyProps = popoverProps(operatorState(narrowed), {
+      editingFilter: emptyEntry,
+    });
+    view.rerender(
+      <SingleChoiceStage
+        {...emptyProps}
+        state={operatorState(narrowed)}
+        heading="Active"
+        field={narrowed}
+      />,
+    );
+    expect(screen.getByRole('option', { name: 'is empty' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    fireEvent.click(screen.getByRole('option', { name: 'is false' }));
+    expect(emptyProps.onPickBoolean).toHaveBeenCalledWith('false');
+  });
+
+  it('ignores choices invalidated between render and activation', () => {
+    const booleanOperators: ('equals' | 'isEmpty' | 'isNotEmpty')[] = ['equals'];
+    const mutableBoolean = {
+      ...BOOLEAN_FIELD,
+      operators: booleanOperators,
+    } satisfies FilterFieldDefinition<'boolean'>;
+    const booleanProps = popoverProps(operatorState(mutableBoolean));
+    const view = render(
+      <SingleChoiceStage
+        {...booleanProps}
+        state={operatorState(mutableBoolean)}
+        heading="Active"
+        field={mutableBoolean}
+      />,
+    );
+    const trueOption = screen.getByRole('option', { name: 'is true' });
+    booleanOperators.splice(0);
+    fireEvent.click(trueOption);
+    expect(booleanProps.onPickBoolean).not.toHaveBeenCalled();
+
+    const stringOperators: ('equals' | 'contains')[] = ['equals'];
+    const mutableString = {
+      ...STRING_FIELD,
+      operators: stringOperators,
+    } satisfies FilterFieldDefinition<'string'>;
+    const stringProps = popoverProps(operatorState(mutableString));
+    view.rerender(
+      <SingleChoiceStage
+        {...stringProps}
+        state={operatorState(mutableString)}
+        heading="Name"
+        field={mutableString}
+      />,
+    );
+    const equalsOption = screen.getByRole('option', { name: 'is' });
+    stringOperators.splice(0);
+    fireEvent.click(equalsOption);
+    expect(stringProps.onSelectOperator).not.toHaveBeenCalled();
+  });
+
+  it('ignores a stale boolean selection left over from a different field', () => {
+    const staleEntry: FilterEntry = {
+      id: 'condition-1',
+      fieldKey: 'other-boolean',
+      type: 'boolean',
+      operator: 'equals',
+      value: false,
+    };
+    const props = popoverProps(operatorState(BOOLEAN_FIELD), {
+      editingFilter: staleEntry,
+    });
+    render(
+      <SingleChoiceStage
+        {...props}
+        state={operatorState(BOOLEAN_FIELD)}
+        heading="Active"
+        field={BOOLEAN_FIELD}
+      />,
+    );
+    expect(screen.getByRole('option', { name: 'is false' })).toHaveAttribute(
+      'aria-selected',
+      'false',
+    );
+  });
+
+  it('ignores a stale operator left over from a field whose type has changed', () => {
+    const staleEntry: FilterEntry = {
+      id: 'condition-1',
+      fieldKey: ENUM_FIELD.key,
+      type: 'string',
+      operator: 'isEmpty',
+    };
+    const props = popoverProps(operatorState(ENUM_FIELD), {
+      editingFilter: staleEntry,
+    });
+    render(
+      <SingleChoiceStage
+        {...props}
+        state={operatorState(ENUM_FIELD)}
+        heading="Stage"
+        field={ENUM_FIELD}
+      />,
+    );
+    expect(screen.getByRole('option', { name: 'is empty' })).toHaveAttribute(
+      'aria-selected',
+      'false',
+    );
+  });
+});

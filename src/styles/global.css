@@ -1,5 +1,5 @@
-@import './fonts.css';
-@import './colors.css';
+@import url('./fonts.css');
+@import url('./colors.css');
 
 :root {
   font-family: Roboto, RobotoDraft, Helvetica, Arial, sans-serif;
@@ -10,13 +10,8 @@
 }
 
 body {
-  font:
-    400 14px/20px Roboto,
-    RobotoDraft,
-    Helvetica,
-    Arial,
-    sans-serif;
-  letter-spacing: 0.25px;
+  margin: 0;
+  background: var(--neutral-50);
   color: var(--neutral-800);
 }
 

@@ -1,0 +1,259 @@
+/* A native `popover="auto"` element in the top layer. Reset the UA popover
+   placement (inset: 0 / margin: auto / border) and position it against its
+   implicit anchor — the element passed to `showPopover({ source })`. The
+   fallbacks flip it above or right-align it when the viewport runs out of
+   room below or toward inline-end. `fixed` (the UA popover default), not
+   `absolute`: on a scrollable page an absolutely positioned popover
+   resolves against the document's initial containing block, so
+   position-try-fallbacks never sees viewport overflow and the popover
+   won't flip; fixed positioning evaluates collision against the viewport
+   while anchor() still tracks the invoker during scroll. */
+.filter-popover {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  border: none;
+
+  /* round(…, 1px) snaps the anchor-derived position to whole pixels: a
+     fractional offset makes Chromium rasterize the popover's text at a
+     different subpixel phase depending on where the anchor happens to land,
+     which reads as slightly soft type (and made pixel snapshots
+     nondeterministic). */
+  inset-block-start: round(calc(anchor(bottom) + 4px), 1px);
+  inset-inline-start: round(anchor(left), 1px);
+  position-try-fallbacks:
+    flip-block,
+    flip-inline,
+    flip-block flip-inline;
+  min-width: min(220px, calc(100vi - 16px));
+  max-width: min(320px, calc(100vi - 16px));
+
+  /* Half a short viewport always fits on one side of the anchor; taller lists
+     scroll inside the popover. */
+  max-height: min(320px, calc(50vb - 8px));
+  padding: 4px 0;
+  background: var(--filter-resolved-color-background-primary);
+
+  /* The UA popover style sets `color: CanvasText`, which would defeat
+     inheritance from .filter. */
+  color: var(--filter-resolved-color-text-primary);
+  border-radius: var(--filter-radius-container);
+  box-shadow: var(--filter-popover-shadow);
+  overflow: hidden;
+
+  /* Scoped to the open state so the UA's display: none keeps a (transient,
+     pre-showPopover) closed popover hidden. */
+  &:popover-open {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.filter-popover-search {
+  padding: 4px 8px;
+
+  input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 4px 8px;
+    border: 1px solid var(--filter-resolved-color-border-primary);
+    border-radius: var(--filter-radius-control);
+    outline: none;
+
+    &:focus {
+      border-color: var(--filter-resolved-color-border-focus);
+    }
+  }
+}
+
+/* Muted, not placeholder-light: 11px text needs WCAG AA 4.5:1 on the
+   active-option background. */
+:where(.filter-popover-heading, .filter-popover-option-hint) {
+  font-size: 11px;
+  color: var(--filter-resolved-color-text-secondary);
+}
+
+.filter-popover-heading {
+  padding-block: 6px 2px;
+  padding-inline: 12px;
+  font-weight: 500;
+}
+
+.filter-popover-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-block: 2px;
+  padding-inline: 12px 6px;
+
+  .filter-popover-heading {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    padding: 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.filter-popover-checkbox {
+  color: var(--filter-resolved-color-icon-secondary);
+}
+
+.filter-popover-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+
+  /* The keyboard-active option — distinct from aria-selected, which
+     marks the committed selection in the operator/value lists. */
+  &[data-active] {
+    background: var(--filter-resolved-color-background-selected);
+  }
+
+  &[aria-selected='true'] .filter-popover-checkbox {
+    color: var(--filter-resolved-color-text-action);
+  }
+}
+
+.filter-popover-list {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: min(240px, calc(50vb - 72px));
+  overflow-y: auto;
+
+  /* A ring around the whole scrollable list reads as a border and clips its
+     rows; keyboard focus is indicated on the active option instead, where
+     the interaction actually points. */
+  outline: none;
+
+  &:focus-visible .filter-popover-option[data-active] {
+    outline: var(--filter-focus-ring);
+    outline-offset: -2px;
+    border-radius: var(--filter-radius-control);
+  }
+}
+
+.filter-popover-option-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.filter-popover-check {
+  color: var(--filter-resolved-color-text-action);
+}
+
+.filter-popover-empty {
+  padding: 8px 12px;
+  color: var(--filter-resolved-color-text-secondary);
+}
+
+.filter-popover-error {
+  padding-block: 0 4px;
+  padding-inline: 12px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--filter-resolved-color-text-danger);
+}
+
+.filter-popover-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-block: 2px 8px;
+  padding-inline: 12px;
+  min-height: 0;
+  overflow-y: auto;
+
+  .filter-popover-error {
+    padding: 0;
+  }
+}
+
+.filter-popover-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-block-start: 4px;
+  padding-block: 6px 2px;
+  padding-inline: 8px;
+  border-block-start: 1px solid var(--filter-resolved-color-border-primary);
+}
+
+.filter-popover-footer-apply {
+  display: flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--filter-radius-control);
+  background: var(--filter-resolved-color-background-action);
+  color: var(--filter-resolved-color-text-on-action);
+
+  &:hover {
+    background: var(--filter-resolved-color-background-action-hover);
+  }
+
+  /* An accent-colored ring would vanish against this button's accent
+     surface; ring in the text color, offset outward instead of inset. */
+  &:focus-visible {
+    outline: 2px solid var(--filter-resolved-color-text-primary);
+    outline-offset: 1px;
+  }
+}
+
+.filter-value-editor-controls {
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid var(--filter-resolved-color-border-primary);
+  border-radius: var(--filter-radius-control);
+
+  &:focus-within {
+    border-color: var(--filter-resolved-color-border-focus);
+  }
+
+  input,
+  select {
+    flex: 1;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 5px 8px;
+    border: none;
+    outline: none;
+    background: var(--filter-resolved-color-background-primary);
+  }
+
+  .filter-value-amount {
+    flex: 0 0 64px;
+  }
+
+  .filter-value-unit {
+    border-inline-start: 1px solid var(--filter-resolved-color-border-primary);
+  }
+}
+
+.filter-value-joiner {
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  border-inline: 1px solid var(--filter-resolved-color-border-primary);
+  background: var(--filter-resolved-color-background-secondary);
+  font-size: 12px;
+  color: var(--filter-resolved-color-text-secondary);
+}
+
+.filter-value-editor-apply {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  border-inline-start: 1px solid var(--filter-resolved-color-border-primary);
+  color: var(--filter-resolved-color-text-action);
+
+  &:hover {
+    background: var(--filter-resolved-color-background-action-subtle);
+  }
+}

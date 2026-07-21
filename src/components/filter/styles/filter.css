@@ -1,0 +1,207 @@
+/* Non-color component tokens. Semantic color defaults and the public theming
+   contract live in filter-colors.css. */
+.filter {
+  --filter-control-height: 28px;
+  --filter-radius-control: 4px;
+  --filter-radius-container: 8px;
+  --filter-radius-pill: 10px;
+  --filter-focus-ring: 2px solid var(--filter-resolved-color-border-focus);
+  --filter-popover-shadow:
+    0 2px 6px var(--filter-resolved-color-shadow-drop),
+    0 0 2px var(--filter-resolved-color-shadow-outline);
+
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--filter-resolved-color-text-primary);
+}
+
+/* Control reset: the component must not depend on the page's global styles.
+   Zero specificity so any component class overrides it regardless of the
+   order stylesheets land in the bundle. */
+:where(.filter) :where(button, input, select) {
+  font: inherit;
+  letter-spacing: inherit;
+}
+
+:where(.filter button) {
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+:where(.filter button):focus-visible {
+  outline: var(--filter-focus-ring);
+  outline-offset: -2px;
+}
+
+/* Destructive controls keep a visible safety boundary while pointer hover
+   changes Chromium's focus-visible modality. */
+:where(
+  .filter .is-destructive,
+  .filter .filter-incomplete-draft-discard,
+  .filter .filter-token-remove,
+  .filter .filter-token-pill-remove,
+  .filter .filter-saved-views-remove
+):focus {
+  outline: var(--filter-focus-ring);
+  outline-offset: -2px;
+}
+
+:where(.filter-chip) {
+  display: inline-flex;
+  align-items: stretch;
+  height: var(--filter-control-height);
+  overflow: hidden;
+  border: 1px solid var(--filter-resolved-color-border-primary);
+  border-radius: var(--filter-radius-control);
+  background: var(--filter-resolved-color-background-primary);
+}
+
+:where(.filter-token-value, .filter-token-pill-label, .filter-draft-preview-value) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The fieldset that natively disables every control inside it. The popover
+   anchors to its invoking element through the Popover API, so this needs no
+   positioning context. */
+.filter-controls {
+  margin: 0;
+  padding: 0;
+  border: none;
+  min-width: 0;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+/* While disabled, controls take no pointer events: their `:hover` states
+   never fire and the fieldset's not-allowed cursor shows through them. */
+:where(.filter-controls:disabled) :where(button, input, select) {
+  pointer-events: none;
+}
+
+.filter-storage-notice {
+  box-sizing: border-box;
+  max-inline-size: 100%;
+  margin: 8px 0 0;
+  padding: 6px 8px;
+  overflow-wrap: anywhere;
+  border: 1px solid var(--filter-resolved-color-border-warning);
+  border-radius: var(--filter-radius-control);
+  background: var(--filter-resolved-color-background-warning);
+  color: var(--filter-resolved-color-text-warning);
+}
+
+/* Layout-transparent: the token list exists purely for list semantics; its
+   tokens lay out as flex children of the row. */
+.filter-token-list {
+  display: contents;
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  min-height: 32px;
+  border: 1px solid var(--filter-resolved-color-border-primary);
+  border-radius: var(--filter-radius-container);
+  background: var(--filter-resolved-color-background-primary);
+
+  /* Text entry belongs to the filter row as a whole. Keep its focus state on
+     the container; compact action buttons retain their own circular rings. */
+  &:has(.filter-add-input:focus-visible) {
+    outline: var(--filter-focus-ring);
+    outline-offset: 1px;
+  }
+}
+
+/* The composer-and-actions block: the add-filter input and the rail as a
+   single flex item. Because they travel together, they wrap to the last line
+   as a unit; `flex: 1` makes the block fill that line so the input can grow
+   and the rail pins to the right edge → bottom-right in every layout. */
+.filter-composer {
+  flex: 1 1 260px;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-add-input {
+  flex: 1 1 120px;
+  min-width: min(120px, 100%);
+  padding: 4px;
+  border: none;
+  outline: none;
+  border-radius: var(--filter-radius-control);
+  background: transparent;
+  color: var(--filter-resolved-color-text-primary);
+
+  &::placeholder {
+    color: var(--filter-resolved-color-text-placeholder);
+  }
+}
+
+.filter-rail {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  margin-inline-start: auto;
+}
+
+.filter-rail-divider {
+  width: 1px;
+  height: 18px;
+  margin: 0 2px;
+  background: var(--filter-resolved-color-border-primary);
+}
+
+.filter-icon-button {
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 50%;
+  color: var(--filter-resolved-color-text-secondary);
+
+  &:hover {
+    background: var(--filter-resolved-color-background-hover);
+  }
+
+  &.is-destructive:hover {
+    background: var(--filter-resolved-color-background-danger-hover);
+    color: var(--filter-resolved-color-text-danger);
+  }
+
+  /* A trigger holds its open state while its popover is showing: a tinted
+     accent surface and accent glyph, so the affordance reads without color
+     alone doing the work. */
+  &.is-open {
+    background: var(--filter-resolved-color-background-action-subtle);
+    color: var(--filter-resolved-color-text-action);
+  }
+
+  &:focus-visible {
+    outline: var(--filter-focus-ring);
+    outline-offset: 0;
+  }
+}
+
+.filter-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

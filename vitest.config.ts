@@ -1,0 +1,41 @@
+import { configDefaults, defineConfig, mergeConfig } from 'vitest/config';
+
+import viteConfiguration from './vite.config.ts';
+
+export default defineConfig((configurationEnvironment) => {
+  const isCompilerTest = configurationEnvironment.mode === 'compiler-test';
+
+  return mergeConfig(
+    viteConfiguration(configurationEnvironment),
+    defineConfig({
+      test: {
+        environment: 'jsdom',
+        execArgv: ['--no-experimental-webstorage'],
+        setupFiles: ['./src/test-setup.ts'],
+        ...(isCompilerTest ? { include: ['src/**/*.compiler.test.tsx'] } : {}),
+        // Playwright owns end-to-end/*.spec.ts. Compiler-specific render tests
+        // run only through `test:compiler`, never through coverage.
+        exclude: [
+          ...configDefaults.exclude,
+          // Claude Code creates scratch git worktrees under `.claude/worktrees`;
+          // their duplicated `src` trees must never be collected as tests.
+          '.claude/**',
+          'end-to-end/**',
+          ...(isCompilerTest ? [] : ['src/**/*.compiler.test.tsx']),
+        ],
+        coverage: {
+          provider: 'v8',
+          include: ['src/**/*.{ts,tsx}'],
+          exclude: [
+            'src/main.tsx',
+            'src/example/**',
+            'src/**/*.test.{ts,tsx}',
+            'src/test-setup.ts',
+            'src/components/filter/__test__/filter-test-setup.tsx',
+          ],
+          reporter: ['text', 'json-summary', 'html'],
+        },
+      },
+    }),
+  );
+});

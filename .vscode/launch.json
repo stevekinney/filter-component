@@ -1,0 +1,33 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Launch dev server in Chrome",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}",
+      "preLaunchTask": "dev"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug current Vitest file",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "test:watch", "--", "${fileBasenameNoExtension}"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug current Playwright test",
+      "runtimeExecutable": "bunx",
+      "runtimeArgs": ["playwright", "test", "${relativeFile}", "--debug"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "internalConsoleOptions": "neverOpen"
+    }
+  ]
+}
